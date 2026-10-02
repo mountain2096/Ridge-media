@@ -1,27 +1,33 @@
-const router = require('express').Router();
-const { 
-    updateUser, 
-    deleteUser, 
-    getUser, 
-    followUser, 
-    unfollowUser,
-    changePassword
-} = require('../controllers/userController');
+const router = require("express").Router();
 
-// Cập nhật thông tin user: PUT /api/users/:id
-router.put('/:id', updateUser);
+const {
+  updateUser,
+  deleteUser,
+  getUser,
+  followUser,
+  unfollowUser,
+  changePassword,
+} = require("../controllers/userController");
 
-// Xóa user: DELETE /api/users/:id
-router.delete('/:id', deleteUser);
+const protect = require("../middlewares/auth");
+const requireAdmin = require("../middlewares/admin");
 
-// Lấy thông tin user: GET /api/users/:id
-router.get('/:id', getUser);
+// GET /api/users/:id
+router.get("/:id", getUser);
 
-// Follow user: PUT /api/users/:id/follow
-router.put('/:id/follow', followUser);
+// PUT /api/users/:id
+router.put("/:id", protect, updateUser);
 
-// Unfollow user: PUT /api/users/:id/unfollow
-router.put('/:id/unfollow', unfollowUser);
+// DELETE /api/users/:id
+router.delete("/:id", protect, deleteUser);
 
-router.put('/:id/password', changePassword)
+// PUT /api/users/:id/follow
+router.put("/:id/follow", protect, followUser);
+
+// PUT /api/users/:id/unfollow
+router.put("/:id/unfollow", protect, unfollowUser);
+
+// PUT /api/users/:id/password
+router.put("/:id/password", protect, changePassword);
+
 module.exports = router;
