@@ -1,87 +1,190 @@
-const Post = require('../models/Post');
-const User = require('../models/User');
+const Post = require("../models/Post");
+const User = require("../models/User");
 
-// 1. TẠO BÀI VIẾT MỚI
-const createPost = async (req, res) => {
-    const newPost = new Post(req.body);
-    try {
-        const savedPost = await newPost.save();
-        res.status(200).json({ message: "Đăng bài viết thành công!", savedPost });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+// CREATE POST
+const createPost = async (req, res, next) => {
+  try {
+    const { content, images, privacy } = req.body;
+
+    if (!content && (!images || images.length === 0)) {
+      return res.status(400).json({
+        message: "Post must contain content or at least one image",
+      });
     }
+
+    const post = await Post.create({
+      authorId: req.user._id,
+      content: content || "",
+      images: Array.isArray(images) ? images : [],
+      privacy: privacy || "Public",
+    });
+
+    const populatedPost = await Post.findById(post._id).populate(
+      "authorId",
+      "username fullName avatarUrl"
+    );
+
+    return res.status(201).json({
+      message: "Post created successfully",
+      post: populatedPost,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-// 2. CẬP NHẬT BÀI VIẾT
-const updatePost = async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if (post.userId === req.body.userId) {
-            await post.updateOne({ $set: req.body });
-            res.status(200).json({ message: "Cập nhật bài viết thành công!" });
-        } else {
-            res.status(403).json({ message: "Bạn chỉ có thể cập nhật bài viết của chính mình!" });
-        }
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+// UPDATE POST
+const updatePost = async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    if (!post || post.status === "Deleted") {
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
+
+    if (post.authorId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You can only update your own post",
+      });
+    }
+
+    const allowedFields = ["content", "images", "privacy"];
+    const updateData = {};
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        message: "No valid fields to update",
+      });
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).populate("authorId", "username fullName avatarUrl");
+
+    return res.status(200).json({
+      message: "Post updated successfully",
+      post: updatedPost,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-// 3. XÓA BÀI VIẾT
-const deletePost = async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if (post.userId === req.body.userId) {
-            await post.deleteOne();
-            res.status(200).json({ message: "Đã xóa bài viết thành công!" });
-        } else {
-            res.status(403).json({ message: "Bạn chỉ có thể xóa bài viết của chính mình!" });
-        }
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+// DELETE POST
+const deletePost = async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    if (!post || post.status === "Deleted") {
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
+
+    const isOwner =
+      post.authorId.toString() === req.user._id.toString();
+
+    const isAdmin = req.user.role === "Admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        message: "You can only delete your own post",
+      });
+    }
+
+    // Soft delete để giữ dữ liệu cho Comment/Like/Report
+    post.status = "Deleted";
+    await post.save();
+
+    return res.status(200).json({
+      message: "Post deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-// 4. THÍCH / BỎ THÍCH BÀI VIẾT (LIKE & DISLIKE)
-const likePost = async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if (!post.likes.includes(req.body.userId)) {
-            await post.updateOne({ $push: { likes: req.body.userId } });
-            res.status(200).json({ message: "Đã thích bài viết!" });
-        } else {
-            await post.updateOne({ $pull: { likes: req.body.userId } });
-            res.status(200).json({ message: "Đã bỏ thích bài viết!" });
-        }
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+// GET ONE POST
+const getPost = async (req, res, next) => {
+  try {
+    const post = await Post.findOne({
+      _id: req.params.id,
+      status: "Active",
+    }).populate("authorId", "username fullName avatarUrl");
+
+    if (!post) {
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
+
+    // Private post
+    if (post.privacy === "Private") {
+      if (
+        !req.user ||
+        post.authorId._id.toString() !== req.user._id.toString()
+      ) {
+        return res.status(403).json({
+          message: "This post is private",
+        });
+      }
+    }
+
+    return res.status(200).json(post);
+  } catch (error) {
+    next(error);
+  }
 };
 
-// 5. LẤY MỘT BÀI VIẾT
-const getPost = async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        res.status(200).json(post);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+// GET TIMELINE
+const getTimelinePosts = async (req, res, next) => {
+  try {
+    const currentUser = await User.findById(req.user._id);
+
+    if (!currentUser) {
+      return res.status(404).json({
+        message: "User not found",
+      });
     }
+
+    const followingIds = currentUser.followings || [];
+
+    const authorIds = [
+      currentUser._id,
+      ...followingIds,
+    ];
+
+    const posts = await Post.find({
+      authorId: { $in: authorIds },
+      status: "Active",
+      privacy: { $in: ["Public", "Friends"] },
+    })
+      .populate("authorId", "username fullName avatarUrl")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json(posts);
+  } catch (error) {
+    next(error);
+  }
 };
 
-// 6. LẤY BẢNG TIN (TIMELINE POSTS): Bài viết của chính mình + Bài viết của những người mình follow
-const getTimelinePosts = async (req, res) => {
-    try {
-        const currentUser = await User.findById(req.params.userId);
-        const userPosts = await Post.find({ userId: currentUser._id });
-        const friendPosts = await Promise.all(
-            currentUser.followings.map((friendId) => {
-                return Post.find({ userId: friendId });
-            })
-        );
-        res.status(200).json(userPosts.concat(...friendPosts));
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+module.exports = {
+  createPost,
+  updatePost,
+  deletePost,
+  getPost,
+  getTimelinePosts,
 };
-
-module.exports = { createPost, updatePost, deletePost, likePost, getPost, getTimelinePosts };
