@@ -1,71 +1,156 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-// 1. ĐĂNG KÝ (REGISTER)
-const registerUser = async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = "7d";
 
-        // Kiểm tra xem email hoặc username đã tồn tại chưa
-        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-        if (existingUser) {
-            return res.status(400).json({ message: "Email hoặc Tên người dùng đã tồn tại!" });
-        }
+const createToken = (user) => {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured");
+  }
 
-        // BÃM MẬT KHẨU (HASH PASSWORD) trước khi lưu
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+  return jwt.sign(
+    {
+      id: user._id.toString(),
+    },
+    JWT_SECRET,
+    {
+      expiresIn: JWT_EXPIRES_IN,
+    }
+  );
+};
 
-        // Tạo người dùng mới với mật khẩu đã được mã hóa
-        const newUser = new User({
-            username,
-            email,
-            password: hashedPassword,
+const register = async (req, res, next) => {
+  try {
+    const {
+      username,
+      email,
+      phone,
+      password,
+      fullName,
+      avatarUrl,
+      coverUrl,
+      bio,
+    } = req.body;
+
+    if (!username || !email || !password || !fullName) {
+      return res.status(400).json({
+        message: "Username, email, password and fullName are required",
+      });
+    }
+
+    const existingUser = await User.findOne({
+      $or: [{ username }, { email }],
+    });
+
+    if (existingUser) {
+      if (existingUser.username === username) {
+        return res.status(409).json({
+          message: "Username already exists",
         });
+      }
 
-        const savedUser = await newUser.save();
-        
-        // Ẩn mật khẩu trước khi trả về kết quả cho client
-        const { password: _, ...userData } = savedUser._doc;
-        res.status(201).json(userData);
-
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi Server: " + error.message });
+      return res.status(409).json({
+        message: "Email already exists",
+      });
     }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await User.create({
+      username,
+      email,
+      phone,
+      password: hashedPassword,
+      fullName,
+      avatarUrl,
+      coverUrl,
+      bio,
+    });
+
+    return res.status(201).json({
+      message: "Registration successful",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
+        coverUrl: user.coverUrl,
+        bio: user.bio,
+        role: user.role,
+        status: user.status,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-// 2. ĐĂNG NHẬP (LOGIN)
-const loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-        // Tìm người dùng theo email
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "Tài khoản không tồn tại!" });
-        }
-
-        // So sánh mật khẩu nhập vào với mật khẩu đã hash trong DB
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(400).json({ message: "Mật khẩu không chính xác!" });
-        }
-
-        // Tạo JWT Token để xác thực các phiên sau
-        const token = jwt.sign(
-            { id: user._id, isAdmin: user.isAdmin },
-            process.env.JWT_SECRET || 'fallback_secret',
-            { expiresIn: '7d' }
-        );
-
-        // Ẩn mật khẩu trước khi trả về
-        const { password: _, ...userData } = user._doc;
-        res.status(200).json({ ...userData, token });
-
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi Server: " + error.message });
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
     }
+
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    if (user.status === "Locked") {
+      return res.status(403).json({
+        message: "Account is locked",
+      });
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    const token = createToken(user);
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
+        coverUrl: user.coverUrl,
+        bio: user.bio,
+        role: user.role,
+        status: user.status,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-module.exports = { registerUser, loginUser };
+module.exports = {
+  register,
+  login,
+};

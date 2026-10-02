@@ -1,45 +1,46 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const cors = require('cors');
+require("dotenv").config();
 
-// Cấu hình sử dụng file .env
-dotenv.config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/users");
+const postRoutes = require("./routes/posts");
+
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
-// Middleware cơ bản
-app.use(express.json()); 
-app.use(cors());         
+app.use(cors());
+app.use(express.json());
 
-// Lấy thông tin cấu hình từ file .env
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/posts", postRoutes);
+
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
 
-// Kiểm tra xem MONGO_URI đã có chưa
-if (!MONGO_URI) {
-    console.error("Lỗi: Chưa cấu hình MONGO_URI trong file .env!");
-    process.exit(1);
+if (!process.env.MONGO_URI) {
+  throw new Error("MONGO_URI is not configured");
 }
-// Khai báo Routes
-const authRoute = require('./routes/auth');
-app.use('/api/auth', authRoute);
 
-const userRoute = require('./routes/users');
-app.use('/api/users', userRoute);
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET is not configured");
+}
 
-const postRoute = require('./routes/posts');
-app.use('/api/posts', postRoute);
-// Kết nối với MongoDB thông qua Mongoose
-mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log('✅ Kết nối thành công đến cơ sở dữ liệu MongoDB Atlas!');
-        
-        // Khởi động Server lắng nghe sau khi kết nối DB thành công
-        app.listen(PORT, () => {
-            console.log(`🚀 Server đang chạy trên cổng http://localhost:${PORT}`);
-        });
-    })
-    .catch((error) => {
-        console.error('❌ Lỗi kết nối MongoDB:', error.message);
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
+  })
+  .catch((error) => {
+    console.error("MongoDB connection failed:", error);
+    process.exit(1);
+  });

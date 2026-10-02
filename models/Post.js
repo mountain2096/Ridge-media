@@ -1,25 +1,49 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const PostSchema = new mongoose.Schema(
+const postSchema = new mongoose.Schema(
   {
-    userId: {
-      type: String,
+    authorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    desc: {
+
+    content: {
       type: String,
-      max: 500,
-    },
-    img: {
-      type: String,
+      trim: true,
+      maxlength: 500,
       default: "",
     },
-    likes: {
-      type: Array,
+
+    images: {
+      type: [String],
       default: [],
     },
+
+    privacy: {
+      type: String,
+      enum: ["Public", "Friends", "Private"],
+      default: "Public",
+    },
+
+    status: {
+      type: String,
+      enum: ["Active", "Deleted"],
+      default: "Active",
+    },
+
+    originalPostId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: null,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model('Post', PostSchema);
+postSchema.index({ authorId: 1, createdAt: -1 });
+postSchema.index({ status: 1, createdAt: -1 });
+
+module.exports = mongoose.model("Post", postSchema);

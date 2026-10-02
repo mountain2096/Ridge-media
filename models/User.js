@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -15,37 +16,53 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
+    phone: {
+      type: String,
+      trim: true,
+    },
+
     password: {
       type: String,
       required: true,
     },
-    profilePicture: {
+
+    fullName: {
       type: String,
-      default: '',
+      required: true,
+      trim: true,
     },
-    coverPicture: {
+
+    avatarUrl: {
       type: String,
-      default: '',
+      default: "",
     },
+
+    coverUrl: {
+      type: String,
+      default: "",
+    },
+
     bio: {
       type: String,
-      maxlength: 255,
-      default: '',
+      default: "",
     },
-    isAdmin: {
-      type: Boolean,
-      default: false,
+
+    role: {
+      type: String,
+      enum: ["User", "Admin"],
+      default: "User",
     },
-    followers: {
-      type: Array,
-      default: [],
-    },
-    followings: {
-      type: Array,
-      default: [],
+
+    status: {
+      type: String,
+      enum: ["Active", "Locked"],
+      default: "Active",
     },
   },
-  { timestamps: true } // Tự động tạo createdAt và updatedAt
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

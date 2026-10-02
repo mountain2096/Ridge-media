@@ -1,10 +1,12 @@
-const router = require('express').Router();
-const { registerUser, loginUser } = require('../controllers/authController');
+const express = require("express");
+const router = express.Router();
 
-// Đường dẫn đăng ký: POST /api/auth/register
-router.post('/register', registerUser);
+const {
+  register,
+  login,
+} = require("../controllers/authController");
 
-// Đường dẫn đăng nhập: POST /api/auth/login
-router.post('/login', loginUser);
+router.post("/register", register);
+router.post("/login", login);
 
 module.exports = router;
