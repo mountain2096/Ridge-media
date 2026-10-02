@@ -1,17 +1,32 @@
-const requireAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      message: "Authentication required",
+const errorHandler = (err, req, res, next) => {
+  console.error(err);
+
+  if (err.name === "ValidationError") {
+    return res.status(400).json({
+      message: "Validation error",
+      errors: Object.values(err.errors).map((error) => error.message),
     });
   }
 
-  if (req.user.role !== "Admin") {
-    return res.status(403).json({
-      message: "Admin access required",
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      message: "Invalid ID",
     });
   }
 
-  next();
+  if (err.code === 11000) {
+    const fields = Object.keys(err.keyPattern || {});
+
+    return res.status(409).json({
+      message: `Duplicate value for: ${fields.join(", ")}`,
+    });
+  }
+
+  const statusCode = err.statusCode || 500;
+
+  return res.status(statusCode).json({
+    message: err.message || "Internal server error",
+  });
 };
 
-module.exports = requireAdmin;
+module.exports = errorHandler;

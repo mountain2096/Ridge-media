@@ -7,6 +7,8 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      minlength: 3,
+      maxlength: 30,
     },
 
     email: {
@@ -17,47 +19,48 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    phone: {
-      type: String,
-      trim: true,
-    },
-
     password: {
       type: String,
       required: true,
     },
 
-    fullName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    avatarUrl: {
+    profilePicture: {
       type: String,
       default: "",
     },
 
-    coverUrl: {
+    coverPicture: {
       type: String,
       default: "",
     },
 
     bio: {
       type: String,
+      maxlength: 255,
       default: "",
     },
 
-    role: {
-      type: String,
-      enum: ["User", "Admin"],
-      default: "User",
+    isAdmin: {
+      type: Boolean,
+      default: false,
     },
 
     status: {
       type: String,
       enum: ["Active", "Locked"],
       default: "Active",
+    },
+
+    followers: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
+    },
+
+    followings: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
     },
   },
   {
