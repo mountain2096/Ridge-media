@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        friend:[
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref:"User"
+            },
+        ]
     },
     {
         timestamps: true
