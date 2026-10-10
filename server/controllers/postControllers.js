@@ -145,7 +145,7 @@ const likePost = async (req, res) =>{
         const alreadyLiked = post.likes.some((id) => id.toString() === userId);
 
         if(alreadyLiked){
-            return res.status(400).json()({
+            return res.status(400).json({
                 message:"Bạn đã thích bài viết này!", 
             })
         }
@@ -155,7 +155,7 @@ const likePost = async (req, res) =>{
         
         if(post.authorId.toString() !== req.user._id.toString()){
             await Notification.create({
-                recipientId: post.xauthorId,
+                recipientId: post.authorId,
                 senderId: req.user._id,
                 type:"like",
                 postId:post._id
