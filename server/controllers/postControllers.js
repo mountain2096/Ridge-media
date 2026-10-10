@@ -153,6 +153,14 @@ const likePost = async (req, res) =>{
 
         await post.save()
         
+        if(post.authorId.toString() !== req.user._id.toString()){
+            await Notification.create({
+                recipientId: authorId,
+                senderId: req.user._id,
+                type:"like",
+                postId:post._id
+            })
+        }
         res.status(200).json({
             message:"Đã thích bài viết!",
             likes: post.likes

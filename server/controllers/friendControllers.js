@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const FriendRequest = require("../models/friendRequest");
+const Notification = require("../models/Notification");
 
 const sendFriendRequest = async (req, res) =>{
     try{
@@ -20,6 +21,15 @@ const sendFriendRequest = async (req, res) =>{
             })
         }
 
+        const alreadFriends = req.user._id.some(
+            (id) => id.toString() === receiverId.toString()
+        )
+
+        if(alreadyFriends){
+            return res.status(400).json({
+                message:"2 bạn đã là bạn bè!"
+            })
+        }
         const existingRequest = await FriendRequest.findOne({
             senderId,
             receiverId,
@@ -52,6 +62,12 @@ const sendFriendRequest = async (req, res) =>{
             }
         );
 
+        await Notification.create({
+            recipientId: receiverId,
+            senderId,
+            type:"friend_request",
+            friendRequestId: friendRequest._id
+        })
         res.status(201).json({
             message:"Đã gửi lời mời kết bạn!",
             friendRequest
@@ -114,6 +130,12 @@ const acceptFriendRequest = async (req,res) =>{
             $addToSet:{
                 friend: request.senderId
             }
+        })
+        await Notification.create({
+            recipientId: request.senderId,
+            senderId: request.receiverId,
+            type:"friend_accepted",
+            friendRequest: friendRequest._id
         })
         res.status(200).json({
             message: "Đã chấp nhận lời mời kết bạn!",

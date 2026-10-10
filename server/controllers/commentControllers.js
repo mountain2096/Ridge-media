@@ -1,5 +1,6 @@
 const Comment = require("../models/Comment");
 const Post = require("../models/Post")
+const Notification = require("../models/Notification");
 
 const createComment = async (req, res) =>{
     try{
@@ -24,7 +25,13 @@ const createComment = async (req, res) =>{
             postId,
             content
         })
-
+        await Notification.create({
+            recipientId: authorId,
+            senderId: req.user._id,
+            typeL:"comment",
+            commentId: comment.id,
+            postId:post.id
+        })
         res.status(200).json({
             message:"Đã đăng bình luận!",
             comment,
