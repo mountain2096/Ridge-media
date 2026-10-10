@@ -21,7 +21,7 @@ const sendFriendRequest = async (req, res) =>{
             })
         }
 
-        const alreadFriends = req.user._id.some(
+        const alreadyFriends =  req.user.friend.some(
             (id) => id.toString() === receiverId.toString()
         )
 
@@ -44,7 +44,7 @@ const sendFriendRequest = async (req, res) =>{
 
         const reverseRequest = await FriendRequest.findOne({
             senderId: receiverId,
-            receiverId: senderId,
+            receiverId: req.user._id,
             status: "pending",
             username: User.username
         });
@@ -135,7 +135,7 @@ const acceptFriendRequest = async (req,res) =>{
             recipientId: request.senderId,
             senderId: request.receiverId,
             type:"friend_accepted",
-            friendRequest: friendRequest._id
+            friendRequest: request._id
         })
         res.status(200).json({
             message: "Đã chấp nhận lời mời kết bạn!",

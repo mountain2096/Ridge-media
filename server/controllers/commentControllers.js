@@ -25,23 +25,31 @@ const createComment = async (req, res) =>{
             postId,
             content
         })
-        await Notification.create({
-            recipientId: authorId,
-            senderId: req.user._id,
-            typeL:"comment",
-            commentId: comment.id,
-            postId:post.id
-        })
+        if(post.authorId.toString() !== req.user._id.toString()){
+            await Notification.create({
+                recipientId: post.authorId,
+                senderId: req.user._id,
+                typeL:"comment",
+                commentId: comment.id,
+                postId:post.id
+            })
+        }
         res.status(200).json({
             message:"Đã đăng bình luận!",
             comment,
         })
     } catch(err){
-        res.status(400).json({
-            message: "Dữ liệu không hợp lệ!",
-        });s
+        if (err.name === "CastError") {
+            return res.status(400).json({
+                message: "ID bài viết không hợp lệ!",
+            });
+        }
+
+        return res.status(500).json({
+            message: error.message,
+        });
     }
-}
+    }
 const getCommentByPost = async (req, res) =>{
     try{
         const { postId } = req.params
@@ -120,7 +128,6 @@ const deleteComment = async (req, res) =>{
         }
 
         await Comment.findByIdAndDelete(req.params.id);
-        await Comment.find
 
         res.status(200).json({
             message:"Bình luận đã được xóa!"

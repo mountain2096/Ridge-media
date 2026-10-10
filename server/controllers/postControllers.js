@@ -1,5 +1,5 @@
 const Post = require("../models/Post");
-
+const Notification = require("../models/Notification")
 
 const createPost = async (req,res) =>{
     try{
@@ -155,7 +155,7 @@ const likePost = async (req, res) =>{
         
         if(post.authorId.toString() !== req.user._id.toString()){
             await Notification.create({
-                recipientId: authorId,
+                recipientId: post.xauthorId,
                 senderId: req.user._id,
                 type:"like",
                 postId:post._id
