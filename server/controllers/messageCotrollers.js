@@ -21,7 +21,7 @@ const createOrGetConversation = async (req, res) => {
             });
         }
 
-        const isFriend = req.user.friends.some(
+        const isFriend = req.user.friend.some(
             (id) => id.toString() === receiverId.toString()
         );
 
@@ -129,7 +129,7 @@ const getMessage = async (req, res) =>{
         const { conversationId } = req.params;
         const conversation = await Conversation.findById(conversationId);
 
-        if(conversation){
+        if(!conversation){
             return res.status(400).json({
                 message:"Không tìm thấy cuộc trò chuyện!"
             })
@@ -178,7 +178,7 @@ const getConversations = async (req, res) =>{
                 path:"senderId",
                 select: "username profilePicture"
             }
-        }).sort({ createdAt: -1});
+        }).sort({ updatedAt: -1});
 
         res.status(200).json({
             conversations,
