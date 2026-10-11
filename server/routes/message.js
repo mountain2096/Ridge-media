@@ -1,7 +1,7 @@
 const express = require("express");
 
 const protect = require("../middlewares/protect");
-const {sendMessage, createOrGetConversation, getMessage, getConversations, markMessageIsRead } = require("../controllers/messageCotrollers");
+const {sendMessage, createOrGetConversation, getMessage, getConversations, markMessageIsRead, } = require("../controllers/messageCotrollers");
 
 const router = express.Router();
 

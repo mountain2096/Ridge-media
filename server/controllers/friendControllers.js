@@ -21,6 +21,18 @@ const sendFriendRequest = async (req, res) =>{
             })
         }
 
+        const senderBlockedReceiver = req.user.blockList.some(
+            (id) => id.toString() === receiverId.toString()
+        )
+        const receiverBlockedSender =   receiver.blockList.some(
+            (id) => id.toString() === senderId.toString()
+        )
+
+        if(senderBlockedReceiver || receiverBlockedSender){
+            return res.status(400).json({
+                message:"đang nằm trong danh sách chặn!"
+            })
+        }
         const alreadyFriends =  req.user.friend.some(
             (id) => id.toString() === receiverId.toString()
         )

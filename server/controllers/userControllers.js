@@ -1,4 +1,5 @@
 const User = require("../models/User")
+const FriendRequest = require("../models/friendRequest");
 
 const getMe = async (req,res) =>{
     try{
@@ -87,8 +88,80 @@ const getUserById = async (req,res) =>{
         })
     }
 }
+const block = async (req, res) =>{
+    try{
+        const userId = req.user._id;
+        const blockedUser = await User.findById(req.params.userId);
+
+        if(!blockedUser){
+            return res.status(400).json({
+                message:"không tìm thấy người dùng"
+            })
+        }
+
+        const isMe = blockedUser._id.toString() === userId.toString()
+
+        if(isMe){
+            return res.status(400).json({
+                message:"không thể tự chặn chính mình!"
+            })
+        }
+
+        const isBlocked = req.user.blockList.some(
+            (id) => id.toString() === blockedUser._id.toString()
+        );
+
+        if(isBlocked){
+            return res.status(400).json({
+                message:"Người dùng này đã trong danh sách chặn!"
+            })
+        }
+
+        await User.findByIdAndUpdate(
+            userId,
+            { $addToSet: {blockList: blockedUser._id}}
+        )
+
+        await FriendRequest.deleteMany({
+            status:"pending",
+            $or:[
+                {
+                    senderId: userId,
+                    receiverId: blockedUser._id
+                },
+                {
+                    senderId:blockedUser._id,
+                    receiverId:userId
+                }
+            ]
+        }
+        )
+
+        const user = await User.findById(userId)
+
+        user.friend = user.friend.filter(
+            (id) => id.toString() !== blockedUser._id.toString()
+        )
+
+        blockedUser.friend = blockedUser.friend.filter(
+            (id) => id.toString() !== userId._id.toString()
+        )
+
+        await user.save();
+        await blockedUser.save();
+
+        res.status(200).json({
+            message:"đã chặn người dùng này!",
+        })
+    } catch(err){
+        return res.status(500).json({
+            message: err.message
+        })
+    }
+}
 module.exports = {
     getMe, 
     updateMe,
     getUserById,
+    block
 }

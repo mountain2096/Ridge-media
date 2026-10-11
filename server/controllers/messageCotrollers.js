@@ -184,20 +184,35 @@ const getConversations = async (req, res) =>{
     try{
         const userId = req.user._id;
 
-        const conversations = await Conversation.find({
-            participants: userId, 
+        const conversation = await Conversation.find({
+            participants: userId
         })
-        .populate("participants", "username profilePicture")
+        .populate("participants","username profilePicture")
         .populate({
             path:"lastMessage",
-            populate: {
+            populate:{
                 path:"senderId",
-                select: "username profilePicture"
+                select:"username profilePicture"
             }
-        }).sort({ updatedAt: -1});
+        }).sort({ createdAt: -1})
+
+        const conversationWithUnreadCount = await Promise.all(
+            conversation.map(async (conversation) =>{
+                const unreadCount = await Message.countDocuments({
+                    conversationId: conversation._id,
+                    senderId:{$ne: userId},
+                    isRead: false
+                });
+
+                return {
+                    ...conversation.toObject(),
+                    unreadCount,
+                }
+            })
+        )
 
         res.status(200).json({
-            conversations,
+            conversations: conversationWithUnreadCount
         })
     }catch (error) {
             res.status(500).json({ message: error.message });
@@ -250,10 +265,11 @@ const markMessageIsRead = async (req, res) =>{
         });
     }
 }
+
 module.exports = {
     createOrGetConversation,
     sendMessage,
     getMessage,
     getConversations,
-    markMessageIsRead
+    markMessageIsRead,
 };
