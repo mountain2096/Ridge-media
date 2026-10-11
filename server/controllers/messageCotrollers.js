@@ -1,12 +1,15 @@
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 const Message = require("../models/Message");
+const Notification = require("../models/Notification");
 
 const createOrGetConversation = async (req, res) => {
     try {
         const senderId = req.user._id;
-        const receiverId = req.params.userId;
+        // const senderName = req.user.username;
 
+        const receiverId = req.params.userId;
+        // const receiverName = req.params.username;
         if (senderId.toString() === receiverId.toString()) {
             return res.status(400).json({
                 message: "Bạn không thể tạo cuộc trò chuyện với chính mình!",
@@ -36,8 +39,8 @@ const createOrGetConversation = async (req, res) => {
                 $all: [senderId, receiverId],
                 $size: 2,
             },
-        });
-
+        }).populate("participants","username profilePicture");
+        
         if (existingConversation) {
             return res.status(200).json({
                 message: "Cuộc trò chuyện đã tồn tại!",
@@ -49,6 +52,7 @@ const createOrGetConversation = async (req, res) => {
             participants: [senderId, receiverId],
         });
 
+        await conversation.populate("participants", "username profilePicture")
         res.status(201).json({
             message: "Tạo cuộc trò chuyện thành công!",
             conversation,
@@ -61,7 +65,7 @@ const createOrGetConversation = async (req, res) => {
         }
 
         res.status(500).json({
-            message: "Lỗi server!",
+            message: error.message,
         });
     }
 };
@@ -107,6 +111,18 @@ const sendMessage = async (req, res) => {
             "senderId",
             "username profilePicture"
         );
+
+        const receiverId = conversation.participants.find(
+            (id) => id.toString() !== req.user._id.toString()
+        )
+
+        if(receiverId){
+            await Notification.create({
+                recipientId: receiverId,
+                senderId: req.user._id,
+                type: "message"
+            })
+        }
 
         res.status(201).json({
             message: "Gửi tin nhắn thành công!",
@@ -187,10 +203,57 @@ const getConversations = async (req, res) =>{
             res.status(500).json({ message: error.message });
         }
     };
+const markMessageIsRead = async (req, res) =>{
+    try{
+        const { conversationId } = req.params;
+    
+        const conversation = await Conversation.findById(conversationId);
 
+        if(!conversation){
+            return res.status(400).json({
+                message:"conversation not found!"
+            })
+        }
+
+        const isParticipant = conversation.participants.some(
+        (id) => id.toString() === req.user._id.toString()
+        )
+        if (!isParticipant) {
+            return res.status(403).json({
+                message: "Bạn không thuộc cuộc trò chuyện này!",
+            });
+        }
+
+        const result = await Message.updateMany(
+            {
+                conversationId,
+                senderId: {$ne: req.user._id},
+                isRead: false,
+            },
+            {
+                $set: {isRead: true}
+            }
+        )
+        return res.status(400).json({
+            message:"Đã đọc",
+            ModifiedCount: result.modifiedCount,
+        })
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({
+                message: "ID cuộc trò chuyện không hợp lệ!",
+            });
+        }
+
+        return res.status(500).json({
+            message: error.message,
+        });
+    }
+}
 module.exports = {
     createOrGetConversation,
     sendMessage,
     getMessage,
-    getConversations
+    getConversations,
+    markMessageIsRead
 };
