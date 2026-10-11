@@ -144,7 +144,7 @@ const block = async (req, res) =>{
         )
 
         blockedUser.friend = blockedUser.friend.filter(
-            (id) => id.toString() !== userId._id.toString()
+            (id) => id.toString() !== userId.toString()
         )
 
         await user.save();

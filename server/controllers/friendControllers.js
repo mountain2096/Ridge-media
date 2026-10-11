@@ -58,7 +58,6 @@ const sendFriendRequest = async (req, res) =>{
             senderId: receiverId,
             receiverId: req.user._id,
             status: "pending",
-            username: User.username
         });
 
         if(reverseRequest){
