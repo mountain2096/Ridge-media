@@ -14,6 +14,12 @@ const conversationSchema = mongoose.Schema(
             ref: "Message",
             default: null,
         },
+        hiddenFor:[
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"User"
+        },
+        ]
     },{
         timestamps: true    
     }

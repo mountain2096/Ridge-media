@@ -1,5 +1,6 @@
-const User = require("../models/User")
-const FriendRequest = require("../models/friendRequest");
+const User = require("../models/User");
+const FriendRequest = require("../models/FriendRequest");
+const Conversation = require("../models/Conversation")
 
 const getMe = async (req,res) =>{
     try{
@@ -150,6 +151,21 @@ const block = async (req, res) =>{
         await user.save();
         await blockedUser.save();
 
+        await Conversation.updateOne(
+        {
+            participants: {
+                $all: [userId, blockedUser._id],
+                $size: 2,
+            },
+        },
+        {
+            $addToSet: {
+                hiddenFor: {
+                    $each: [userId, blockedUser._id],
+                },
+            },
+        }
+    );
         res.status(200).json({
             message:"đã chặn người dùng này!",
         })

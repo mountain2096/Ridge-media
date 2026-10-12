@@ -185,7 +185,8 @@ const getConversations = async (req, res) =>{
         const userId = req.user._id;
 
         const conversation = await Conversation.find({
-            participants: userId
+            participants: userId,
+            hiddenFor: {$ne: userId }
         })
         .populate("participants","username profilePicture")
         .populate({
