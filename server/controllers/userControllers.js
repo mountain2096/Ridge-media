@@ -175,9 +175,71 @@ const block = async (req, res) =>{
         })
     }
 }
+const unblock = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const blockedUserId = await User.findById(req.params.userId);
+
+        if (!blockedUserId) {
+            return res.status(404).json({
+                message: "Nguoi dung khong ton tai!"
+            });
+        }
+        const isBlocked = req.user.blockList.some(
+            (id) => id.toString() === blockedUserId._id.toString()
+        );
+
+        if (!isBlocked) {
+            return res.status(400).json({
+                message: "Nguoi dung nay chua bi chan!"
+            });
+        }
+
+
+        await User.findByIdAndUpdate(
+            userId,
+            { $pull: { blockList: blockedUserId._id } }
+        );
+
+
+        const isBlockedBack = blockedUserId.blockList.some(
+            (id) => id.toString() === userId.toString()
+        );
+
+
+        if (!isBlockedBack) {
+            await Conversation.updateOne(
+                {
+                    participants: {
+                        $all: [userId, blockedUserId._id],
+                        $size: 2
+                    }
+                },
+                {
+                    $pull: {
+                        hiddenFor: {
+                            $in: [userId, blockedUserId._id]
+                        }
+                    }
+                }
+            );
+        }
+
+        return res.status(200).json({
+            message: "Bo chan thanh cong!"
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: err.message
+        });
+    }
+};
+
 module.exports = {
     getMe, 
     updateMe,
     getUserById,
-    block
+    block,
+    unblock,
 }
