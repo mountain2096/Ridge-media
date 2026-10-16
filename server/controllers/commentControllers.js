@@ -6,7 +6,7 @@ const createComment = async (req, res) =>{
     try{
         const { content } = req.body;
         const { postId } = req.params
-        const post = await Post.findById({ postId });
+        const post = await Post.findById(postId);
 
         if(!content){
             return res.status(400).json({
@@ -29,7 +29,7 @@ const createComment = async (req, res) =>{
             await Notification.create({
                 recipientId: post.authorId,
                 senderId: req.user._id,
-                typeL:"comment",
+                type:"comment",
                 commentId: comment.id,
                 postId:post.id
             })
@@ -46,7 +46,7 @@ const createComment = async (req, res) =>{
         }
 
         return res.status(500).json({
-            message: error.message,
+            message: err.message,
         });
     }
     }

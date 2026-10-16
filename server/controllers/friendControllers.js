@@ -145,8 +145,8 @@ const acceptFriendRequest = async (req,res) =>{
         await Notification.create({
             recipientId: request.senderId,
             senderId: request.receiverId,
-            type:"friend_accepted",
-            friendRequest: request._id
+            type:"friend_accept",
+            friendRequestId: request._id
         })
         res.status(200).json({
             message: "Đã chấp nhận lời mời kết bạn!",

@@ -37,9 +37,15 @@ const updateMe = async (req, res) =>{
             const existingUser = await User.findOne({
                 username,
                 _id: {$ne: user._id}
-            })
+            });
+
+            if (existingUser) {
+                return res.status(400).json({
+                    message: "Tên người dùng đã được sử dụng!",
+                });
+            }
+            user.username = username;
         } 
-        user.username = username;
         if(bio !== undefined){
             user.bio = bio;
         }

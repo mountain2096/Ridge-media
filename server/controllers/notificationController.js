@@ -19,7 +19,10 @@ const getNotification = async (req, res) =>{
 }
 const markNotificationIsRead = async (req, res) =>{
     try{
-        const notification = await Notification.findById(req.params.id);
+        const notification = await Notification.findOne({
+            _id: req.params.id,
+            recipientId: req.user._id,
+        });
 
         if(!notification){
             return res.status(400).json({

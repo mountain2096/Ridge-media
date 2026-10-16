@@ -39,6 +39,7 @@ const createOrGetConversation = async (req, res) => {
                 $all: [senderId, receiverId],
                 $size: 2,
             },
+            hiddenFor: { $ne: senderId },
         }).populate("participants","username profilePicture");
         
         if (existingConversation) {
@@ -95,6 +96,12 @@ const sendMessage = async (req, res) => {
         if (!isParticipant) {
             return res.status(403).json({
                 message: "Bạn không thuộc cuộc trò chuyện này!",
+            });
+        }
+
+        if (conversation.hiddenFor.some((id) => id.toString() === req.user._id.toString())) {
+            return res.status(404).json({
+                message: "Không tìm thấy cuộc trò chuyện!",
             });
         }
 
@@ -158,6 +165,12 @@ const getMessage = async (req, res) =>{
         if (!isParticipant) {
             return res.status(403).json({
                 message: "Bạn không thuộc cuộc trò chuyện này!",
+            });
+        }
+
+        if (conversation.hiddenFor.some((id) => id.toString() === req.user._id.toString())) {
+            return res.status(404).json({
+                message: "Không tìm thấy cuộc trò chuyện!",
             });
         }
 
@@ -240,6 +253,12 @@ const markMessageIsRead = async (req, res) =>{
             });
         }
 
+        if (conversation.hiddenFor.some((id) => id.toString() === req.user._id.toString())) {
+            return res.status(404).json({
+                message: "Không tìm thấy cuộc trò chuyện!",
+            });
+        }
+
         const result = await Message.updateMany(
             {
                 conversationId,
@@ -250,7 +269,7 @@ const markMessageIsRead = async (req, res) =>{
                 $set: {isRead: true}
             }
         )
-        return res.status(400).json({
+        return res.status(200).json({
             message:"Đã đọc",
             ModifiedCount: result.modifiedCount,
         })

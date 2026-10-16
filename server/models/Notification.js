@@ -34,7 +34,7 @@ const notificationSchema = new mongoose.Schema(
             ref:"Post",
             default: null,
         },
-        commnentId:{
+        commentId:{
             type: mongoose.Schema.Types.ObjectId,
             ref:"Comment",
             default:null

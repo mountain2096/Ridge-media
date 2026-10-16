@@ -23,7 +23,7 @@ const register = async (req, res) =>{
         }
         const normalizedEmail = email.trim().toLowerCase();
 
-        const existingUser = await User.findOne({normalizedEmail});
+        const existingUser = await User.findOne({ email: normalizedEmail });
         if(existingUser){
             return res.status(400).json({
                 message: "Email đã được sử dụng!"
