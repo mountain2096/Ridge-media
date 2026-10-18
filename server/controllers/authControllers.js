@@ -23,6 +23,11 @@ const register = async (req, res) =>{
         }
         const normalizedEmail = email.trim().toLowerCase();
 
+        if(typeof password !== "string" || password.length < 8){
+            return res.status(400).json({
+                message:"Mật khẩu ít nhất 8 ký tự"
+            })
+        }
         const existingUser = await User.findOne({ email: normalizedEmail });
         if(existingUser){
             return res.status(400).json({

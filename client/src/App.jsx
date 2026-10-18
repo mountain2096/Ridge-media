@@ -1,21 +1,69 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import FeedPage from "./pages/FeedPage.jsx";
 import './App.css'
 
-function App() {
+function AuthPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("register");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState({type: "", text:""})
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   async function handleSubmit(event) {
     event.preventDefault();
+    setFeedback({type:"", text:""});
 
     if(activeTab === "register" && password !== confirmPassword) {
-      alert("Mật khẩu và xác nhận mật khẩu không khớp!");
-      return;
+      setFeedback({
+        type:"error",
+        text:"Mật khẩu xác nhận và mật khẩu không trùng khớp!"
+      });
+      return
     }
-    
+
+  async function handleForgotPassword(event){
+    event.preventDefault();
+    setFeedback({type:"", text:""});
+    setIsSubmitting(true);
+
+    try{
+      const formData = new FormData(event.currentTarget);
+      const email = formData.get("email");
+
+      const response = await fetch(
+        `http://localhost5000/api/auth/forgot-password`,
+        {
+          method:"POST",
+          headers:{
+            "Content-type": "application/json",
+          },
+          body:JSON.stringify({email})
+        }
+      );
+
+      const data = await response.json();
+
+      if(!response.ok){
+        throw new Error(data.message || "Không thể gửi yêu cầu.");
+      }
+
+      setFeedback({
+        type:"success",
+        text:data.messag
+      })
+    } catch(err){
+      setFeedback({
+        type:"error",
+        text: err.message || "Không thể kết nối máy chủ"
+      })
+    } finally{
+      setIsSubmitting(false)
+    }
+  }
+    setIsSubmitting(true)
+    try{
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email");
     const passwordValue = formData.get("password");
@@ -24,6 +72,7 @@ function App() {
     const endpoint = 
     activeTab === "register" ? "/api/auth/register" : "/api/auth/login";
 
+    const forgotPassword = "/api/auth/forgot-password"
     const requestBody = 
     activeTab === "register"
     ? {username, email, password: passwordValue}
@@ -44,18 +93,38 @@ function App() {
       const data = await response.json();
 
       if(!response.ok) {
-        throw new Error(data.message || "Yêu cầu thành công!");
+        throw new Error(data.message || "Yêu cầu khong thành công!");
     }
 
     if(activeTab === "login") {
       localStorage.setItem("token", data.token);
+      navigate("/feed");
     }
 
-    alert(data.message);
-    }catch(error) {
-      alert(error.message || "Đã xảy ra lỗi!");
+    setFeedback({
+      type: "success",
+      text: data.message
+    });
+    if(activeTab === 'register'){
+      setPassword("");
+      setConfirmPassword("");
+      setActiveTab("login")
     }
+    }catch(error) {
+      setFeedback({
+        type: "error",
+        text: error.message || "Đã xảy ra lỗi!",
+      });
+    }
+  } catch(err){
+    setFeedback({
+      type:"error",
+      text:err.message || "Không thể kết nối đến máy chủ."
+    }) 
+  } finally{
+    setIsSubmitting(false)
   }
+}
   return (
     <main className="auth-page">
       <section className="welcome-panel">
@@ -90,7 +159,6 @@ function App() {
           >
             Đăng ký
           </button>
-
           <button
             className={`tab ${activeTab === "login" ? "active" : ""}`}
             type="button"
@@ -101,7 +169,41 @@ function App() {
         </div>
 
         <div className="form-placeholders">
-          <form className="register-form" onSubmit={handleSubmit}>
+          {isForgotPassword ? 
+            (<form className='register-form' onSubmit={isForgotPassword}>
+              <input
+              type="email"
+              name="email"
+              placeholder='Email'
+              required/>
+
+              <button
+              className='submit-button'
+              type="submit"
+              disabled={isSubmitting}
+              >
+                {isSubmitting ? "Đang xử lý..." : "Gửi liên kết"}
+              </button>
+
+              {feedback.text && (
+                <p className={`feedback-message ${feedback.type}`}>
+                  {feedback.text}
+                </p>
+              )}
+
+               <button
+               className='back-button'
+                type="button"
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setFeedback({ type: "", text: "" });
+                }}
+              >
+                Quay lại đăng nhập
+              </button>
+            </form>) 
+            :
+            (<form className="register-form" onSubmit={handleSubmit}>
             {activeTab === "register" && (
               <input type="text" name="username" placeholder="Họ và tên" required />
             )}
@@ -112,7 +214,8 @@ function App() {
             name="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            required/>
+            required
+            minLength={8}/>
             {activeTab === "register" && (
               <input 
               type="password" 
@@ -120,13 +223,29 @@ function App() {
               name="confirmPassword"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              required/>
+              required
+              minLength={8}/>
             )}
 
-            <button className="submit-button" type="submit">
-              {activeTab === "register" ? "Đăng ký" : "Đăng nhập"}
+            <button className="submit-button" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Đang xử lý..." : activeTab === "register" ? "Đăng ký" : "Đăng nhập"}
             </button>
 
+            {activeTab !== "register" && (
+              <a
+              className='forgot-password'
+              href='#'
+              onClick={(event) =>{
+                event.preventDefault();
+                setFeedback({type:"", text:""});
+                setIsForgotPassword(true);
+              }}>
+                Quên mật khẩu?
+              </a>
+            )}
+            {feedback.text && (
+              <p className={`feedback-message ${feedback.type}`}>{feedback.text}</p>
+            )}
             <p className="form-note">
               {activeTab === "register"
                 ? "Bạn đã có tài khoản? "
@@ -158,11 +277,37 @@ function App() {
                 <button className="social-button apple" type="button">●</button>
               </div>
             </div>
-          </form>
+          </form>)}
         </div>
       </section>
     </main>
   )
 }
 
-export default App
+
+function ProtectedFeed() {
+  const token = localStorage.getItem("token");
+
+  return token ? <FeedPage /> : <Navigate to="/" replace />;
+}
+
+function AuthRoute(){
+  const token = localStorage.getItem('token');
+
+  return token ? <Navigate to="/feed" replace/>:<AuthPage/>
+}
+function App() {
+
+  return (
+    <Routes>
+      <Route path="/" element={<AuthRoute />} />
+      <Route
+        path="/feed"
+        element={<ProtectedFeed/>}
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default App;
