@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate, Link } from "react-router-dom";
 import FeedPage from "./pages/FeedPage.jsx";
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import './App.css'
 
 function AuthPage() {
@@ -10,7 +12,7 @@ function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({type: "", text:""})
-  const [isForgotPassword, setIsForgotPassword] = useState(false);
+
   async function handleSubmit(event) {
     event.preventDefault();
     setFeedback({type:"", text:""});
@@ -23,45 +25,6 @@ function AuthPage() {
       return
     }
 
-  async function handleForgotPassword(event){
-    event.preventDefault();
-    setFeedback({type:"", text:""});
-    setIsSubmitting(true);
-
-    try{
-      const formData = new FormData(event.currentTarget);
-      const email = formData.get("email");
-
-      const response = await fetch(
-        `http://localhost5000/api/auth/forgot-password`,
-        {
-          method:"POST",
-          headers:{
-            "Content-type": "application/json",
-          },
-          body:JSON.stringify({email})
-        }
-      );
-
-      const data = await response.json();
-
-      if(!response.ok){
-        throw new Error(data.message || "Không thể gửi yêu cầu.");
-      }
-
-      setFeedback({
-        type:"success",
-        text:data.messag
-      })
-    } catch(err){
-      setFeedback({
-        type:"error",
-        text: err.message || "Không thể kết nối máy chủ"
-      })
-    } finally{
-      setIsSubmitting(false)
-    }
-  }
     setIsSubmitting(true)
     try{
     const formData = new FormData(event.currentTarget);
@@ -72,7 +35,6 @@ function AuthPage() {
     const endpoint = 
     activeTab === "register" ? "/api/auth/register" : "/api/auth/login";
 
-    const forgotPassword = "/api/auth/forgot-password"
     const requestBody = 
     activeTab === "register"
     ? {username, email, password: passwordValue}
@@ -169,41 +131,7 @@ function AuthPage() {
         </div>
 
         <div className="form-placeholders">
-          {isForgotPassword ? 
-            (<form className='register-form' onSubmit={isForgotPassword}>
-              <input
-              type="email"
-              name="email"
-              placeholder='Email'
-              required/>
-
-              <button
-              className='submit-button'
-              type="submit"
-              disabled={isSubmitting}
-              >
-                {isSubmitting ? "Đang xử lý..." : "Gửi liên kết"}
-              </button>
-
-              {feedback.text && (
-                <p className={`feedback-message ${feedback.type}`}>
-                  {feedback.text}
-                </p>
-              )}
-
-               <button
-               className='back-button'
-                type="button"
-                onClick={() => {
-                  setIsForgotPassword(false);
-                  setFeedback({ type: "", text: "" });
-                }}
-              >
-                Quay lại đăng nhập
-              </button>
-            </form>) 
-            :
-            (<form className="register-form" onSubmit={handleSubmit}>
+            <form className="register-form" onSubmit={handleSubmit}>
             {activeTab === "register" && (
               <input type="text" name="username" placeholder="Họ và tên" required />
             )}
@@ -215,7 +143,7 @@ function AuthPage() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
-            minLength={8}/>
+            minLength={6}/>
             {activeTab === "register" && (
               <input 
               type="password" 
@@ -224,7 +152,7 @@ function AuthPage() {
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               required
-              minLength={8}/>
+              minLength={6}/>
             )}
 
             <button className="submit-button" type="submit" disabled={isSubmitting}>
@@ -232,16 +160,9 @@ function AuthPage() {
             </button>
 
             {activeTab !== "register" && (
-              <a
-              className='forgot-password'
-              href='#'
-              onClick={(event) =>{
-                event.preventDefault();
-                setFeedback({type:"", text:""});
-                setIsForgotPassword(true);
-              }}>
+              <Link className="forgot-password" to="/forgot-password">
                 Quên mật khẩu?
-              </a>
+              </Link>
             )}
             {feedback.text && (
               <p className={`feedback-message ${feedback.type}`}>{feedback.text}</p>
@@ -277,7 +198,7 @@ function AuthPage() {
                 <button className="social-button apple" type="button">●</button>
               </div>
             </div>
-          </form>)}
+          </form>
         </div>
       </section>
     </main>
@@ -305,6 +226,8 @@ function App() {
         path="/feed"
         element={<ProtectedFeed/>}
       />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage></ResetPasswordPage>}></Route>
+      <Route path="/forgot-password" element={<ForgotPasswordPage></ForgotPasswordPage>}></Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

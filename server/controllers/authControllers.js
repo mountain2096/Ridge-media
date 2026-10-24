@@ -23,9 +23,9 @@ const register = async (req, res) =>{
         }
         const normalizedEmail = email.trim().toLowerCase();
 
-        if(typeof password !== "string" || password.length < 8){
+        if(typeof password !== "string" || password.length < 6){
             return res.status(400).json({
-                message:"Mật khẩu ít nhất 8 ký tự"
+                message:"Mật khẩu ít nhất 6 ký tự"
             })
         }
         const existingUser = await User.findOne({ email: normalizedEmail });
@@ -114,20 +114,18 @@ const forgotPassword = async (req, res) =>{
 
         if(!email){
             return res.status(400).json({
-                message:"Vui long nhap email"
+                message:"Vui lòng nhập email"
             })
         }
 
         const user = await User.findOne({
             email: email.trim().toLowerCase()
         })
-
-        const message =  "Neu email da dang ky, huong dan dat lai mat khau se duoc gui.";
-
         if(!user){
-            return res.status(200).json({ message });
+            return res.status(200).json({ message:"Email chưa được đăng ký" });
         }
 
+        const message =  "Đã gửi đường dẫn đặt lại mật khẩu đến gmail!";
         const resetToken = randomBytes(32).toString("hex");
 
         user.resetPasswordToken = 
@@ -148,8 +146,8 @@ const forgotPassword = async (req, res) =>{
             await transport.sendMail({
                 from: process.env.EMAIL_USER,
                 to: user.email,
-                subject: "Dat lai mat khau Ridge",
-                text: `Truy cap lien ket sau de dat lai mat khau: ${resetURL}\nLien ket het han sau 15 phut.`
+                subject: "Đặt lại mật khẩu",
+                text: `Truy cập liên kết sau để đặt lại mật khẩu: ${resetURL}\nLiên kết hết hạn sau 15 phút.`
             });
         } catch (emailError) {
             user.resetPasswordToken = null;
@@ -164,7 +162,7 @@ const forgotPassword = async (req, res) =>{
         console.error(err);
 
         return res.status(500).json({
-            message: "Khong the gui email dat lai mat khau!"
+            message: "Không thể gửi email đặt lại mật khẩu!"
         });
     }
 };
@@ -174,22 +172,20 @@ const resetPassword = async (req, res) => {
 
         if (!password || !confirmPassword) {
             return res.status(400).json({
-                message: "Vui long nhap day du mat khau!"
+                message: "Vui lòng nhập đầy đủ mật khẩu!"
             });
         }
 
         if (password !== confirmPassword) {
             return res.status(400).json({
-                message: "Mat khau xac nhan khong khop!"
+                message: "Mật khẩu xác nhận không khớp!"
             });
         }
-        if (password.length < 8) {
+        if (password.length < 6) {
             return res.status(400).json({
-            message: "Mat khau phai co it nhat 8 ky tu!"
+            message: "Mật khẩu phải có ít nhất 6 ký tự!!"
             });
         }
-
-        // Băm token nhận từ liên kết để đối chiếu database
         const hashedToken = 
             createHash("sha256")
             .update(req.params.token)
@@ -202,21 +198,18 @@ const resetPassword = async (req, res) => {
 
         if (!user) {
             return res.status(400).json({
-                message: "Token khong hop le hoac da het han!"
+                message: "Token hết hạn!"
             });
         }
-
-        // Băm mật khẩu mới giống cách đăng ký
         user.password = await bcrypt.hash(password, 10);
 
-        // Xóa token để không thể sử dụng lại
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
 
         await user.save();
 
         return res.status(200).json({
-            message: "Dat lai mat khau thanh cong!"
+            message: "Đặt lại mật khẩu thành công!"
         });
     } catch (err) {
         return res.status(500).json({

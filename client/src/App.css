@@ -80,6 +80,7 @@ body {
 .tabs {
   display: flex;
   border-bottom: 2px solid #222;
+  justify-content: center;
 }
 
 .tab {
