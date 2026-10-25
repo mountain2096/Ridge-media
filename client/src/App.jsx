@@ -193,9 +193,9 @@ function AuthPage() {
               </div>
 
               <div className="social-buttons">
-                <button className="social-button google" type="button">G</button>
-                <button className="social-button facebook" type="button">f</button>
-                <button className="social-button apple" type="button">●</button>
+                <button className="social-button google" type="button" disabled title="Đăng nhập Google chưa được cấu hình">G</button>
+                <button className="social-button facebook" type="button" disabled title="Đăng nhập Facebook chưa được cấu hình">f</button>
+                <button className="social-button apple" type="button" disabled title="Đăng nhập Apple chưa được cấu hình">●</button>
               </div>
             </div>
           </form>

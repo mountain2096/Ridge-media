@@ -73,12 +73,16 @@ const sendFriendRequest = async (req, res) =>{
             }
         );
 
-        await Notification.create({
-            recipientId: receiverId,
-            senderId,
-            type:"friend_request",
-            friendRequestId: friendRequest._id
-        })
+        try {
+            await Notification.create({
+                recipientId: receiverId,
+                senderId,
+                type: "friend_request",
+                friendRequestId: friendRequest._id,
+            });
+        } catch (notificationError) {
+            console.error("Could not create friend request notification:", notificationError);
+        }
         res.status(201).json({
             message:"Đã gửi lời mời kết bạn!",
             friendRequest
@@ -111,7 +115,7 @@ const acceptFriendRequest = async (req,res) =>{
         const request = await FriendRequest.findById(req.params.id);
 
         if(!request){
-            return res.status(200).json({
+            return res.status(404).json({
                 message:"Lời mời kết bạn không tồn tại!"
             })
         }
@@ -128,26 +132,27 @@ const acceptFriendRequest = async (req,res) =>{
             });
         }
 
+        await Promise.all([
+            User.findByIdAndUpdate(request.senderId, {
+                $addToSet: { friend: request.receiverId },
+            }),
+            User.findByIdAndUpdate(request.receiverId, {
+                $addToSet: { friend: request.senderId },
+            }),
+        ]);
+
         request.status = "accepted";
         await request.save();
-
-        await User.findByIdAndUpdate(request.senderId, {
-            $addToSet:{
-                friend: request.receiverId
-            }
-        })
-
-        await User.findByIdAndUpdate(request.receiverId, {
-            $addToSet:{
-                friend: request.senderId
-            }
-        })
-        await Notification.create({
-            recipientId: request.senderId,
-            senderId: request.receiverId,
-            type:"friend_accept",
-            friendRequestId: request._id
-        })
+        try {
+            await Notification.create({
+                recipientId: request.senderId,
+                senderId: request.receiverId,
+                type: "friend_accept",
+                friendRequestId: request._id,
+            });
+        } catch (notificationError) {
+            console.error("Could not create friend acceptance notification:", notificationError);
+        }
         res.status(200).json({
             message: "Đã chấp nhận lời mời kết bạn!",
             friendRequest: request,
@@ -163,14 +168,14 @@ const rejectFriendRequest = async (req, res) =>{
         const request = await FriendRequest.findById(req.params.id);
 
         if(!request){
-            return res.status(200).json({
+            return res.status(404).json({
                 message:"Lời mời kết bạn không tồn tại!"
             })
         }
 
         if(request.receiverId.toString() !== req.user._id.toString()){
             return res.status(403).json({
-                message: "Bạn không có quyền chấp nhận lời mời này!",
+                message: "Bạn không có quyền từ chối lời mời này!",
             });
         }
 
@@ -185,7 +190,7 @@ const rejectFriendRequest = async (req, res) =>{
 
         res.status(200).json({
             message:"Bạn đã từ chối lời mời kết bạn!",
-            FriendRequest: request,
+            friendRequest: request,
         })
     } catch(err){
         res.status(400).json({

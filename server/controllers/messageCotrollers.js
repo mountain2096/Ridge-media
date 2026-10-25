@@ -75,7 +75,7 @@ const sendMessage = async (req, res) => {
         const { content } = req.body;
         const { conversationId } = req.params;
 
-        if (!content || !content.trim()) {
+        if (typeof content !== "string" || !content.trim()) {
             return res.status(400).json({
                 message: "Nội dung tin nhắn không được để trống!",
             });
@@ -124,11 +124,15 @@ const sendMessage = async (req, res) => {
         )
 
         if(receiverId){
-            await Notification.create({
-                recipientId: receiverId,
-                senderId: req.user._id,
-                type: "message"
-            })
+            try {
+                await Notification.create({
+                    recipientId: receiverId,
+                    senderId: req.user._id,
+                    type: "message",
+                });
+            } catch (notificationError) {
+                console.error("Could not create message notification:", notificationError);
+            }
         }
 
         res.status(201).json({
@@ -176,7 +180,7 @@ const getMessage = async (req, res) =>{
 
         const message = await Message.find({conversationId})
         .populate("senderId", "username profilePicture")
-        .sort({ createdAt: -1})
+        .sort({ createdAt: 1})
 
         res.status(200).json({
             message,
@@ -208,7 +212,7 @@ const getConversations = async (req, res) =>{
                 path:"senderId",
                 select:"username profilePicture"
             }
-        }).sort({ createdAt: -1})
+        }).sort({ updatedAt: -1})
 
         const conversationWithUnreadCount = await Promise.all(
             conversation.map(async (conversation) =>{

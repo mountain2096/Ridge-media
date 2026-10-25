@@ -8,7 +8,7 @@ const createComment = async (req, res) =>{
         const { postId } = req.params
         const post = await Post.findById(postId);
 
-        if(!content){
+        if(typeof content !== "string" || !content.trim()){
             return res.status(400).json({
                 message:"Nội dung không được để trống!"
             })
@@ -23,16 +23,20 @@ const createComment = async (req, res) =>{
         const comment = await Comment.create({
             authorId: req.user._id,
             postId,
-            content
+            content: content.trim(),
         })
         if(post.authorId.toString() !== req.user._id.toString()){
-            await Notification.create({
-                recipientId: post.authorId,
-                senderId: req.user._id,
-                type:"comment",
-                commentId: comment.id,
-                postId:post.id
-            })
+            try {
+                await Notification.create({
+                    recipientId: post.authorId,
+                    senderId: req.user._id,
+                    type: "comment",
+                    commentId: comment.id,
+                    postId: post.id,
+                });
+            } catch (notificationError) {
+                console.error("Could not create comment notification:", notificationError);
+            }
         }
         res.status(200).json({
             message:"Đã đăng bình luận!",
@@ -65,8 +69,16 @@ const getCommentByPost = async (req, res) =>{
         .populate("authorId","username profilePicture")
         .sort({ createdAt : 1})
 
+        const commentsWithOwner = comment.map((item) => {
+        const commentData = item.toObject();
+
+        commentData.isMine =
+            item.authorId?._id?.toString() === req.user._id.toString();
+
+        return commentData;
+        });
         res.status(200).json({
-            comment,
+            comment: commentsWithOwner,
         })
     } catch (error) {
         res.status(400).json({
@@ -78,7 +90,7 @@ const updateComment = async (req, res) =>{
     try{
         const { content } = req.body;
 
-        if(!content || !content.trim()){
+        if(typeof content !== "string" || !content.trim()){
             return res.status(400).json({
                 message:"Nội dung không hợp lệ!"
             })
@@ -93,12 +105,12 @@ const updateComment = async (req, res) =>{
         }
 
         if(comment.authorId.toString() !== req.user._id.toString()){
-            return res.status(400).json({
+            return res.status(403).json({
                 message:"Bạn không có quyền chỉnh sửa bình luận này!"
             })
         }
 
-        comment.content = content;
+        comment.content = content.trim();
 
         await comment.save()
         res.status(200).json({
@@ -122,8 +134,8 @@ const deleteComment = async (req, res) =>{
         }
 
         if(comment.authorId.toString() !== req.user._id.toString()){
-            return res.status(400).json({
-                message:"Bạn không có quyền chỉnh sửa bình luận này!"
+            return res.status(403).json({
+                message:"Bạn không có quyền xóa bình luận này!"
             })
         }
 

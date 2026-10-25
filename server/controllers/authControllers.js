@@ -16,12 +16,18 @@ const register = async (req, res) =>{
     try{
         const {username, email, password} = req.body;
 
-        if(!username || !email || !password){
+        if(typeof username !== "string" || !username.trim() ||
+           typeof email !== "string" || !email.trim() ||
+           typeof password !== "string" || !password){
             return res.status(400).json({
                 message:"Vui lòng điền đầy đủ thông tin!",
             })
         }
         const normalizedEmail = email.trim().toLowerCase();
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+            return res.status(400).json({ message: "Email không hợp lệ!" });
+        }
 
         if(typeof password !== "string" || password.length < 6){
             return res.status(400).json({
@@ -38,12 +44,12 @@ const register = async (req, res) =>{
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
-            username,
-            email,
+            username: username.trim(),
+            email: normalizedEmail,
             password: hashedPassword
         })
 
-        res.status(200).json({
+        res.status(201).json({
             message:"Đăng kí thành công!",
             user:{
                 id: user._id,
@@ -52,6 +58,9 @@ const register = async (req, res) =>{
             }
         });
     } catch(error){
+        if (error.code === 11000) {
+            return res.status(400).json({ message: "Email đã được sử dụng!" });
+        }
         console.error(error);
         res.status(500).json({
             message: error.message
@@ -64,7 +73,8 @@ const login = async(req,res) =>{
     try{
         const {email, password} = req.body;
 
-        if(!email||!password){
+        if(typeof email !== "string" || !email.trim() ||
+           typeof password !== "string" || !password){
             return res.status(400).json({
                 message:"Vui lòng nhập email và mật khẩu!"
             })
@@ -112,10 +122,14 @@ const forgotPassword = async (req, res) =>{
     try{
         const { email } = req.body;
 
-        if(!email){
+        if(typeof email !== "string" || !email.trim()){
             return res.status(400).json({
                 message:"Vui lòng nhập email"
             })
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+            return res.status(400).json({ message: "Email không hợp lệ!" });
         }
 
         const user = await User.findOne({
@@ -170,7 +184,8 @@ const resetPassword = async (req, res) => {
     try {
         const { password, confirmPassword } = req.body;
 
-        if (!password || !confirmPassword) {
+        if (typeof password !== "string" || typeof confirmPassword !== "string" ||
+            !password || !confirmPassword) {
             return res.status(400).json({
                 message: "Vui lòng nhập đầy đủ mật khẩu!"
             });

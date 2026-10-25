@@ -10,7 +10,6 @@ function ResetPasswordPage(){
     async function handleSubmit(event){
         event.preventDefault();
         setFeedback({type:"", text:""});
-        setIsSubmitting(true);
 
         if(password !== confirmPassword){
             setFeedback({
@@ -19,6 +18,7 @@ function ResetPasswordPage(){
             });
             return
         }
+        setIsSubmitting(true);
 try{
         const response = await fetch(
             `http://localhost:5000/api/auth/reset-password/${token}`,

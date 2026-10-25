@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "nodemon server/server.js"
+    "dev": "nodemon server/server.js",
+    "dev:client": "npm run dev --prefix client",
+    "dev:all": "concurrently -k -n API,WEB \"npm run dev\" \"npm run dev:client\""
   },
   "keywords": [],
   "author": "",
@@ -17,9 +19,11 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.2",
+    "multer": "^2.5.0",
     "nodemailer": "^10.1.1"
   },
   "devDependencies": {
+    "concurrently": "^10.0.6",
     "nodemon": "^3.1.14"
   }
 }

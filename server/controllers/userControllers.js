@@ -2,9 +2,56 @@ const User = require("../models/User");
 const FriendRequest = require("../models/FriendRequest");
 const Conversation = require("../models/Conversation")
 
+const searchUsers = async (req, res) => {
+    try {
+        if (req.query.q !== undefined && typeof req.query.q !== "string") {
+            return res.status(400).json({ message: "Từ khóa tìm kiếm không hợp lệ!" });
+        }
+        const query = (req.query.q || "").trim();
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const incomingRequests = await FriendRequest.find({
+            receiverId: req.user._id,
+            status: "pending",
+        }).select("senderId");
+        const excludedIds = [
+            req.user._id,
+            ...req.user.friend,
+            ...req.user.blockList,
+            ...incomingRequests.map((request) => request.senderId),
+        ];
+
+        const users = await User.find({
+            _id: { $nin: excludedIds },
+            username: { $regex: escapedQuery, $options: "i" },
+            blockList: { $ne: req.user._id },
+        })
+            .select("username profilePicture bio")
+            .limit(20)
+            .sort({ username: 1 });
+
+        const outgoingRequests = await FriendRequest.find({
+            senderId: req.user._id,
+            status: "pending",
+        }).select("receiverId");
+        const pendingUserIds = new Set(
+            outgoingRequests.map((request) => request.receiverId.toString())
+        );
+
+        res.status(200).json({
+            users: users.map((user) => ({
+                ...user.toObject(),
+                hasPendingRequest: pendingUserIds.has(user._id.toString()),
+            })),
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const getMe = async (req,res) =>{
     try{
-        const user = await User.findById(req.user.id).select("-password");
+        const user = await User.findById(req.user.id)
+            .select("-password -resetPasswordToken -resetPasswordExpires");
 
         if(!user){
             return res.status(404).json({
@@ -22,6 +69,19 @@ const getMe = async (req,res) =>{
     }
 }
 
+const getBlockedUsers = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+            .populate("blockList", "username profilePicture");
+        if (!user) {
+            return res.status(404).json({ message: "Không tìm thấy người dùng!" });
+        }
+        res.status(200).json({ blockedUsers: user.blockList.filter(Boolean) });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const updateMe = async (req, res) =>{
     try{
         const {username, bio, profilePicture, coverPicture} = req.body;
@@ -33,9 +93,27 @@ const updateMe = async (req, res) =>{
                 message: "Không tìm thấy người dùng!",
             });
         }
-        if(username !== undefined){
+        if (bio !== undefined && (typeof bio !== "string" || bio.length > 255)) {
+            return res.status(400).json({
+                message: "Phần giới thiệu tối đa 255 ký tự!",
+            });
+        }
+        if (profilePicture !== undefined && typeof profilePicture !== "string") {
+            return res.status(400).json({ message: "Đường dẫn ảnh đại diện không hợp lệ!" });
+        }
+        if (coverPicture !== undefined && typeof coverPicture !== "string") {
+            return res.status(400).json({ message: "Đường dẫn ảnh bìa không hợp lệ!" });
+        }
+        if (username !== undefined) {
+            if (typeof username !== "string" || !username.trim()) {
+                return res.status(400).json({
+                    message: "Tên người dùng không được để trống!",
+                });
+            }
+            const normalizedUsername = username.trim();
+            const escapedUsername = normalizedUsername.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
             const existingUser = await User.findOne({
-                username,
+                username: { $regex: `^${escapedUsername}$`, $options: "i" },
                 _id: {$ne: user._id}
             });
 
@@ -44,7 +122,7 @@ const updateMe = async (req, res) =>{
                     message: "Tên người dùng đã được sử dụng!",
                 });
             }
-            user.username = username;
+            user.username = normalizedUsername;
         } 
         if(bio !== undefined){
             user.bio = bio;
@@ -78,7 +156,8 @@ const updateMe = async (req, res) =>{
 }
 const getUserById = async (req,res) =>{
     try{
-        const user = await User.findById(req.params.id).select("-password -email");
+        const user = await User.findById(req.params.id)
+            .select("-password -email -resetPasswordToken -resetPasswordExpires");
 
         if(!user){
             return res.status(404).json({
@@ -243,7 +322,9 @@ const unblock = async (req, res) => {
 };
 
 module.exports = {
+    searchUsers,
     getMe, 
+    getBlockedUsers,
     updateMe,
     getUserById,
     block,
