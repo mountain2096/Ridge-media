@@ -30,3 +30,9 @@
 - Lọc bài đang hoạt động theo privacy public/friends/private và quan hệ bạn bè.
 - Loại bài của cả người người xem chặn lẫn người đã chặn người xem; truy vấn phân trang mặc định 20, tối đa 50 và trả metadata.
 - Thêm test kiểm tra bộ lọc, phân trang và giới hạn page size.
+
+## Giai đoạn 5: chặn nhắn tin
+
+- Chặn tạo hội thoại, gửi tin, đọc lịch sử và đánh dấu đã đọc nếu một trong hai người chặn người kia.
+- Lọc hội thoại bị block khỏi danh sách. Kiểm tra blockList từ hai phía, kể cả dữ liệu hội thoại cũ.
+- Thêm test cho block từ phía người nhận và người gửi; không tạo tin nhắn khi bị chặn.
