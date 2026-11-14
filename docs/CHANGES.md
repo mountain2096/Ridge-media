@@ -43,3 +43,10 @@
 - Thêm API Admin liệt kê người dùng, khóa/mở khóa tài khoản, xem báo cáo và cập nhật trạng thái. Tất cả `/api/admin` được bảo vệ bằng `protect` và `requireAdmin`.
 - Bổ sung `reviewedBy`/`reviewedAt` để lưu người và thời điểm xử lý. Trạng thái `actioned` ghi nhận quyết định Admin nhưng không tự xóa bài hay khóa tài khoản; giữ nguyên nội dung và tài khoản trừ khi Admin dùng thao tác tương ứng.
 - Thêm test cho báo cáo trùng, khóa tài khoản và audit thông tin người duyệt.
+
+## Giai đoạn 7: đổi mật khẩu và chia sẻ
+
+- Thêm endpoint đổi mật khẩu đăng nhập, bắt buộc mật khẩu hiện tại, xác nhận và chính sách tối thiểu 8 ký tự gồm chữ hoa, chữ thường và số. Áp dụng cùng chính sách cho đăng ký và đặt lại mật khẩu; không áp đặt lên đăng nhập tài khoản cũ.
+- Đăng ký kiểm tra confirmPassword ở server; email không tồn tại và sai mật khẩu đều trả 401 (thay đổi 401 đã có sẵn trước khi bắt đầu).
+- Thêm chia sẻ bài công khai (hoặc bài riêng của chính người chia sẻ), lưu `originalPostId` và gửi notification `share`. Bài chia sẻ bị xóa mềm cùng nguồn; quyền riêng tư/block nguồn được kiểm tra khi đọc bài và trong feed.
+- Test các nhánh đổi hành vi trọng yếu; giao diện đăng ký/reset/share và đổi mật khẩu hoàn tất ở giai đoạn 8.

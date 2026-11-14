@@ -7,7 +7,8 @@ const { createPost,
         deletePost,
          likePost,
           unlikePost,
-          toggleSavePost } = require("../controllers/postControllers");
+          toggleSavePost,
+          sharePost } = require("../controllers/postControllers");
 
 const protect = require("../middlewares/protect");
 const router = express.Router();
@@ -20,4 +21,5 @@ router.delete("/:id", protect, deletePost);
 router.post("/:id/like", protect, likePost);
 router.delete("/:id/like", protect, unlikePost);
 router.put("/:id/save", protect, toggleSavePost);
+router.post("/:id/share", protect, sharePost);
 module.exports = router;

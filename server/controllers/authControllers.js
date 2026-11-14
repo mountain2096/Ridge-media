@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
 
+const validatePassword = (password) => typeof password === "string" && password.length >= 8 &&
+    /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
+
 const transport = nodemailer.createTransport({
     service: "gmail",
     auth:{
@@ -14,11 +17,11 @@ const transport = nodemailer.createTransport({
 
 const register = async (req, res) =>{
     try{
-        const {username, email, password} = req.body;
+        const {username, email, password, confirmPassword} = req.body;
 
         if(typeof username !== "string" || !username.trim() ||
            typeof email !== "string" || !email.trim() ||
-           typeof password !== "string" || !password){
+           typeof password !== "string" || !password || typeof confirmPassword !== "string" || !confirmPassword){
             return res.status(400).json({
                 message:"Vui lòng điền đầy đủ thông tin!",
             })
@@ -29,10 +32,13 @@ const register = async (req, res) =>{
             return res.status(400).json({ message: "Email không hợp lệ!" });
         }
 
-        if(typeof password !== "string" || password.length < 6){
+        if (!validatePassword(password)) {
             return res.status(400).json({
-                message:"Mật khẩu ít nhất 6 ký tự"
+                message:"Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số."
             })
+        }
+        if (password !== confirmPassword) {
+            return res.status(400).json({ message: "Mật khẩu xác nhận không khớp!" });
         }
         const existingUser = await User.findOne({ email: normalizedEmail });
         if(existingUser){
@@ -83,7 +89,7 @@ const login = async(req,res) =>{
         const user = await User.findOne({email: email.trim().toLowerCase()});
 
         if(!user){
-            return res.status(404).json({
+            return res.status(401).json({
                 message:"Email hoặc password không đúng!"
             })
         }
@@ -98,7 +104,7 @@ const login = async(req,res) =>{
             })
         }
 
-                if (user.isLocked) {
+        if (user.isLocked) {
             return res.status(403).json({
                 message: "Tài khoản của bạn hiện đã bị vô hiệu hóa"
             });
@@ -204,9 +210,9 @@ const resetPassword = async (req, res) => {
                 message: "Mật khẩu xác nhận không khớp!"
             });
         }
-        if (password.length < 6) {
+        if (!validatePassword(password)) {
             return res.status(400).json({
-            message: "Mật khẩu phải có ít nhất 6 ký tự!!"
+            message: "Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số."
             });
         }
         const hashedToken = 
@@ -240,9 +246,40 @@ const resetPassword = async (req, res) => {
         });
     }
 };
+
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+        if (typeof currentPassword !== "string" || !currentPassword ||
+            typeof newPassword !== "string" || !newPassword ||
+            typeof confirmPassword !== "string" || !confirmPassword) {
+            return res.status(400).json({ message: "Vui lòng nhập đầy đủ mật khẩu!" });
+        }
+        if (!validatePassword(newPassword)) {
+            return res.status(400).json({ message: "Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số." });
+        }
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: "Mật khẩu xác nhận không khớp!" });
+        }
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng!" });
+        if (!(await bcrypt.compare(currentPassword, user.password))) {
+            return res.status(401).json({ message: "Mật khẩu hiện tại không đúng!" });
+        }
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+        await user.save();
+        return res.status(200).json({ message: "Đổi mật khẩu thành công!" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     register,
     login,
     resetPassword,
-    forgotPassword
+    forgotPassword,
+    changePassword,
 }

@@ -27,7 +27,11 @@ test("feed filters privacy and both block directions, then paginates", async () 
         limit(value) { limit = value; return this; },
         then(resolve, reject) { return Promise.resolve([]).then(resolve, reject); },
     };
-    Post.find = (query) => { filter = query; return chain; };
+    Post.find = (query) => {
+        if (query.authorId?.$in) return { distinct: async () => ["source-post"] };
+        filter = query;
+        return chain;
+    };
     Post.countDocuments = async () => 73;
     User.find = () => ({ select: async () => [{ _id: "blocked-me" }] });
 
@@ -41,10 +45,14 @@ test("feed filters privacy and both block directions, then paginates", async () 
         assert.equal(res.statusCode, 200);
         assert.equal(filter.status, "active");
         assert.deepEqual(filter.authorId.$nin, ["blocked", "blocked-me"]);
-        assert.deepEqual(filter.$or, [
+        assert.deepEqual(filter.$and[0].$or, [
             { privacy: "public" },
             { authorId: "viewer" },
             { privacy: "friends", authorId: { $in: ["friend"] } },
+        ]);
+        assert.deepEqual(filter.$and[1].$or, [
+            { originalPostId: null },
+            { originalPostId: { $nin: ["source-post"] } },
         ]);
         assert.equal(skip, 20);
         assert.equal(limit, 10);

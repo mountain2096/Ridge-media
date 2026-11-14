@@ -16,8 +16,10 @@ function response() {
 
 test("post owner and admin can soft-delete; deleted posts are not physically removed", async () => {
     const originalFindOne = Post.findOne;
+    const originalUpdateMany = Post.updateMany;
     const deletedPost = { authorId: "owner", status: "active", save: async function () {} };
     Post.findOne = async () => deletedPost;
+    Post.updateMany = async () => ({ modifiedCount: 0 });
 
     try {
         const res = response();
@@ -26,6 +28,7 @@ test("post owner and admin can soft-delete; deleted posts are not physically rem
         assert.equal(deletedPost.status, "deleted");
     } finally {
         Post.findOne = originalFindOne;
+        Post.updateMany = originalUpdateMany;
     }
 });
 
