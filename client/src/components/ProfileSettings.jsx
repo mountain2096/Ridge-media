@@ -9,6 +9,8 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
   const [dateOfBirth, setDateOfBirth] = useState(currentUser?.dateOfBirth ? currentUser.dateOfBirth.slice(0, 10) : "");
   const [profilePictureFile, setProfilePictureFile] = useState(null);
   const [coverPictureFile, setCoverPictureFile] = useState(null);
+  const [profilePreviewUrl, setProfilePreviewUrl] = useState("");
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState("");
   const [feedback, setFeedback] = useState({ type: "", text: "" });
   const [isSaving, setIsSaving] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
@@ -18,6 +20,14 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordFeedback, setPasswordFeedback] = useState({ type: "", text: "" });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  useEffect(() => () => {
+    if (profilePreviewUrl) URL.revokeObjectURL(profilePreviewUrl);
+  }, [profilePreviewUrl]);
+
+  useEffect(() => () => {
+    if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+  }, [coverPreviewUrl]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,6 +107,8 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
       setDateOfBirth(data.user.dateOfBirth ? data.user.dateOfBirth.slice(0, 10) : "");
       setProfilePictureFile(null);
       setCoverPictureFile(null);
+      setProfilePreviewUrl("");
+      setCoverPreviewUrl("");
       form.reset();
       setFeedback({ type: "success", text: data.message || "Đã cập nhật hồ sơ." });
     } catch (requestError) {
@@ -133,82 +145,131 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
   }
 
   return (
-    <section className="settings-card">
-      <h1>Cài đặt hồ sơ</h1>
-      <p>Cập nhật tên hiển thị, giới thiệu, ảnh đại diện và ảnh bìa.</p>
-      <form className="settings-form" onSubmit={handleSubmit}>
-        <label>
-          Tên người dùng
-          <input
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            minLength="2"
-            maxLength="40"
-            required
-          />
-        </label>
-        <label>
-          Ngày sinh
-          <input
-            type="date"
-            value={dateOfBirth}
-            max={new Date().toISOString().slice(0, 10)}
-            onChange={(event) => setDateOfBirth(event.target.value)}
-          />
-        </label>
-        <label>
-          Giới thiệu
-          <textarea
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
-            maxLength="255"
-            rows="4"
-          />
-        </label>
-        <label>
-          Tải ảnh đại diện
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={(event) => setProfilePictureFile(event.target.files?.[0] || null)}
-          />
-          {profilePictureFile && <span className="selected-media-name">{profilePictureFile.name}</span>}
-        </label>
-        <label>
-          Tải ảnh bìa
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={(event) => setCoverPictureFile(event.target.files?.[0] || null)}
-          />
-          {coverPictureFile && <span className="selected-media-name">{coverPictureFile.name}</span>}
-        </label>
-        {feedback.text && (
-          <p className={`feedback-message ${feedback.type}`}>{feedback.text}</p>
-        )}
-        <button className="create-post-button" type="submit" disabled={isSaving}>
-          {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
-        </button>
-      </form>
-      <form className="settings-form" onSubmit={handleChangePassword}>
-        <h2>Đổi mật khẩu</h2>
-        <label>Mật khẩu hiện tại<input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label>
-        <label>Mật khẩu mới<input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength="8" required /></label>
-        <label>Xác nhận mật khẩu mới<input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength="8" required /></label>
-        <p className="password-requirement">Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.</p>
-        {passwordFeedback.text && <p className={`feedback-message ${passwordFeedback.type}`}>{passwordFeedback.text}</p>}
-        <button className="create-post-button" type="submit" disabled={isChangingPassword}>{isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}</button>
-      </form>
-      <section className="blocked-users-section">
-        <h2>Người dùng đã chặn</h2>
-        {blockError && <p className="feedback-message error">{blockError}</p>}
-        {blockedUsers.length === 0 && !blockError && <p>Bạn chưa chặn người dùng nào.</p>}
-        {blockedUsers.map((user) => (
-          <div className="blocked-user-row" key={user._id}>
-            <strong>{user.username}</strong>
-            <button type="button" onClick={() => handleUnblock(user._id)}>Bỏ chặn</button>
+    <section className="settings-page" aria-label="Cài đặt">
+      <section className="settings-card card">
+        <header className="settings-card-header">
+          <h1>Cài đặt hồ sơ</h1>
+          <p>Cập nhật tên hiển thị, ngày sinh, giới thiệu và hình ảnh hồ sơ.</p>
+        </header>
+        <form className="settings-form" onSubmit={handleSubmit}>
+          <label>
+            <span>Tên người dùng</span>
+            <input
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              minLength="2"
+              maxLength="40"
+              required
+            />
+          </label>
+          <label>
+            <span>Ngày sinh</span>
+            <input
+              type="date"
+              value={dateOfBirth}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(event) => setDateOfBirth(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>Giới thiệu</span>
+            <textarea
+              value={bio}
+              onChange={(event) => setBio(event.target.value)}
+              maxLength="255"
+              rows="4"
+            />
+          </label>
+          <div className="settings-image-row">
+            <div className="settings-image-field">
+              <span className="settings-label">Ảnh đại diện</span>
+              <label className="settings-file-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m21 16-5-5-9 9" /></svg>
+                Chọn ảnh
+                <input
+                  className="settings-file-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] || null;
+                    setProfilePictureFile(file);
+                    setProfilePreviewUrl(file ? URL.createObjectURL(file) : "");
+                  }}
+                />
+              </label>
+              <span className="settings-file-name">{profilePictureFile?.name || (profilePicture ? "Ảnh hiện tại" : "Chưa chọn ảnh")}</span>
+              {(profilePreviewUrl || profilePicture) && (
+                <img className="settings-avatar-preview" src={profilePreviewUrl || profilePicture} alt="Xem trước ảnh đại diện" />
+              )}
+            </div>
+            <div className="settings-image-field">
+              <span className="settings-label">Ảnh bìa</span>
+              <label className="settings-file-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m21 16-5-5-9 9" /></svg>
+                Chọn ảnh
+                <input
+                  className="settings-file-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] || null;
+                    setCoverPictureFile(file);
+                    setCoverPreviewUrl(file ? URL.createObjectURL(file) : "");
+                  }}
+                />
+              </label>
+              <span className="settings-file-name">{coverPictureFile?.name || (coverPicture ? "Ảnh hiện tại" : "Chưa chọn ảnh")}</span>
+              {(coverPreviewUrl || coverPicture) && (
+                <img className="settings-cover-preview" src={coverPreviewUrl || coverPicture} alt="Xem trước ảnh bìa" />
+              )}
+            </div>
           </div>
-        ))}
+          {feedback.text && (
+            <p className={`feedback-message ${feedback.type}`} role={feedback.type === "error" ? "alert" : "status"} aria-live={feedback.type === "error" ? "assertive" : "polite"}>{feedback.text}</p>
+          )}
+          <div className="settings-submit-row">
+            <button className="settings-submit" type="submit" disabled={isSaving}>
+              {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="settings-card card">
+        <header className="settings-card-header">
+          <h2>Đổi mật khẩu</h2>
+          <p>Cập nhật mật khẩu để bảo vệ tài khoản của bạn.</p>
+        </header>
+        <form className="settings-form" onSubmit={handleChangePassword}>
+          <label><span>Mật khẩu hiện tại</span><input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label>
+          <label><span>Mật khẩu mới</span><input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength="8" required /></label>
+          <label><span>Xác nhận mật khẩu mới</span><input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength="8" required /></label>
+          <p className="password-requirement">Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.</p>
+          {passwordFeedback.text && <p className={`feedback-message ${passwordFeedback.type}`} role={passwordFeedback.type === "error" ? "alert" : "status"} aria-live={passwordFeedback.type === "error" ? "assertive" : "polite"}>{passwordFeedback.text}</p>}
+          <div className="settings-submit-row">
+            <button className="settings-submit" type="submit" disabled={isChangingPassword}>{isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}</button>
+          </div>
+        </form>
+      </section>
+
+      <section className="settings-card card">
+        <header className="settings-card-header">
+          <h2>Người dùng đã chặn</h2>
+          <p>Quản lý những người bạn đã chặn.</p>
+        </header>
+        {blockError && <p className="feedback-message error" role="alert" aria-live="assertive">{blockError}</p>}
+        {blockedUsers.length === 0 && !blockError && <p className="settings-empty">Bạn chưa chặn ai.</p>}
+        <div className="blocked-users-list">
+          {blockedUsers.map((user) => (
+            <div className="blocked-user-row" key={user._id}>
+              <span className="blocked-user-avatar">
+                {user.profilePicture ? <img src={user.profilePicture} alt="" /> : (user.username || "U").charAt(0).toUpperCase()}
+              </span>
+              <strong>{user.username}</strong>
+              <button className="settings-unblock" type="button" onClick={() => handleUnblock(user._id)}>Bỏ chặn</button>
+            </div>
+          ))}
+        </div>
       </section>
     </section>
   );
