@@ -35,9 +35,35 @@ const createPost = async (req,res) =>{
 
 const getPosts = async (req,res) =>{
     try{
-        const posts = await Post.find({status: "active"})
-        .populate("authorId", "username profilePicture")
-        .sort({createdAt: -1});
+        const page = Number(req.query.page ?? 1);
+        const limit = Number(req.query.limit ?? 20);
+        if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > 50) {
+            return res.status(400).json({ message: "Tham số phân trang không hợp lệ!" });
+        }
+
+        const blockedByCurrentUser = req.user.blockList || [];
+        const usersWhoBlockedCurrentUser = await User.find({ blockList: req.user._id }).select("_id");
+        const blockedUserIds = [
+            ...blockedByCurrentUser,
+            ...usersWhoBlockedCurrentUser.map((user) => user._id),
+        ];
+        const filter = {
+            status: "active",
+            authorId: { $nin: blockedUserIds },
+            $or: [
+                { privacy: "public" },
+                { authorId: req.user._id },
+                { privacy: "friends", authorId: { $in: req.user.friend || [] } },
+            ],
+        };
+        const [posts, total] = await Promise.all([
+            Post.find(filter)
+                .populate("authorId", "username profilePicture")
+                .sort({ createdAt: -1 })
+                .skip((page - 1) * limit)
+                .limit(limit),
+            Post.countDocuments(filter),
+        ]);
         
         const postWithLikeStatus = posts.map((post) =>{
             const postData = post.toObject();
@@ -53,7 +79,8 @@ const getPosts = async (req,res) =>{
             return postData
         })
         res.status(200).json({
-            posts: postWithLikeStatus
+            posts: postWithLikeStatus,
+            pagination: { page, limit, total, pages: Math.ceil(total / limit) },
         })
     }catch (error) {
         res.status(500).json({
@@ -63,7 +90,7 @@ const getPosts = async (req,res) =>{
 }
 const getPostById = async (req, res) =>{
     try{
-        const post = await Post.findOne({ _id: req.params.id, status: "active" })   
+        const post = await Post.findOne({ _id: req.params.id, status: "active" })
         .populate("authorId","username profilePicture");
 
         if(!post){

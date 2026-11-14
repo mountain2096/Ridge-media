@@ -24,3 +24,9 @@
 - Các thay đổi controller tương ứng đã có sẵn trong workspace trước khi bắt đầu; rà soát và bổ sung quyền Admin xóa bài viết.
 - Bài viết/bình luận được đánh dấu `deleted`, các truy vấn đọc và thao tác chỉ nhắm bản ghi `active`; tác giả bình luận, chủ bài và Admin có quyền xóa bình luận.
 - Thêm test cho xóa mềm và quyền chủ bài/Admin.
+
+## Giai đoạn 4: newsfeed
+
+- Lọc bài đang hoạt động theo privacy public/friends/private và quan hệ bạn bè.
+- Loại bài của cả người người xem chặn lẫn người đã chặn người xem; truy vấn phân trang mặc định 20, tối đa 50 và trả metadata.
+- Thêm test kiểm tra bộ lọc, phân trang và giới hạn page size.
