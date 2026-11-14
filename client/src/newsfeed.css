@@ -550,6 +550,298 @@
   cursor: wait;
 }
 
+.post-card {
+  overflow: visible;
+  padding: 0;
+  border: 1px solid var(--news-border);
+  border-radius: var(--news-radius-card);
+  background: var(--news-surface);
+}
+
+.post-header {
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 18px 20px 12px;
+}
+
+.post-author {
+  flex: 1;
+  min-width: 0;
+  gap: 12px;
+}
+
+.post-avatar {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #3F6C99;
+  color: var(--news-surface);
+  font-size: 18px;
+}
+
+.post-author-info {
+  min-width: 0;
+  gap: 4px;
+}
+
+.post-author-info > strong {
+  color: var(--news-ink);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.post-author-info .post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--news-muted);
+  font-size: 13px;
+}
+
+.post-author-info .post-meta svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.post-menu-wrap {
+  position: relative;
+  flex: none;
+}
+
+.post-more {
+  display: flex;
+  width: var(--news-tap);
+  height: var(--news-tap);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--news-nav);
+  cursor: pointer;
+}
+
+.post-more:hover {
+  background: var(--news-hover);
+}
+
+.post-more svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.post-menu {
+  top: 48px;
+  z-index: 8;
+  min-width: 232px;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--news-border);
+  border-radius: 14px;
+  background: var(--news-surface);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 14%);
+}
+
+.post-menu button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--news-tap);
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--news-ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.post-menu button:hover {
+  background: var(--news-hover);
+}
+
+.post-menu button svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.post-menu button.danger,
+.post-menu .post-menu-delete {
+  color: var(--news-danger);
+}
+
+.post-edit-form {
+  margin: 4px 20px 16px;
+}
+
+.post-image,
+.post-video {
+  display: block;
+  width: calc(100% - 40px);
+  max-height: 380px;
+  height: 380px;
+  margin: 0 20px;
+  border-radius: 14px;
+  background: #E6EAF4;
+  object-fit: cover;
+}
+
+.post-video {
+  background: #101828;
+}
+
+.post-text {
+  margin: 0;
+  padding: 4px 20px 20px;
+  color: var(--news-ink);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.post-caption {
+  margin: 0;
+  padding: 14px 20px 4px;
+  color: var(--news-ink);
+  overflow-wrap: anywhere;
+}
+
+.post-caption > strong {
+  font-weight: 600;
+}
+
+.shared-post-by {
+  color: var(--news-muted);
+  font-weight: 500;
+}
+
+.post-likes {
+  margin: 0;
+  padding: 6px 20px 10px;
+  color: var(--news-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 12px 10px;
+  border-top: 1px solid #EEF0F6;
+}
+
+.post-action-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.post-action-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: var(--news-tap);
+  min-height: var(--news-tap);
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--news-nav);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.post-action-button:hover {
+  background: var(--news-hover);
+}
+
+.post-action-button svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.post-action-button.liked,
+.post-action-button.liked svg {
+  color: var(--news-like);
+  stroke: var(--news-like);
+}
+
+.post-action-button.saved,
+.post-action-button.saved svg {
+  color: var(--news-accent);
+  stroke: var(--news-accent);
+}
+
+.post-actions > .post-action-button {
+  width: var(--news-tap);
+  padding: 0;
+}
+
+@media (max-width: 480px) {
+  .post-header {
+    padding: 16px 14px 10px;
+  }
+
+  .post-text {
+    padding: 4px 14px 18px;
+    font-size: 20px;
+  }
+
+  .post-image,
+  .post-video {
+    width: calc(100% - 28px);
+    height: auto;
+    min-height: 220px;
+    margin: 0 14px;
+  }
+
+  .post-actions {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .post-action-button {
+    gap: 6px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 600px) {
   .create-post-card {
     padding: 16px;

@@ -1228,9 +1228,14 @@ function FeedPage(){
     const visiblePost = post.originalPostId || post;
     const visibleAuthor = visiblePost.authorId?.username || username;
     const hasLiked = likedPostIds.includes(post._id);
+    const visibilityLabel = post.privacy === "private" ? "Chỉ mình tôi" : post.privacy === "friends" ? "Bạn bè" : "Mọi người";
+    const postDate = post.createdAt
+      ? new Date(post.createdAt).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })
+      : "Mới đăng";
+    const hasMedia = Boolean(visiblePost.image || visiblePost.video);
 
     return (
-      <article className="post-card" id={`post-${post._id}`} key={post._id}>
+      <article className="post-card card" id={`post-${post._id}`} key={post._id}>
         <header className="post-header">
           <div className="post-author">
             <span className="post-avatar">
@@ -1241,7 +1246,12 @@ function FeedPage(){
 
             <div className="post-author-info">
               <strong>{username}</strong>
-              <span>Ridge</span>
+              <span className="post-meta">
+                <span>Ridge</span><span aria-hidden="true">·</span>
+                <span>{postDate}</span><span aria-hidden="true">·</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>
+                <span>{visibilityLabel}</span>
+              </span>
             </div>
           </div>
 
@@ -1255,10 +1265,24 @@ function FeedPage(){
                 openPostMenuId === post._id ? null : post._id
               )}
             >
-              •••
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
             </button>
             {openPostMenuId === post._id && (
-              <div className="post-menu">
+              <div className="post-menu" role="group" aria-label="Tùy chọn bài viết">
+                <button type="button" onClick={() => {
+                  handleToggleSavedPost(post._id, Boolean(post.isSaved));
+                  setOpenPostMenuId(null);
+                }}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>
+                  {post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
+                </button>
+                {!post.isMine && <button className="danger" type="button" onClick={() => {
+                  setOpenPostMenuId(null);
+                  handleReport("post", post._id);
+                }}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0h11l-2 4 2 4H5" /></svg>
+                  Báo cáo bài viết
+                </button>}
                 {post.isMine ? (
                   <>
                     <button
@@ -1279,15 +1303,13 @@ function FeedPage(){
                       Xóa bài viết
                     </button>
                   </>
-                ) : (
-                  <span>Chỉ chủ bài viết mới có thể chỉnh sửa hoặc xóa.</span>
-                )}
+                ) : null}
               </div>
             )}
           </div>
         </header>
 
-        {activeSection === "reels" && visiblePost.video ? (
+        {visiblePost.video ? (
           <video
             className="post-video"
             src={visiblePost.video}
@@ -1301,43 +1323,7 @@ function FeedPage(){
             alt={`Bài viết của ${username}`}
             onError={() => setFailedImagePostIds((ids) => [...ids, post._id])}
           />
-        ) : (
-          <div className="post-image-placeholder">Bài viết không có ảnh</div>
-        )}
-
-        <div className="post-actions">
-          <div className="post-action-group">
-            <button
-              className={`post-action-button ${hasLiked ? "liked" : ""}`}
-              type="button"
-              aria-label={hasLiked ? "Bỏ thích" : "Thích"}
-              onClick={() => handleLike(post._id, hasLiked)}
-            >
-              {hasLiked ? "♥" : "♡"}
-            </button>
-            <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => handleToggleComments(post._id)}>
-              ▢
-            </button>
-            <button className="post-action-button" type="button" aria-label="Chia sẻ bài viết" onClick={() => handleSharePost(post._id)}>
-              ➤
-            </button>
-            {!post.isMine && <button className="post-action-button" type="button" aria-label="Báo cáo bài viết" onClick={() => handleReport("post", post._id)}>Báo cáo</button>}
-          </div>
-
-          <button
-            className={`post-action-button ${post.isSaved ? "saved" : ""}`}
-            type="button"
-            aria-label={post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
-            aria-pressed={Boolean(post.isSaved)}
-            onClick={() => handleToggleSavedPost(post._id, Boolean(post.isSaved))}
-          >
-            {post.isSaved ? "▣" : "♧"}
-          </button>
-        </div>
-
-        <p className="post-likes">
-          {post.likes?.length ?? 0} lượt thích
-        </p>
+        ) : null}
 
         {editingPostId === post._id ? (
           <form
@@ -1366,13 +1352,50 @@ function FeedPage(){
               </button>
             </div>
           </form>
-        ) : (
+        ) : hasMedia ? (
           <p className="post-caption">
             <strong>{username}</strong>{" "}
-            {post.originalPostId && <span className="shared-post-by"> Chia sẻ từ {visibleAuthor}: </span>}
+            {post.originalPostId && <span className="shared-post-by">Chia sẻ từ {visibleAuthor}: </span>}
             {visiblePost.content}
           </p>
+        ) : (
+          <p className="post-text">{visiblePost.content}</p>
         )}
+
+        <p className="post-likes">
+          {post.likes?.length ?? 0} lượt thích
+        </p>
+
+        <div className="post-actions">
+          <div className="post-action-group">
+            <button
+              className={`post-action-button ${hasLiked ? "liked" : ""}`}
+              type="button"
+              aria-label={hasLiked ? "Bỏ thích" : "Thích"}
+              onClick={() => handleLike(post._id, hasLiked)}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg>
+              <span>{hasLiked ? "Đã thích" : "Thích"}</span>
+            </button>
+            <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => handleToggleComments(post._id)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận</span>
+            </button>
+            <button className="post-action-button" type="button" aria-label="Chia sẻ bài viết" onClick={() => handleSharePost(post._id)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>Chia sẻ</span>
+            </button>
+          </div>
+
+          <button
+            className={`post-action-button ${post.isSaved ? "saved" : ""}`}
+            type="button"
+            aria-label={post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
+            aria-pressed={Boolean(post.isSaved)}
+            onClick={() => handleToggleSavedPost(post._id, Boolean(post.isSaved))}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>
+          </button>
+        </div>
+
         {openCommentsFor === post._id && (
           <div>
           <div className="comments-list">
