@@ -1018,6 +1018,23 @@ function FeedPage(){
                   />
                 ) : activeSection === "admin" && currentUser?.isAdmin ? (
                   <AdminPanel />
+                ) : activeSection === "friends" ? (
+                  <section className="friends-page">
+                    <h1 className="section-title">Danh sách bạn bè</h1>
+                    {friends.length === 0 ? <p>Bạn chưa có bạn bè nào.</p> : (
+                      <div className="friends-page-list">
+                        {friends.map((friend) => (
+                          <div className="friend-row" key={friend._id}>
+                            <span className="friend-avatar">
+                              {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                            </span>
+                            <strong className="friend-name">{friend.username}</strong>
+                            <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 ) : activeSection === "connections" ? (
                   <section className="connections-page">
                     <h1 className="section-title">Kết nối với mọi người</h1>
@@ -1497,28 +1514,25 @@ function FeedPage(){
                 )}
                 </section>
                 <aside className="right-column">
-                {friends.length > 0 && (
-                  <section className="side-card">
-                    <h2>Bạn bè</h2>
-                    <div className="people-list">
-                      {friends.map((friend) => (
-                        <div className="person-row" key={friend._id}>
-                          <span className="person-avatar">
-                            {friend.profilePicture ? (
-                              <img src={friend.profilePicture} alt="" />
-                            ) : (friend.username?.charAt(0).toUpperCase() || "?")}
-                          </span>
-                          <div className="person-info">
-                            <strong>{friend.username}</strong>
-                          </div>
-                          <button type="button" onClick={() => handleStartConversation(friend._id)}>
-                            Nhắn tin
-                          </button>
-                        </div>
-                      ))}
+                  <section className="side-card friends-card">
+                    <div className="friends-head">
+                      <h2>Bạn bè</h2>
+                      <button type="button" onClick={() => setActiveSection("friends")}>Xem tất cả</button>
                     </div>
+                    {friends.length === 0 ? <p className="friends-empty">Bạn chưa có bạn bè nào.</p> : (
+                      <div className="friends-list">
+                        {friends.slice(0, 5).map((friend) => (
+                          <div className="friend-row" key={friend._id}>
+                            <span className="friend-avatar">
+                              {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                            </span>
+                            <strong className="friend-name">{friend.username}</strong>
+                            <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </section>
-                )}
                 </aside>
             </div>
             </section>

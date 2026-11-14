@@ -38,6 +38,12 @@
   font: inherit;
 }
 
+.home-layout button,
+.home-layout input:not([type="file"]),
+.home-layout select {
+  min-height: var(--news-tap);
+}
+
 .home-layout :focus-visible {
   outline: 2px solid var(--news-accent);
   outline-offset: 2px;
@@ -265,6 +271,122 @@
   gap: 20px;
   min-width: 0;
   max-width: 340px;
+}
+
+.friends-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--news-border);
+  border-radius: var(--news-radius-card);
+  background: var(--news-surface);
+}
+
+.friends-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.friends-head h2 {
+  margin: 0;
+  color: var(--news-ink);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.friends-head button {
+  min-height: var(--news-tap);
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--news-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.friends-list,
+.friends-page-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.friend-avatar {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #7A5BB0;
+  color: var(--news-surface);
+  font-weight: 700;
+}
+
+.friend-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.friend-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--news-ink);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-outline {
+  flex: 0 0 auto;
+  min-height: var(--news-tap);
+  padding: 0 18px;
+  border: 1.5px solid var(--news-accent);
+  border-radius: 999px;
+  background: var(--news-surface);
+  color: var(--news-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background: var(--news-hover);
+}
+
+.friends-empty {
+  margin: 0;
+  color: var(--news-muted);
+}
+
+.friends-page {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+}
+
+.friends-page-list {
+  padding: 20px;
+  border: 1px solid var(--news-border);
+  border-radius: var(--news-radius-card);
+  background: var(--news-surface);
 }
 
 .profile-load-error {
@@ -942,5 +1064,13 @@
 
   .profile-load-error {
     margin: 12px;
+  }
+
+  .friend-row {
+    gap: 8px;
+  }
+
+  .btn-outline {
+    padding: 0 12px;
   }
 }
