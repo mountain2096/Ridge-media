@@ -21,6 +21,9 @@ const postSchema = new mongoose.Schema(
             type: String,
             default: ""
         },
+        privacy: { type: String, enum: ["public", "friends", "private"], default: "public" },
+        status: { type: String, enum: ["active", "hidden", "deleted"], default: "active", index: true },
+        originalPostId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: null },
         likes:[
             {
                 type: mongoose.Schema.Types.ObjectId,

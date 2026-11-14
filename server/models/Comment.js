@@ -17,7 +17,8 @@ const commentSchema = new mongoose.Schema(
             maxlength:500,
             trim: true,
             required: true
-        }
+        },
+        status: { type: String, enum: ["active", "deleted"], default: "active" },
     },
     {
         timestamps:true,

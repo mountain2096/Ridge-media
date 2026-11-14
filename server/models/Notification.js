@@ -20,7 +20,9 @@ const notificationSchema = new mongoose.Schema(
                 "friend_reject",
                 "like",
                 "comment",
-                "message"
+                "message",
+                "share",
+                "system"
             ],
             required: true
         },

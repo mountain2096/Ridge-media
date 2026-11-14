@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import MessagesView from "../components/MessagesView.jsx";
 import ProfileSettings from "../components/ProfileSettings.jsx";
+import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
 function FeedPage(){
     const navigate = useNavigate();
@@ -12,6 +13,10 @@ function FeedPage(){
     const [error, setError] = useState("");
     const [profileError, setProfileError] = useState("");
     const [postContent, setPostContent] = useState("");
+    const [postPrivacy, setPostPrivacy] = useState("public");
+    const [feedPage, setFeedPage] = useState(1);
+    const [hasMorePosts, setHasMorePosts] = useState(false);
+    const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false);
     const [isPosting, setIsPosting] = useState(false);
     const [postError, setPostError] = useState("");
     const [reloadPosts, setReloadPosts] = useState(0);
@@ -219,7 +224,7 @@ function FeedPage(){
         try {
             const token = localStorage.getItem("token");
 
-            const response = await fetch("http://localhost:5000/api/post", {
+            const response = await fetch(`http://localhost:5000/api/post?page=${feedPage}&limit=20`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -234,7 +239,8 @@ function FeedPage(){
             if (!Array.isArray(data.posts)) {
               throw new Error("Dữ liệu bài viết từ máy chủ không hợp lệ.");
             }
-            setPosts(data.posts);
+            setPosts((currentPosts) => feedPage === 1 ? data.posts : [...currentPosts, ...data.posts]);
+            setHasMorePosts(data.pagination ? feedPage < data.pagination.pages : false);
             setLikedPostIds(
               data.posts
                 .filter((post) => post.isLiked)
@@ -244,11 +250,12 @@ function FeedPage(){
             setError(requestError.message);
         } finally {
             setIsLoading(false);
+            setIsLoadingMorePosts(false);
         }
         }
 
         loadPosts();
-    }, [reloadPosts]);
+    }, [reloadPosts, feedPage]);
 
     useEffect(() => {
       if (isLoading || !location.hash || handledPostHash.current === location.hash) {
@@ -293,6 +300,7 @@ function FeedPage(){
             content,
             image: uploadedImage?.url || "",
             video: uploadedVideo?.url || "",
+            privacy: postPrivacy,
           }),
         });
 
@@ -305,8 +313,10 @@ function FeedPage(){
         setPostContent("");
         setPostImageFile(null);
         setPostVideoFile(null);
+        setPostPrivacy("public");
         form.reset();
-        setReloadPosts((currentValue) => currentValue + 1);
+        if (feedPage !== 1) setFeedPage(1);
+        else setReloadPosts((currentValue) => currentValue + 1);
       } catch (requestError) {
         setPostError(requestError.message);
       } finally {
@@ -405,15 +415,40 @@ function FeedPage(){
       }
     }
     async function handleSharePost(postId) {
-      const postUrl = new URL("/feed", window.location.origin);
-      postUrl.hash = `post-${postId}`;
       try {
-        await navigator.clipboard.writeText(postUrl.toString());
-        setShareFeedback("Đã sao chép liên kết bài viết.");
+        const response = await fetch(`http://localhost:5000/api/post/${postId}/share`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Không thể chia sẻ bài viết.");
+        setShareFeedback(data.message);
+        setFeedPage(1);
+        setReloadPosts((currentValue) => currentValue + 1);
         window.setTimeout(() => setShareFeedback(""), 2500);
-      } catch {
-        setPostActionError("Trình duyệt không cho phép sao chép liên kết.");
+      } catch (requestError) {
+        setPostActionError(requestError.message);
       }
+    }
+
+    async function handleReport(targetType, targetId) {
+      const description = window.prompt("Mô tả lý do báo cáo (không bắt buộc):") || "";
+      try {
+        const response = await fetch("http://localhost:5000/api/report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+          body: JSON.stringify({ targetType, targetId, reason: "other", description }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Không thể gửi báo cáo.");
+        setShareFeedback(data.message);
+        window.setTimeout(() => setShareFeedback(""), 2500);
+      } catch (requestError) { setPostActionError(requestError.message); }
+    }
+
+    function handleLoadMorePosts() {
+      setIsLoadingMorePosts(true);
+      setFeedPage((currentPage) => currentPage + 1);
     }
     async function handleToggleNotifications() {
       if (isNotificationOpen) {
@@ -868,6 +903,7 @@ function FeedPage(){
                 <button className={`menu-item ${activeSection === "saved" ? "active" : ""}`} type="button" onClick={() => setActiveSection("saved")}>Saved</button>
                 <button className={`menu-item ${activeSection === "activity" ? "active" : ""}`} type="button" onClick={() => setActiveSection("activity")}>Your Activity</button>
                 <button className={`menu-item ${activeSection === "settings" ? "active" : ""}`} type="button" onClick={() => setActiveSection("settings")}>Setting</button>
+                {currentUser?.isAdmin && <button className={`menu-item ${activeSection === "admin" ? "active" : ""}`} type="button" onClick={() => setActiveSection("admin")}>Quản trị</button>}
             </nav>
 
             <button className="logout-button" type="button" onClick={handleLogout}>
@@ -920,6 +956,7 @@ function FeedPage(){
                            notification.type === "friend_request" ? "đã gửi lời mời kết bạn" :
                            notification.type === "friend_accept" ? "đã chấp nhận lời mời kết bạn" :
                            notification.type === "message" ? "đã gửi tin nhắn cho bạn" :
+                           notification.type === "share" ? "đã chia sẻ bài viết của bạn" :
                            "có cập nhật mới"}
                         </button>
                       ))}
@@ -950,6 +987,8 @@ function FeedPage(){
                       _id: savedUser.id || current?._id,
                     }))}
                   />
+                ) : activeSection === "admin" && currentUser?.isAdmin ? (
+                  <AdminPanel />
                 ) : activeSection === "connections" ? (
                   <section className="connections-page">
                     <h1 className="section-title">Kết nối với mọi người</h1>
@@ -1096,6 +1135,14 @@ function FeedPage(){
                     value={postContent}
                     onChange={(event) => setPostContent(event.target.value)}
                   />
+                  <label className="post-privacy-field">
+                    Ai có thể xem?
+                    <select value={postPrivacy} onChange={(event) => setPostPrivacy(event.target.value)}>
+                      <option value="public">Mọi người</option>
+                      <option value="friends">Bạn bè</option>
+                      <option value="private">Chỉ mình tôi</option>
+                    </select>
+                  </label>
 
                   {postError && (
                     <p className="feedback-message error">{postError}</p>
@@ -1118,6 +1165,11 @@ function FeedPage(){
 {!isLoading && !error && displayedPosts.length === 0 && (
   <p>{activeSection === "saved" ? "Bạn chưa lưu bài viết nào." : activeSection === "activity" ? "Bạn chưa đăng bài viết nào." : activeSection === "reels" ? "Chưa có Reels nào. Khi đăng bài, thêm đường dẫn video MP4 để bài xuất hiện tại đây." : "Chưa có bài viết nào."}</p>
 )}
+{!isLoading && !error && activeSection === "feed" && hasMorePosts && (
+  <button className="create-post-button" type="button" onClick={handleLoadMorePosts} disabled={isLoadingMorePosts}>
+    {isLoadingMorePosts ? "Đang tải..." : "Tải thêm bài viết"}
+  </button>
+)}
 {shareFeedback && <p className="feedback-message success">{shareFeedback}</p>}
 {likeError && (
   <p className="feedback-message error">{likeError}</p>
@@ -1129,6 +1181,8 @@ function FeedPage(){
   !error &&
   displayedPosts.map((post) => {
     const username = post.authorId?.username || "Người dùng";
+    const visiblePost = post.originalPostId || post;
+    const visibleAuthor = visiblePost.authorId?.username || username;
     const hasLiked = likedPostIds.includes(post._id);
 
     return (
@@ -1189,17 +1243,17 @@ function FeedPage(){
           </div>
         </header>
 
-        {activeSection === "reels" && post.video ? (
+        {activeSection === "reels" && visiblePost.video ? (
           <video
             className="post-video"
-            src={post.video}
+            src={visiblePost.video}
             controls
             preload="metadata"
           />
-        ) : post.image && !failedImagePostIds.includes(post._id) ? (
+        ) : visiblePost.image && !failedImagePostIds.includes(post._id) ? (
           <img
             className="post-image"
-            src={post.image}
+            src={visiblePost.image}
             alt={`Bài viết của ${username}`}
             onError={() => setFailedImagePostIds((ids) => [...ids, post._id])}
           />
@@ -1223,6 +1277,7 @@ function FeedPage(){
             <button className="post-action-button" type="button" aria-label="Sao chép liên kết bài viết" onClick={() => handleSharePost(post._id)}>
               ➤
             </button>
+            {!post.isMine && <button className="post-action-button" type="button" aria-label="Report post" onClick={() => handleReport("post", post._id)}>Report</button>}
           </div>
 
           <button
@@ -1270,7 +1325,8 @@ function FeedPage(){
         ) : (
           <p className="post-caption">
             <strong>{username}</strong>{" "}
-            {post.content}
+            {post.originalPostId && <span className="shared-post-by"> Chia sẻ từ {visibleAuthor}: </span>}
+            {visiblePost.content}
           </p>
         )}
         {openCommentsFor === post._id && (
@@ -1322,6 +1378,7 @@ function FeedPage(){
                         {comment.content}
                       </p>
 
+                      {!comment.isMine && <button type="button" onClick={() => handleReport("comment", comment._id)}>Report</button>}
                       {comment.isMine && (
                         <div className="comment-controls">
                           <button

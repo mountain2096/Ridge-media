@@ -95,7 +95,7 @@ try{
                         placeholder="Mật khẩu mới"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
-                        minLength={6}
+                        minLength={8}
                         required 
                         />
 
@@ -105,7 +105,7 @@ try{
                         name="confirmPassword"
                         value={confirmPassword}
                         onChange={(event) => setConfirmPassword(event.target.value)}
-                        minLength={6}
+                        minLength={8}
                         required></input>
 
                         <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? "Đang xử lý..." : "Xác nhận"}</button>

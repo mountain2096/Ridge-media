@@ -5,7 +5,8 @@ const userSchema = new mongoose.Schema(
         username:{
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            unique: true
         },
         email:{
             type: String,
@@ -39,9 +40,17 @@ const userSchema = new mongoose.Schema(
             maxlength: 255,
             default:""
         },
+        dateOfBirth: {
+            type: Date,
+            default: null,
+        },
         isAdmin:{
             type: Boolean,
             default: false,
+        },
+        isLocked:{
+            type: Boolean,
+            default: false  
         },
         friend:[
             {

@@ -6,7 +6,7 @@ const createComment = async (req, res) =>{
     try{
         const { content } = req.body;
         const { postId } = req.params
-        const post = await Post.findById(postId);
+        const post = await Post.findOne({ _id: postId, status: "active" });
 
         if(typeof content !== "string" || !content.trim()){
             return res.status(400).json({
@@ -57,7 +57,7 @@ const createComment = async (req, res) =>{
 const getCommentByPost = async (req, res) =>{
     try{
         const { postId } = req.params
-        const post = await Post.findById(postId);
+        const post = await Post.findOne({ _id: postId, status: "active" });
 
         if(!post){
             return res.status(400).json({
@@ -65,7 +65,7 @@ const getCommentByPost = async (req, res) =>{
             })
         }
 
-        const comment = await Comment.find({postId})
+        const comment = await Comment.find({ postId, status: "active" })
         .populate("authorId","username profilePicture")
         .sort({ createdAt : 1})
 
@@ -96,7 +96,7 @@ const updateComment = async (req, res) =>{
             })
         }
 
-        const comment = await Comment.findById(req.params.id);
+        const comment = await Comment.findOne({ _id: req.params.id, status: "active" });
 
         if(!comment){
             return res.status(400).json({
@@ -125,25 +125,24 @@ const updateComment = async (req, res) =>{
 }
 const deleteComment = async (req, res) =>{
     try{
-        const comment = await Comment.findById(req.params.id);
+        const comment = await Comment.findOne({ _id: req.params.id, status: "active" });
 
-        if(!comment){
-            return res.status(400).json({
-                message:"Bình luận không tồn tại!"
-            })
+        if (!comment) {
+            return res.status(404).json({ message: "Bình luận không tồn tại!" });
         }
 
-        if(comment.authorId.toString() !== req.user._id.toString()){
-            return res.status(403).json({
-                message:"Bạn không có quyền xóa bình luận này!"
-            })
+        const post = await Post.findById(comment.postId);
+        const isCommentOwner = comment.authorId.toString() === req.user._id.toString();
+        const isPostOwner = post && post.authorId.toString() === req.user._id.toString();
+
+        if (!isCommentOwner && !isPostOwner && !req.user.isAdmin) {
+            return res.status(403).json({ message: "Bạn không có quyền xóa bình luận này!" });
         }
 
-        await Comment.findByIdAndDelete(req.params.id);
+        comment.status = "deleted";
+        await comment.save();
 
-        res.status(200).json({
-            message:"Bình luận đã được xóa!"
-        })
+        res.status(200).json({ message: "Bình luận đã được xóa!" });
     } catch (error) {
         res.status(400).json({
             message: "ID comment không hợp lệ!",
