@@ -84,7 +84,7 @@ const getBlockedUsers = async (req, res) => {
 
 const updateMe = async (req, res) =>{
     try{
-        const {username, bio, profilePicture, coverPicture} = req.body;
+        const {username, bio, profilePicture, coverPicture, dateOfBirth} = req.body;
 
         const user = await User.findById(req.user._id);
 
@@ -103,6 +103,13 @@ const updateMe = async (req, res) =>{
         }
         if (coverPicture !== undefined && typeof coverPicture !== "string") {
             return res.status(400).json({ message: "Đường dẫn ảnh bìa không hợp lệ!" });
+        }
+        if (dateOfBirth !== undefined) {
+            const parsedDate = dateOfBirth === null || dateOfBirth === "" ? null : new Date(dateOfBirth);
+            if (parsedDate && (Number.isNaN(parsedDate.getTime()) || parsedDate > new Date())) {
+                return res.status(400).json({ message: "Ngày sinh không hợp lệ!" });
+            }
+            user.dateOfBirth = parsedDate;
         }
         if (username !== undefined) {
             if (typeof username !== "string" || !username.trim()) {
@@ -145,6 +152,7 @@ const updateMe = async (req, res) =>{
                 profilePicture: user.profilePicture,
                 coverPicture: user.coverPicture,
                 bio: user.bio,
+                dateOfBirth: user.dateOfBirth,
                 isAdmin: user.isAdmin,
             },
         });

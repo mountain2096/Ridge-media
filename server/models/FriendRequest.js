@@ -22,6 +22,16 @@ const friendRequestSchema = new mongoose.Schema(
         timestamps:true
     }
 )
+
+friendRequestSchema.index(
+    { senderId: 1, receiverId: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { status: "pending" },
+        name: "unique_pending_friend_request",
+    }
+);
+
 const FriendRequest = mongoose.model("FriendRequest", friendRequestSchema);
 
 module.exports = FriendRequest;
