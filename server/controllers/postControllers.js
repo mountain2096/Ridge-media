@@ -35,7 +35,7 @@ const createPost = async (req,res) =>{
 
 const getPosts = async (req,res) =>{
     try{
-        const posts = await Post.find()
+        const posts = await Post.find({status: "active"})
         .populate("authorId", "username profilePicture")
         .sort({createdAt: -1});
         
@@ -63,7 +63,7 @@ const getPosts = async (req,res) =>{
 }
 const getPostById = async (req, res) =>{
     try{
-        const post = await Post.findById(req.params.id)
+        const post = await Post.findOne({ _id: req.params.id, status: "active" })   
         .populate("authorId","username profilePicture");
 
         if(!post){
@@ -90,7 +90,7 @@ const updatePost = async (req, res) =>{
             return res.status(400).json({ message: "Dữ liệu bài viết không hợp lệ!" });
         }
 
-        const post =  await Post.findById(req.params.id);
+        const post = await Post.findOne({ _id: req.params.id, status: "active" });
 
         if(!post){
             return res.status(404).json({
@@ -134,7 +134,7 @@ const updatePost = async (req, res) =>{
 }
 const deletePost = async (req, res) =>{
     try{
-        const post = await Post.findById(req.params.id);
+        const post = await Post.findOne({ _id: req.params.id, status: "active" });
 
         if(!post){
             return res.status(404).json({
@@ -142,25 +142,14 @@ const deletePost = async (req, res) =>{
             })
         }
 
-        if(post.authorId.toString() !== req.user._id.toString()){
+        if(post.authorId.toString() !== req.user._id.toString() && !req.user.isAdmin){
             return res.status(403).json({
                 message: "Bạn không có quyền xóa bài viết này!",
             });
         }
 
-        await Post.findByIdAndDelete(req.params.id);
-        try {
-            await Promise.all([
-                Comment.deleteMany({ postId: post._id }),
-                Notification.deleteMany({ postId: post._id }),
-                User.updateMany(
-                    { savedPosts: post._id },
-                    { $pull: { savedPosts: post._id } }
-                ),
-            ]);
-        } catch (cleanupError) {
-            console.error("Could not fully clean up deleted post references:", cleanupError);
-        }
+        post.status = "deleted";
+        await post.save();
 
         res.status(200).json({
             message:"Bài viết đã được xóa!"
@@ -176,6 +165,7 @@ const likePost = async (req, res) =>{
         const post = await Post.findOneAndUpdate(
             {
                 _id: req.params.id,
+                status: "active",
                 likes: { $ne: req.user._id },
             },
             { $addToSet: { likes: req.user._id } },
@@ -183,7 +173,7 @@ const likePost = async (req, res) =>{
         );
 
         if (!post) {
-            const postExists = await Post.exists({ _id: req.params.id });
+            const postExists = await Post.exists({ _id: req.params.id, status: "active" });
             if (!postExists) {
                 return res.status(404).json({ message: "Bài viết không tồn tại!" });
             }
@@ -214,8 +204,8 @@ const likePost = async (req, res) =>{
 }
 const unlikePost = async (req, res) => {
     try {
-        const post = await Post.findByIdAndUpdate(
-            req.params.id,
+            const post = await Post.findOneAndUpdate(
+            { _id: req.params.id, status: "active" },
             { $pull: { likes: req.user._id } },
             { new: true }
         );
@@ -243,7 +233,7 @@ const toggleSavePost = async (req, res) => {
             return res.status(400).json({ message: "Thiếu trạng thái lưu bài viết!" });
         }
 
-        const post = await Post.findById(req.params.id).select("_id");
+        const post = await Post.findOne({ _id: req.params.id, status: "active" }).select("_id");
         if (!post) {
             return res.status(404).json({ message: "Không tìm thấy bài viết!" });
         }

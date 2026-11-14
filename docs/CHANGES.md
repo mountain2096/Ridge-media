@@ -18,3 +18,9 @@
 
 - Xác minh `protect` hiện đã nạp User từ DB và từ chối tài khoản `isLocked`; `requireAdmin` đã kiểm tra `req.user.isAdmin` sau xác thực. Đây là code có sẵn trước thay đổi.
 - Bổ sung test hồi quy cho hai nhánh phân quyền này; sẽ gắn `requireAdmin` vào các route quản trị ở giai đoạn 6.
+
+## Giai đoạn 3: xóa mềm bài viết và bình luận
+
+- Các thay đổi controller tương ứng đã có sẵn trong workspace trước khi bắt đầu; rà soát và bổ sung quyền Admin xóa bài viết.
+- Bài viết/bình luận được đánh dấu `deleted`, các truy vấn đọc và thao tác chỉ nhắm bản ghi `active`; tác giả bình luận, chủ bài và Admin có quyền xóa bình luận.
+- Thêm test cho xóa mềm và quyền chủ bài/Admin.
