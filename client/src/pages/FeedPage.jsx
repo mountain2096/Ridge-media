@@ -4,6 +4,7 @@ import MessagesView from "../components/MessagesView.jsx";
 import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
+import "../newsfeed.css";
 function FeedPage(){
     const navigate = useNavigate();
     const location = useLocation();
@@ -901,19 +902,35 @@ function FeedPage(){
                 <span>Ridge</span>
             </div>
 
-            <nav className="home-menu">
-                <button className={`menu-item ${activeSection === "feed" ? "active" : ""}`} type="button" onClick={() => setActiveSection("feed")}>News Feed</button>
-                <button className={`menu-item ${activeSection === "messages" ? "active" : ""}`} type="button" onClick={() => setActiveSection("messages")}>Messages</button>
-                <button className={`menu-item ${activeSection === "connections" ? "active" : ""}`} type="button" onClick={() => setActiveSection("connections")}>Kết bạn</button>
-                <button className={`menu-item ${activeSection === "reels" ? "active" : ""}`} type="button" onClick={() => setActiveSection("reels")}>Reels</button>
-                <button className={`menu-item ${activeSection === "saved" ? "active" : ""}`} type="button" onClick={() => setActiveSection("saved")}>Saved</button>
-                <button className={`menu-item ${activeSection === "activity" ? "active" : ""}`} type="button" onClick={() => setActiveSection("activity")}>Your Activity</button>
-                <button className={`menu-item ${activeSection === "settings" ? "active" : ""}`} type="button" onClick={() => setActiveSection("settings")}>Setting</button>
-                {currentUser?.isAdmin && <button className={`menu-item ${activeSection === "admin" ? "active" : ""}`} type="button" onClick={() => setActiveSection("admin")}>Quản trị</button>}
+            <nav className="home-menu" aria-label="Điều hướng chính">
+                <button className={`menu-item ${activeSection === "feed" ? "active" : ""}`} type="button" onClick={() => setActiveSection("feed")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>Bảng tin
+                </button>
+                <button className={`menu-item ${activeSection === "messages" ? "active" : ""}`} type="button" onClick={() => setActiveSection("messages")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>Tin nhắn
+                </button>
+                <button className={`menu-item ${activeSection === "connections" ? "active" : ""}`} type="button" onClick={() => setActiveSection("connections")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.2.7 3.5 2.6 3.5 5.7" /></svg>Kết bạn
+                </button>
+                <button className={`menu-item ${activeSection === "reels" ? "active" : ""}`} type="button" onClick={() => setActiveSection("reels")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M3 9h18M8 4l3 5m3-5 3 5m-6 3.5v4l3.5-2z" /></svg>Reels
+                </button>
+                <button className={`menu-item ${activeSection === "saved" ? "active" : ""}`} type="button" onClick={() => setActiveSection("saved")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>Đã lưu
+                </button>
+                <button className={`menu-item ${activeSection === "activity" ? "active" : ""}`} type="button" onClick={() => setActiveSection("activity")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg>Hoạt động của bạn
+                </button>
+                <button className={`menu-item ${activeSection === "settings" ? "active" : ""}`} type="button" onClick={() => setActiveSection("settings")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10m4 0h2M4 17h2m4 0h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>Cài đặt
+                </button>
+                {currentUser?.isAdmin && <button className={`menu-item ${activeSection === "admin" ? "active" : ""}`} type="button" onClick={() => setActiveSection("admin")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v5c0 5 3.4 8 8 10 4.6-2 8-5 8-10V6z" /><path d="m9 12 2 2 4-4" /></svg>Quản trị
+                </button>}
             </nav>
 
             <button className="logout-button" type="button" onClick={handleLogout}>
-                Đăng xuất
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5m5 5H9" /></svg>Đăng xuất
             </button>
             </aside>
 
