@@ -4,6 +4,7 @@ import MessagesView from "../components/MessagesView.jsx";
 import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
+import "../newsfeed.css";
 function FeedPage(){
     const navigate = useNavigate();
     const location = useLocation();
@@ -901,31 +902,52 @@ function FeedPage(){
                 <span>Ridge</span>
             </div>
 
-            <nav className="home-menu">
-                <button className={`menu-item ${activeSection === "feed" ? "active" : ""}`} type="button" onClick={() => setActiveSection("feed")}>News Feed</button>
-                <button className={`menu-item ${activeSection === "messages" ? "active" : ""}`} type="button" onClick={() => setActiveSection("messages")}>Messages</button>
-                <button className={`menu-item ${activeSection === "connections" ? "active" : ""}`} type="button" onClick={() => setActiveSection("connections")}>Kết bạn</button>
-                <button className={`menu-item ${activeSection === "reels" ? "active" : ""}`} type="button" onClick={() => setActiveSection("reels")}>Reels</button>
-                <button className={`menu-item ${activeSection === "saved" ? "active" : ""}`} type="button" onClick={() => setActiveSection("saved")}>Saved</button>
-                <button className={`menu-item ${activeSection === "activity" ? "active" : ""}`} type="button" onClick={() => setActiveSection("activity")}>Your Activity</button>
-                <button className={`menu-item ${activeSection === "settings" ? "active" : ""}`} type="button" onClick={() => setActiveSection("settings")}>Setting</button>
-                {currentUser?.isAdmin && <button className={`menu-item ${activeSection === "admin" ? "active" : ""}`} type="button" onClick={() => setActiveSection("admin")}>Quản trị</button>}
+            <nav className="home-menu" aria-label="Điều hướng chính">
+                <button className={`menu-item ${activeSection === "feed" ? "active" : ""}`} type="button" onClick={() => setActiveSection("feed")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>Bảng tin
+                </button>
+                <button className={`menu-item ${activeSection === "messages" ? "active" : ""}`} type="button" onClick={() => setActiveSection("messages")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>Tin nhắn
+                </button>
+                <button className={`menu-item ${activeSection === "connections" ? "active" : ""}`} type="button" onClick={() => setActiveSection("connections")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.2.7 3.5 2.6 3.5 5.7" /></svg>Kết bạn
+                </button>
+                <button className={`menu-item ${activeSection === "reels" ? "active" : ""}`} type="button" onClick={() => setActiveSection("reels")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M3 9h18M8 4l3 5m3-5 3 5m-6 3.5v4l3.5-2z" /></svg>Reels
+                </button>
+                <button className={`menu-item ${activeSection === "saved" ? "active" : ""}`} type="button" onClick={() => setActiveSection("saved")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>Đã lưu
+                </button>
+                <button className={`menu-item ${activeSection === "activity" ? "active" : ""}`} type="button" onClick={() => setActiveSection("activity")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg>Hoạt động của bạn
+                </button>
+                <button className={`menu-item ${activeSection === "settings" ? "active" : ""}`} type="button" onClick={() => setActiveSection("settings")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10m4 0h2M4 17h2m4 0h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>Cài đặt
+                </button>
+                {currentUser?.isAdmin && <button className={`menu-item ${activeSection === "admin" ? "active" : ""}`} type="button" onClick={() => setActiveSection("admin")}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v5c0 5 3.4 8 8 10 4.6-2 8-5 8-10V6z" /><path d="m9 12 2 2 4-4" /></svg>Quản trị
+                </button>}
             </nav>
 
             <button className="logout-button" type="button" onClick={handleLogout}>
-                Đăng xuất
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5m5 5H9" /></svg>Đăng xuất
             </button>
             </aside>
 
             <section className="home-content">
             <header className="home-topbar">
+                <div className="news-search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
                 <input
                   type="search"
+                  aria-label="Tìm người dùng"
                   placeholder="Tìm người dùng..."
                   value={searchQuery}
                   onFocus={() => setActiveSection("connections")}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
+                </div>
+                <div className="news-topbar-right">
                 <div className="topbar-user">
                 <div className="notification-wrap">
                   <button
@@ -976,6 +998,7 @@ function FeedPage(){
                 </span>
                 <span>{currentUser?.username || "Tài khoản"}</span>
                 </div>
+                </div>
             </header>
             {profileError && <p className="profile-load-error">{profileError}</p>}
 
@@ -995,6 +1018,23 @@ function FeedPage(){
                   />
                 ) : activeSection === "admin" && currentUser?.isAdmin ? (
                   <AdminPanel />
+                ) : activeSection === "friends" ? (
+                  <section className="friends-page">
+                    <h1 className="section-title">Danh sách bạn bè</h1>
+                    {friends.length === 0 ? <p>Bạn chưa có bạn bè nào.</p> : (
+                      <div className="friends-page-list">
+                        {friends.map((friend) => (
+                          <div className="friend-row" key={friend._id}>
+                            <span className="friend-avatar">
+                              {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                            </span>
+                            <strong className="friend-name">{friend.username}</strong>
+                            <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 ) : activeSection === "connections" ? (
                   <section className="connections-page">
                     <h1 className="section-title">Kết nối với mọi người</h1>
@@ -1064,7 +1104,7 @@ function FeedPage(){
                   </h1>
                 )}
                 {activeSection === "feed" && <>
-                <div className="stories-card">
+                <div className="stories-card card">
                   {storyFeedback && <p className="feedback-message error">{storyFeedback}</p>}
                   <div className="story-list">
                     <button
@@ -1080,13 +1120,15 @@ function FeedPage(){
                         }
                       }}
                     >
-                      <span className="story-avatar story-self">
-                        {currentUser?.profilePicture ? (
-                          <img src={currentUser.profilePicture} alt="" />
-                        ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
-                        <span className="story-add">+</span>
+                      <span className="story-ring story-ring-add">
+                        <span className="story-avatar story-self">
+                          {currentUser?.profilePicture ? (
+                            <img src={currentUser.profilePicture} alt="" />
+                          ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
+                        </span>
+                        <span className="story-add" aria-hidden="true">+</span>
                       </span>
-                      <span className="story-name">Your Story</span>
+                      <span className="story-name">Tin của bạn</span>
                     </button>
                     {storyGroups
                       .filter((group) => group.author._id !== currentUser?._id)
@@ -1100,10 +1142,12 @@ function FeedPage(){
                             setActiveStoryIndex(0);
                           }}
                         >
-                          <span className="story-avatar story-blue">
-                            {group.author.profilePicture ? (
-                              <img src={group.author.profilePicture} alt="" />
-                            ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
+                          <span className="story-ring">
+                            <span className="story-avatar story-blue">
+                              {group.author.profilePicture ? (
+                                <img src={group.author.profilePicture} alt="" />
+                              ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
+                            </span>
                           </span>
                           <span className="story-name">{group.author.username}</span>
                         </button>
@@ -1111,55 +1155,66 @@ function FeedPage(){
                   </div>
                 </div>
 
-                <form className="create-post-card" onSubmit={handleCreatePost}>
+                <form className="create-post-card card" onSubmit={handleCreatePost}>
                   <h2>Tạo bài viết</h2>
+                  <div className="composer-row">
+                    <span className="composer-avatar">
+                      {currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
+                    </span>
+                    <textarea
+                      className="create-post-input"
+                      aria-label="Nội dung bài viết"
+                      placeholder="Bạn đang nghĩ gì?"
+                      rows="3"
+                      maxLength="500"
+                      value={postContent}
+                      onChange={(event) => setPostContent(event.target.value)}
+                    />
+                  </div>
                   <p className="upload-hint">Ảnh hoặc video tùy chọn, tối đa 30 MB mỗi tệp.</p>
-                  <input
-                    className="create-post-image-input"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    aria-label="Chọn ảnh cho bài viết"
-                    onChange={(event) => setPostImageFile(event.target.files?.[0] || null)}
-                  />
-                  <input
-                    className="create-post-image-input"
-                    type="file"
-                    accept="video/mp4,video/webm"
-                    aria-label="Chọn video cho Reels"
-                    onChange={(event) => setPostVideoFile(event.target.files?.[0] || null)}
-                  />
-                  {(postImageFile || postVideoFile) && (
-                    <p className="selected-media-name">
-                      {[postImageFile?.name, postVideoFile?.name].filter(Boolean).join(" · ")}
-                    </p>
-                  )}
-                  <textarea
-                    className="create-post-input"
-                    placeholder="Bạn đang nghĩ gì?"
-                    rows="3"
-                    maxLength="500"
-                    value={postContent}
-                    onChange={(event) => setPostContent(event.target.value)}
-                  />
-                  <label className="post-privacy-field">
-                    Ai có thể xem?
-                    <select value={postPrivacy} onChange={(event) => setPostPrivacy(event.target.value)}>
-                      <option value="public">Mọi người</option>
-                      <option value="friends">Bạn bè</option>
-                      <option value="private">Chỉ mình tôi</option>
-                    </select>
-                  </label>
+                  <div className="composer-actions">
+                    <label className="chip">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m21 16-5-5-9 9" /></svg>
+                      Ảnh
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        aria-label="Chọn ảnh cho bài viết"
+                        onChange={(event) => setPostImageFile(event.target.files?.[0] || null)}
+                      />
+                    </label>
+                    <label className="chip">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="3" /><path d="m16 10 5-3v10l-5-3" /></svg>
+                      Video
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm"
+                        aria-label="Chọn video cho bài viết"
+                        onChange={(event) => setPostVideoFile(event.target.files?.[0] || null)}
+                      />
+                    </label>
+                    {(postImageFile || postVideoFile) && (
+                      <span className="selected-media-name">
+                        {[postImageFile?.name, postVideoFile?.name].filter(Boolean).join(" · ")}
+                      </span>
+                    )}
+                    <span className="composer-spacer" />
+                    <label className="select-label">
+                      Ai có thể xem?
+                      <select value={postPrivacy} onChange={(event) => setPostPrivacy(event.target.value)}>
+                        <option value="public">Mọi người</option>
+                        <option value="friends">Bạn bè</option>
+                        <option value="private">Chỉ mình tôi</option>
+                      </select>
+                    </label>
+                    <button className="create-post-button btn-primary" type="submit" disabled={isPosting}>
+                      {isPosting ? "Đang đăng..." : "Đăng bài"}
+                    </button>
+                  </div>
 
                   {postError && (
                     <p className="feedback-message error">{postError}</p>
                   )}
-                  <button
-                    className="create-post-button"
-                    type="submit"
-                    disabled={isPosting}
-                  >
-                    {isPosting ? "Đang đăng..." : "Đăng bài"}
-                  </button>
                 </form>
                 </>}
                 {isLoading && <p>Đang tải bài viết...</p>}
@@ -1190,9 +1245,14 @@ function FeedPage(){
     const visiblePost = post.originalPostId || post;
     const visibleAuthor = visiblePost.authorId?.username || username;
     const hasLiked = likedPostIds.includes(post._id);
+    const visibilityLabel = post.privacy === "private" ? "Chỉ mình tôi" : post.privacy === "friends" ? "Bạn bè" : "Mọi người";
+    const postDate = post.createdAt
+      ? new Date(post.createdAt).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })
+      : "Mới đăng";
+    const hasMedia = Boolean(visiblePost.image || visiblePost.video);
 
     return (
-      <article className="post-card" id={`post-${post._id}`} key={post._id}>
+      <article className="post-card card" id={`post-${post._id}`} key={post._id}>
         <header className="post-header">
           <div className="post-author">
             <span className="post-avatar">
@@ -1203,7 +1263,12 @@ function FeedPage(){
 
             <div className="post-author-info">
               <strong>{username}</strong>
-              <span>Ridge</span>
+              <span className="post-meta">
+                <span>Ridge</span><span aria-hidden="true">·</span>
+                <span>{postDate}</span><span aria-hidden="true">·</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>
+                <span>{visibilityLabel}</span>
+              </span>
             </div>
           </div>
 
@@ -1217,10 +1282,24 @@ function FeedPage(){
                 openPostMenuId === post._id ? null : post._id
               )}
             >
-              •••
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
             </button>
             {openPostMenuId === post._id && (
-              <div className="post-menu">
+              <div className="post-menu" role="group" aria-label="Tùy chọn bài viết">
+                <button type="button" onClick={() => {
+                  handleToggleSavedPost(post._id, Boolean(post.isSaved));
+                  setOpenPostMenuId(null);
+                }}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>
+                  {post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
+                </button>
+                {!post.isMine && <button className="danger" type="button" onClick={() => {
+                  setOpenPostMenuId(null);
+                  handleReport("post", post._id);
+                }}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0h11l-2 4 2 4H5" /></svg>
+                  Báo cáo bài viết
+                </button>}
                 {post.isMine ? (
                   <>
                     <button
@@ -1241,15 +1320,13 @@ function FeedPage(){
                       Xóa bài viết
                     </button>
                   </>
-                ) : (
-                  <span>Chỉ chủ bài viết mới có thể chỉnh sửa hoặc xóa.</span>
-                )}
+                ) : null}
               </div>
             )}
           </div>
         </header>
 
-        {activeSection === "reels" && visiblePost.video ? (
+        {visiblePost.video ? (
           <video
             className="post-video"
             src={visiblePost.video}
@@ -1263,43 +1340,7 @@ function FeedPage(){
             alt={`Bài viết của ${username}`}
             onError={() => setFailedImagePostIds((ids) => [...ids, post._id])}
           />
-        ) : (
-          <div className="post-image-placeholder">Bài viết không có ảnh</div>
-        )}
-
-        <div className="post-actions">
-          <div className="post-action-group">
-            <button
-              className={`post-action-button ${hasLiked ? "liked" : ""}`}
-              type="button"
-              aria-label={hasLiked ? "Bỏ thích" : "Thích"}
-              onClick={() => handleLike(post._id, hasLiked)}
-            >
-              {hasLiked ? "♥" : "♡"}
-            </button>
-            <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => handleToggleComments(post._id)}>
-              ▢
-            </button>
-            <button className="post-action-button" type="button" aria-label="Chia sẻ bài viết" onClick={() => handleSharePost(post._id)}>
-              ➤
-            </button>
-            {!post.isMine && <button className="post-action-button" type="button" aria-label="Báo cáo bài viết" onClick={() => handleReport("post", post._id)}>Báo cáo</button>}
-          </div>
-
-          <button
-            className={`post-action-button ${post.isSaved ? "saved" : ""}`}
-            type="button"
-            aria-label={post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
-            aria-pressed={Boolean(post.isSaved)}
-            onClick={() => handleToggleSavedPost(post._id, Boolean(post.isSaved))}
-          >
-            {post.isSaved ? "▣" : "♧"}
-          </button>
-        </div>
-
-        <p className="post-likes">
-          {post.likes?.length ?? 0} lượt thích
-        </p>
+        ) : null}
 
         {editingPostId === post._id ? (
           <form
@@ -1328,13 +1369,50 @@ function FeedPage(){
               </button>
             </div>
           </form>
-        ) : (
+        ) : hasMedia ? (
           <p className="post-caption">
             <strong>{username}</strong>{" "}
-            {post.originalPostId && <span className="shared-post-by"> Chia sẻ từ {visibleAuthor}: </span>}
+            {post.originalPostId && <span className="shared-post-by">Chia sẻ từ {visibleAuthor}: </span>}
             {visiblePost.content}
           </p>
+        ) : (
+          <p className="post-text">{visiblePost.content}</p>
         )}
+
+        <p className="post-likes">
+          {post.likes?.length ?? 0} lượt thích
+        </p>
+
+        <div className="post-actions">
+          <div className="post-action-group">
+            <button
+              className={`post-action-button ${hasLiked ? "liked" : ""}`}
+              type="button"
+              aria-label={hasLiked ? "Bỏ thích" : "Thích"}
+              onClick={() => handleLike(post._id, hasLiked)}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg>
+              <span>{hasLiked ? "Đã thích" : "Thích"}</span>
+            </button>
+            <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => handleToggleComments(post._id)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận</span>
+            </button>
+            <button className="post-action-button" type="button" aria-label="Chia sẻ bài viết" onClick={() => handleSharePost(post._id)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>Chia sẻ</span>
+            </button>
+          </div>
+
+          <button
+            className={`post-action-button ${post.isSaved ? "saved" : ""}`}
+            type="button"
+            aria-label={post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
+            aria-pressed={Boolean(post.isSaved)}
+            onClick={() => handleToggleSavedPost(post._id, Boolean(post.isSaved))}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>
+          </button>
+        </div>
+
         {openCommentsFor === post._id && (
           <div>
           <div className="comments-list">
@@ -1436,28 +1514,25 @@ function FeedPage(){
                 )}
                 </section>
                 <aside className="right-column">
-                {friends.length > 0 && (
-                  <section className="side-card">
-                    <h2>Bạn bè</h2>
-                    <div className="people-list">
-                      {friends.map((friend) => (
-                        <div className="person-row" key={friend._id}>
-                          <span className="person-avatar">
-                            {friend.profilePicture ? (
-                              <img src={friend.profilePicture} alt="" />
-                            ) : (friend.username?.charAt(0).toUpperCase() || "?")}
-                          </span>
-                          <div className="person-info">
-                            <strong>{friend.username}</strong>
-                          </div>
-                          <button type="button" onClick={() => handleStartConversation(friend._id)}>
-                            Nhắn tin
-                          </button>
-                        </div>
-                      ))}
+                  <section className="side-card friends-card">
+                    <div className="friends-head">
+                      <h2>Bạn bè</h2>
+                      <button type="button" onClick={() => setActiveSection("friends")}>Xem tất cả</button>
                     </div>
+                    {friends.length === 0 ? <p className="friends-empty">Bạn chưa có bạn bè nào.</p> : (
+                      <div className="friends-list">
+                        {friends.slice(0, 5).map((friend) => (
+                          <div className="friend-row" key={friend._id}>
+                            <span className="friend-avatar">
+                              {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                            </span>
+                            <strong className="friend-name">{friend.username}</strong>
+                            <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </section>
-                )}
                 </aside>
             </div>
             </section>
