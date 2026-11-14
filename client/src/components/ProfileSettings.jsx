@@ -6,12 +6,18 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
   const [bio, setBio] = useState(currentUser?.bio || "");
   const [profilePicture, setProfilePicture] = useState(currentUser?.profilePicture || "");
   const [coverPicture, setCoverPicture] = useState(currentUser?.coverPicture || "");
+  const [dateOfBirth, setDateOfBirth] = useState(currentUser?.dateOfBirth ? currentUser.dateOfBirth.slice(0, 10) : "");
   const [profilePictureFile, setProfilePictureFile] = useState(null);
   const [coverPictureFile, setCoverPictureFile] = useState(null);
   const [feedback, setFeedback] = useState({ type: "", text: "" });
   const [isSaving, setIsSaving] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [blockError, setBlockError] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordFeedback, setPasswordFeedback] = useState({ type: "", text: "" });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -77,6 +83,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
           bio: bio.trim(),
           profilePicture: uploadedProfilePicture?.url || profilePicture.trim(),
           coverPicture: uploadedCoverPicture?.url || coverPicture.trim(),
+          dateOfBirth: dateOfBirth || null,
         }),
       });
       const data = await response.json();
@@ -87,6 +94,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
       onProfileSaved(data.user);
       setProfilePicture(data.user.profilePicture || "");
       setCoverPicture(data.user.coverPicture || "");
+      setDateOfBirth(data.user.dateOfBirth ? data.user.dateOfBirth.slice(0, 10) : "");
       setProfilePictureFile(null);
       setCoverPictureFile(null);
       form.reset();
@@ -95,6 +103,32 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
       setFeedback({ type: "error", text: requestError.message });
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleChangePassword(event) {
+    event.preventDefault();
+    setPasswordFeedback({ type: "", text: "" });
+    setIsChangingPassword(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể đổi mật khẩu.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordFeedback({ type: "success", text: data.message });
+    } catch (requestError) {
+      setPasswordFeedback({ type: "error", text: requestError.message });
+    } finally {
+      setIsChangingPassword(false);
     }
   }
 
@@ -111,6 +145,15 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
             minLength="2"
             maxLength="40"
             required
+          />
+        </label>
+        <label>
+          Ngày sinh
+          <input
+            type="date"
+            value={dateOfBirth}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(event) => setDateOfBirth(event.target.value)}
           />
         </label>
         <label>
@@ -146,6 +189,15 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
         <button className="create-post-button" type="submit" disabled={isSaving}>
           {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
         </button>
+      </form>
+      <form className="settings-form" onSubmit={handleChangePassword}>
+        <h2>Đổi mật khẩu</h2>
+        <label>Mật khẩu hiện tại<input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label>
+        <label>Mật khẩu mới<input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength="8" required /></label>
+        <label>Xác nhận mật khẩu mới<input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength="8" required /></label>
+        <p>Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.</p>
+        {passwordFeedback.text && <p className={`feedback-message ${passwordFeedback.type}`}>{passwordFeedback.text}</p>}
+        <button className="create-post-button" type="submit" disabled={isChangingPassword}>{isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}</button>
       </form>
       <section className="blocked-users-section">
         <h2>Người dùng đã chặn</h2>

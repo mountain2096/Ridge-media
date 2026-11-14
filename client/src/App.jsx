@@ -37,7 +37,7 @@ function AuthPage() {
 
     const requestBody = 
     activeTab === "register"
-    ? {username, email, password: passwordValue}
+    ? {username, email, password: passwordValue, confirmPassword}
     : {email, password: passwordValue};
 
     try{
@@ -143,7 +143,8 @@ function AuthPage() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
-            minLength={6}/>
+            minLength={activeTab === "register" ? 8 : undefined}
+            title={activeTab === "register" ? "Ít nhất 8 ký tự, có chữ hoa, chữ thường và số." : undefined}/>
             {activeTab === "register" && (
               <input 
               type="password" 
@@ -152,7 +153,7 @@ function AuthPage() {
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               required
-              minLength={6}/>
+              minLength={8}/>
             )}
 
             <button className="submit-button" type="submit" disabled={isSubmitting}>

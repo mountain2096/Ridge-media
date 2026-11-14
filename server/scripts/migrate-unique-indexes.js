@@ -9,7 +9,7 @@ async function migrate() {
         throw new Error("MONGO_URI chưa được cấu hình");
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, { autoIndex: false });
 
     const duplicateUsernames = await User.collection.aggregate([
         { $group: { _id: { $toLower: { $trim: { input: "$username" } } }, ids: { $push: "$_id" }, count: { $sum: 1 } } },
@@ -30,7 +30,17 @@ async function migrate() {
         throw new Error("Duplicate pending friend requests found; resolve them before creating the unique index");
     }
 
-    await User.collection.createIndex({ username: 1 }, { unique: true, name: "username_unique" });
+    const userIndexes = await User.collection.indexes();
+    const usernameIndex = userIndexes.find((index) =>
+        index.key.username === 1 && index.unique === true
+    );
+    if (!usernameIndex) {
+        const conflictingIndex = userIndexes.find((index) => index.key.username === 1);
+        if (conflictingIndex) {
+            throw new Error("A non-unique username index exists; inspect it before changing indexes");
+        }
+        await User.collection.createIndex({ username: 1 }, { unique: true, name: "username_unique" });
+    }
     await FriendRequest.collection.createIndex(
         { senderId: 1, receiverId: 1 },
         {

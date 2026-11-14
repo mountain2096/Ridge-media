@@ -1,10 +1,11 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const bcrypt = require("bcryptjs");
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const { sharePost } = require("../controllers/postControllers");
-const { register, login } = require("../controllers/authControllers");
+const { register, login, changePassword } = require("../controllers/authControllers");
 
 function response() {
     return {
@@ -57,5 +58,34 @@ test("login uses the same unauthorized status for unknown email", async () => {
         assert.equal(res.statusCode, 401);
     } finally {
         User.findOne = originalFind;
+    }
+});
+
+test("change password checks the current password and stores a new hash", async () => {
+    const originalFind = User.findById;
+    const user = {
+        _id: "user",
+        password: await bcrypt.hash("CurrentPass1", 4),
+        resetPasswordToken: "old-token",
+        resetPasswordExpires: new Date(),
+        save: async () => {},
+    };
+    User.findById = async () => user;
+    try {
+        const denied = response();
+        await changePassword({ body: {
+            currentPassword: "incorrect", newPassword: "NewPassword2", confirmPassword: "NewPassword2",
+        }, user: { _id: "user" } }, denied);
+        assert.equal(denied.statusCode, 401);
+
+        const allowed = response();
+        await changePassword({ body: {
+            currentPassword: "CurrentPass1", newPassword: "NewPassword2", confirmPassword: "NewPassword2",
+        }, user: { _id: "user" } }, allowed);
+        assert.equal(allowed.statusCode, 200);
+        assert.equal(await bcrypt.compare("NewPassword2", user.password), true);
+        assert.equal(user.resetPasswordToken, null);
+    } finally {
+        User.findById = originalFind;
     }
 });

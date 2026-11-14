@@ -29,6 +29,7 @@ test("feed filters privacy and both block directions, then paginates", async () 
     };
     Post.find = (query) => {
         if (query.authorId?.$in) return { distinct: async () => ["source-post"] };
+        if (query.status?.$ne) return { distinct: async () => ["inactive-source"] };
         filter = query;
         return chain;
     };
@@ -52,7 +53,7 @@ test("feed filters privacy and both block directions, then paginates", async () 
         ]);
         assert.deepEqual(filter.$and[1].$or, [
             { originalPostId: null },
-            { originalPostId: { $nin: ["source-post"] } },
+            { originalPostId: { $nin: ["source-post", "inactive-source"] } },
         ]);
         assert.equal(skip, 20);
         assert.equal(limit, 10);

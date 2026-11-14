@@ -50,3 +50,11 @@
 - Đăng ký kiểm tra confirmPassword ở server; email không tồn tại và sai mật khẩu đều trả 401 (thay đổi 401 đã có sẵn trước khi bắt đầu).
 - Thêm chia sẻ bài công khai (hoặc bài riêng của chính người chia sẻ), lưu `originalPostId` và gửi notification `share`. Bài chia sẻ bị xóa mềm cùng nguồn; quyền riêng tư/block nguồn được kiểm tra khi đọc bài và trong feed.
 - Test các nhánh đổi hành vi trọng yếu; giao diện đăng ký/reset/share và đổi mật khẩu hoàn tất ở giai đoạn 8.
+
+## Giai đoạn 8: client và đặc tả
+
+- Cập nhật form đăng ký/reset, gửi confirmPassword, hiển thị chính sách mật khẩu; thêm đổi mật khẩu trong cài đặt hồ sơ và chọn ngày sinh.
+- Composer cho chọn quyền riêng tư; feed tải trang tiếp theo, hiển thị nội dung được chia sẻ và gọi API share thực.
+- Thêm giao diện báo cáo bài/bình luận và trang quản trị Admin; hiển thị notification share.
+- Lọc tài khoản khóa khỏi tìm kiếm. Cập nhật AUDIT.md theo code đã kiểm chứng và ghi rõ các điểm vẫn là một phần.
+- Lint lần đầu báo lỗi hook trong AdminPanel; đã chuyển thao tác tải dữ liệu qua callback bất đồng bộ và lint chạy lại đạt.

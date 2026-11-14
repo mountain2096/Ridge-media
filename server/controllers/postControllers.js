@@ -5,7 +5,7 @@ const User = require("../models/User");
 
 const createPost = async (req,res) =>{
     try{
-        const {content, image, video} = req.body;
+        const {content, image, video, privacy = "public"} = req.body;
 
         if(typeof content !== "string" || !content.trim()){
             return res.status(400).json({
@@ -16,12 +16,16 @@ const createPost = async (req,res) =>{
             (video !== undefined && typeof video !== "string")) {
             return res.status(400).json({ message: "Đường dẫn media không hợp lệ!" });
         }
+        if (!['public', 'friends', 'private'].includes(privacy)) {
+            return res.status(400).json({ message: "Quyền riêng tư bài viết không hợp lệ!" });
+        }
 
         const post = await Post.create({
             authorId: req.user._id,
             content,
             image: image?.trim() || "",
             video: video?.trim() || "",
+            privacy,
         })
         res.status(201).json({
             message:"Đã tạo bài viết mới!"
@@ -55,6 +59,7 @@ const getPosts = async (req,res) =>{
         const blockedSourcePostIds = blockedUserIds.length
             ? await Post.find({ authorId: { $in: blockedUserIds } }).distinct("_id")
             : [];
+        const inactiveSourcePostIds = await Post.find({ status: { $ne: "active" } }).distinct("_id");
         const filter = {
             status: "active",
             authorId: { $nin: blockedUserIds },
@@ -62,7 +67,7 @@ const getPosts = async (req,res) =>{
                 { $or: visibleByPrivacy },
                 { $or: [
                     { originalPostId: null },
-                    { originalPostId: { $nin: blockedSourcePostIds } },
+                    { originalPostId: { $nin: [...blockedSourcePostIds, ...inactiveSourcePostIds] } },
                 ] },
             ],
         };
