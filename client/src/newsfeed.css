@@ -782,6 +782,7 @@
 
 .post-menu button {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 12px;
   min-height: var(--news-tap);
@@ -792,6 +793,7 @@
   color: var(--news-ink);
   font-size: 14px;
   font-weight: 500;
+  line-height: 1.4;
   text-align: left;
   cursor: pointer;
 }

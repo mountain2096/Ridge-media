@@ -1310,6 +1310,7 @@ function FeedPage(){
                         setOpenPostMenuId(null);
                       }}
                     >
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" /></svg>
                       Chỉnh sửa bài viết
                     </button>
                     <button
@@ -1317,6 +1318,7 @@ function FeedPage(){
                       type="button"
                       onClick={() => handleDeletePost(post._id)}
                     >
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>
                       Xóa bài viết
                     </button>
                   </>
