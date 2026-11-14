@@ -59,3 +59,4 @@
 - Lọc tài khoản khóa khỏi tìm kiếm. Cập nhật AUDIT.md theo code đã kiểm chứng và ghi rõ các điểm vẫn là một phần.
 - Lint lần đầu báo lỗi hook trong AdminPanel; đã chuyển thao tác tải dữ liệu qua callback bất đồng bộ và lint chạy lại đạt.
 - Khi mở PR, xác minh `main` trong workspace (`99dcdf7`) và `origin/main` (`3b421e2`) là hai lịch sử không có merge-base. Để không rewrite commit đã push, nối lịch sử remote vào nhánh bằng merge commit giữ nguyên cây file của nhánh; PR vẫn so sánh cây cuối với `origin/main`.
+- Snapshot local có `node_modules.zip` 33 MB nhưng `origin/main` không có; file này đã bị xóa trong workspace trước khi bắt đầu. Ghi nhận đúng việc xóa sẵn có bằng commit để archive không xuất hiện trong cây cuối/PR và giữ workspace sạch.
