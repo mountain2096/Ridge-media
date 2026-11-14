@@ -432,12 +432,18 @@ function FeedPage(){
     }
 
     async function handleReport(targetType, targetId) {
+      const reason = window.prompt("Chọn lý do: spam, violence, abuse, misinfo, other", "other");
+      if (!reason) return;
+      if (!["spam", "violence", "abuse", "misinfo", "other"].includes(reason)) {
+        setPostActionError("Lý do báo cáo không hợp lệ.");
+        return;
+      }
       const description = window.prompt("Mô tả lý do báo cáo (không bắt buộc):") || "";
       try {
         const response = await fetch("http://localhost:5000/api/report", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-          body: JSON.stringify({ targetType, targetId, reason: "other", description }),
+          body: JSON.stringify({ targetType, targetId, reason, description }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Không thể gửi báo cáo.");
@@ -1274,10 +1280,10 @@ function FeedPage(){
             <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => handleToggleComments(post._id)}>
               ▢
             </button>
-            <button className="post-action-button" type="button" aria-label="Sao chép liên kết bài viết" onClick={() => handleSharePost(post._id)}>
+            <button className="post-action-button" type="button" aria-label="Chia sẻ bài viết" onClick={() => handleSharePost(post._id)}>
               ➤
             </button>
-            {!post.isMine && <button className="post-action-button" type="button" aria-label="Report post" onClick={() => handleReport("post", post._id)}>Report</button>}
+            {!post.isMine && <button className="post-action-button" type="button" aria-label="Báo cáo bài viết" onClick={() => handleReport("post", post._id)}>Báo cáo</button>}
           </div>
 
           <button
@@ -1378,7 +1384,7 @@ function FeedPage(){
                         {comment.content}
                       </p>
 
-                      {!comment.isMine && <button type="button" onClick={() => handleReport("comment", comment._id)}>Report</button>}
+                      {!comment.isMine && <button type="button" onClick={() => handleReport("comment", comment._id)}>Báo cáo</button>}
                       {comment.isMine && (
                         <div className="comment-controls">
                           <button

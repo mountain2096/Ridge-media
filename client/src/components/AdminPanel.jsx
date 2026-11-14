@@ -30,6 +30,7 @@ function AdminPanel() {
   }, [loadData]);
 
   async function updateUserLock(user) {
+    if (!user.isLocked && !window.confirm(`Khóa tài khoản ${user.username}?`)) return;
     try {
       const response = await fetch(`http://localhost:5000/api/admin/users/${user._id}/${user.isLocked ? "unlock" : "lock"}`, {
         method: "PATCH",

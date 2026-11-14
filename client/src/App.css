@@ -115,6 +115,13 @@ body {
   font-size: 16px;
 }
 
+.password-requirement {
+  margin: 0;
+  color: #737d8c;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 .submit-button {
   padding: 18px;
   border: 0;

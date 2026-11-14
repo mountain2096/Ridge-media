@@ -89,6 +89,7 @@ try{
                         <h1>Đặt lại mật khẩu</h1>
                     </div>
                     <form className="register-form" onSubmit={handleSubmit}>
+                        <p className="password-requirement">Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.</p>
                         <input
                         type="password"
                         name="password"

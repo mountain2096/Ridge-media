@@ -136,6 +136,9 @@ function AuthPage() {
               <input type="text" name="username" placeholder="Họ và tên" required />
             )}
             <input type="email" name="email" placeholder="Email" required/>
+            {activeTab === "register" && (
+              <p className="password-requirement">Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.</p>
+            )}
             <input 
             type="password" 
             placeholder="Mật khẩu" 
