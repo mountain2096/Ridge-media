@@ -1087,7 +1087,7 @@ function FeedPage(){
                   </h1>
                 )}
                 {activeSection === "feed" && <>
-                <div className="stories-card">
+                <div className="stories-card card">
                   {storyFeedback && <p className="feedback-message error">{storyFeedback}</p>}
                   <div className="story-list">
                     <button
@@ -1103,13 +1103,15 @@ function FeedPage(){
                         }
                       }}
                     >
-                      <span className="story-avatar story-self">
-                        {currentUser?.profilePicture ? (
-                          <img src={currentUser.profilePicture} alt="" />
-                        ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
-                        <span className="story-add">+</span>
+                      <span className="story-ring story-ring-add">
+                        <span className="story-avatar story-self">
+                          {currentUser?.profilePicture ? (
+                            <img src={currentUser.profilePicture} alt="" />
+                          ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
+                        </span>
+                        <span className="story-add" aria-hidden="true">+</span>
                       </span>
-                      <span className="story-name">Your Story</span>
+                      <span className="story-name">Tin của bạn</span>
                     </button>
                     {storyGroups
                       .filter((group) => group.author._id !== currentUser?._id)
@@ -1123,10 +1125,12 @@ function FeedPage(){
                             setActiveStoryIndex(0);
                           }}
                         >
-                          <span className="story-avatar story-blue">
-                            {group.author.profilePicture ? (
-                              <img src={group.author.profilePicture} alt="" />
-                            ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
+                          <span className="story-ring">
+                            <span className="story-avatar story-blue">
+                              {group.author.profilePicture ? (
+                                <img src={group.author.profilePicture} alt="" />
+                              ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
+                            </span>
                           </span>
                           <span className="story-name">{group.author.username}</span>
                         </button>
