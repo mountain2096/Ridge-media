@@ -22,7 +22,7 @@ const searchUsers = async (req, res) => {
 
         const users = await User.find({
             _id: { $nin: excludedIds },
-            isLocked: false,
+            isLocked: { $ne: true },
             username: { $regex: escapedQuery, $options: "i" },
             blockList: { $ne: req.user._id },
         })
