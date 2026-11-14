@@ -13,3 +13,8 @@
 - Thêm `dateOfBirth` cùng cập nhật hồ sơ có kiểm tra ngày hợp lệ.
 - Thêm unique partial index cho lời mời kết bạn đang chờ. Migration kiểm tra dữ liệu trùng trước khi tạo index và dừng an toàn nếu phát hiện trùng, không xóa dữ liệu.
 - Có sẵn migration status cho bài viết/bình luận cũ; không chạy migration dữ liệu vì cần nhắm đúng MongoDB người dùng và không có yêu cầu/ủy quyền ghi vào DB thật.
+
+## Giai đoạn 2: middleware
+
+- Xác minh `protect` hiện đã nạp User từ DB và từ chối tài khoản `isLocked`; `requireAdmin` đã kiểm tra `req.user.isAdmin` sau xác thực. Đây là code có sẵn trước thay đổi.
+- Bổ sung test hồi quy cho hai nhánh phân quyền này; sẽ gắn `requireAdmin` vào các route quản trị ở giai đoạn 6.
