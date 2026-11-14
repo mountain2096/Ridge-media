@@ -1098,3 +1098,220 @@
     padding: 0 12px;
   }
 }
+
+.home-layout .comments-list {
+  display: grid;
+  gap: 12px;
+  margin: 8px 20px 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--news-border);
+}
+
+.home-layout .comment-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.comment-avatar {
+  display: grid;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--news-ink);
+  color: var(--news-surface);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.comment-bubble,
+.home-layout .comment-edit-form {
+  width: fit-content;
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--news-bg);
+  color: var(--news-ink);
+  overflow-wrap: anywhere;
+}
+
+.comment-bubble strong {
+  display: block;
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+
+.comment-bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.home-layout .comment-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 36px;
+  margin-top: 2px;
+}
+
+.home-layout .comment-icon-button {
+  display: inline-flex;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--news-nav);
+  cursor: pointer;
+}
+
+.comment-icon-button:hover {
+  background: var(--news-hover);
+}
+
+.comment-icon-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home-layout .comment-icon-button.comment-delete-button {
+  color: var(--news-danger);
+}
+
+.comment-report-button {
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--news-danger);
+  cursor: pointer;
+}
+
+.comment-report-button:hover {
+  background: var(--news-hover);
+}
+
+.home-layout .comment-edit-form {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+  padding: 10px;
+}
+
+.home-layout .comment-edit-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--news-border);
+  border-radius: 12px;
+  background: var(--news-field);
+  color: var(--news-ink);
+  outline: none;
+}
+
+.home-layout .comment-edit-form input:focus {
+  border-color: var(--news-accent);
+  box-shadow: 0 0 0 2px rgb(47 75 224 / 16%);
+}
+
+.comment-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.home-layout .comment-edit-actions button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--news-border);
+  border-radius: 999px;
+  background: var(--news-surface);
+  color: var(--news-ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home-layout .comment-edit-actions button[type="submit"] {
+  border-color: var(--news-accent);
+  background: var(--news-accent);
+  color: var(--news-surface);
+}
+
+.home-layout .comment-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 20px 16px;
+}
+
+.home-layout .comment-form input {
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--news-border);
+  border-radius: 999px;
+  background: var(--news-field);
+  color: var(--news-ink);
+  outline: none;
+}
+
+.home-layout .comment-form input:focus {
+  border-color: var(--news-accent);
+  box-shadow: 0 0 0 2px rgb(47 75 224 / 16%);
+}
+
+.home-layout .comment-form button {
+  min-width: 72px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--news-accent);
+  border-radius: 999px;
+  background: var(--news-accent);
+  color: var(--news-surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .home-layout .comments-list,
+  .home-layout .comment-form {
+    margin-right: 14px;
+    margin-left: 14px;
+  }
+
+  .home-layout .comment-icon-button {
+    width: var(--news-tap);
+    min-width: var(--news-tap);
+    height: var(--news-tap);
+    min-height: var(--news-tap);
+  }
+}

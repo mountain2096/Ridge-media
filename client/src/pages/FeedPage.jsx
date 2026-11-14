@@ -1433,62 +1433,80 @@ function FeedPage(){
               !commentError &&
               comments.map((comment) => (
                 <div className="comment-item" key={comment._id}>
-                  {editingCommentId === comment._id ? (
-                    <form
-                      className="comment-edit-form"
-                      onSubmit={(event) => handleUpdateComment(event, comment._id)}
-                    >
-                      <input
-                        value={editingCommentContent}
-                        onChange={(event) => setEditingCommentContent(event.target.value)}
-                        maxLength="500"
-                      />
-
-                      <button type="submit" disabled={isUpdatingComment}>
-                        {isUpdatingComment ? "Đang lưu..." : "Lưu"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingCommentId(null);
-                          setEditingCommentContent("");
-                        }}
+                  <span className="comment-avatar">
+                    {comment.authorId?.profilePicture ? (
+                      <img src={comment.authorId.profilePicture} alt="" />
+                    ) : (comment.authorId?.username || "U").charAt(0).toUpperCase()}
+                  </span>
+                  <div className="comment-main">
+                    {editingCommentId === comment._id ? (
+                      <form
+                        className="comment-edit-form"
+                        onSubmit={(event) => handleUpdateComment(event, comment._id)}
                       >
-                        Hủy
-                      </button>
-                    </form>
-                  ) : (
-                    <>
-                      <p>
-                        <strong>{comment.authorId?.username || "Người dùng"}</strong>{" "}
-                        {comment.content}
-                      </p>
-
-                      {!comment.isMine && <button type="button" onClick={() => handleReport("comment", comment._id)}>Báo cáo</button>}
-                      {comment.isMine && (
-                        <div className="comment-controls">
+                        <input
+                          aria-label="Sửa nội dung bình luận"
+                          value={editingCommentContent}
+                          onChange={(event) => setEditingCommentContent(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              setEditingCommentId(null);
+                              setEditingCommentContent("");
+                            }
+                          }}
+                          maxLength="500"
+                        />
+                        <div className="comment-edit-actions">
+                          <button type="submit" disabled={isUpdatingComment}>
+                            {isUpdatingComment ? "Đang lưu..." : "Lưu"}
+                          </button>
                           <button
                             type="button"
                             onClick={() => {
-                              setEditingCommentId(comment._id);
-                              setEditingCommentContent(comment.content);
+                              setEditingCommentId(null);
+                              setEditingCommentContent("");
                             }}
                           >
-                            Sửa
-                          </button>
-
-                          <button
-                            className="comment-delete-button"
-                            type="button"
-                            onClick={() => handleDeleteComment(comment._id)}
-                          >
-                            Xóa
+                            Hủy
                           </button>
                         </div>
-                      )}
-                    </>
-                  )}
+                      </form>
+                    ) : (
+                      <>
+                        <div className="comment-bubble">
+                          <strong>{comment.authorId?.username || "Người dùng"}</strong>
+                          <p>{comment.content}</p>
+                        </div>
+                        <div className="comment-controls">
+                          {comment.isMine ? (
+                            <>
+                              <button
+                                className="comment-icon-button"
+                                type="button"
+                                aria-label="Sửa bình luận"
+                                onClick={() => {
+                                  setEditingCommentId(comment._id);
+                                  setEditingCommentContent(comment.content);
+                                }}
+                              >
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" /></svg>
+                              </button>
+                              <button
+                                className="comment-icon-button comment-delete-button"
+                                type="button"
+                                aria-label="Xóa bình luận"
+                                onClick={() => handleDeleteComment(comment._id)}
+                              >
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>
+                              </button>
+                            </>
+                          ) : (
+                            <button className="comment-report-button" type="button" onClick={() => handleReport("comment", comment._id)}>Báo cáo</button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
           </div>
@@ -1499,6 +1517,7 @@ function FeedPage(){
             <input
               type="text"
               placeholder="Viết bình luận..."
+              aria-label="Viết bình luận"
               maxLength="500"
               value={commentContent}
               onChange={(event) => setCommentContent(event.target.value)}
