@@ -113,6 +113,33 @@
   font-weight: 600;
 }
 
+.menu-item-label {
+  min-width: 0;
+}
+
+.sidebar-count {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-width: 22px;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--news-accent);
+  color: var(--news-surface);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-item.active .sidebar-count {
+  background: var(--news-surface);
+  color: var(--news-ink);
+}
+
 .menu-item svg,
 .logout-button svg {
   flex: none;

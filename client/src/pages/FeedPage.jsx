@@ -45,6 +45,8 @@ function FeedPage(){
     const [notifications, setNotifications] = useState([]);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [notificationError, setNotificationError] = useState("");
+    const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+    const [pendingFriendRequestCount, setPendingFriendRequestCount] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [people, setPeople] = useState([]);
     const [isLoadingPeople, setIsLoadingPeople] = useState(false);
@@ -107,6 +109,49 @@ function FeedPage(){
     }, []);
 
     useEffect(() => {
+      let isMounted = true;
+      let isLoadingCounts = false;
+
+      async function loadSidebarCounts() {
+        if (isLoadingCounts) return;
+        isLoadingCounts = true;
+        try {
+          const token = localStorage.getItem("token");
+          const headers = { Authorization: "Bearer " + token };
+          const [messagesResponse, requestsResponse] = await Promise.all([
+            fetch("http://localhost:5000/api/message/conversations", { headers }),
+            fetch("http://localhost:5000/api/friend/requests", { headers }),
+          ]);
+          const [messagesData, requestsData] = await Promise.all([
+            messagesResponse.json(),
+            requestsResponse.json(),
+          ]);
+          if (!messagesResponse.ok || !requestsResponse.ok) return;
+          if (!isMounted) return;
+
+          setUnreadMessageCount((messagesData.conversations || []).reduce(
+            (total, conversation) => total + Number(conversation.unreadCount || 0),
+            0
+          ));
+          setPendingFriendRequestCount((requestsData.request || []).length);
+        } catch {
+          // Sidebar counts are optional; keep the feed usable if a count request fails.
+        } finally {
+          isLoadingCounts = false;
+        }
+      }
+
+      loadSidebarCounts();
+      const intervalId = window.setInterval(loadSidebarCounts, 10000);
+      window.addEventListener("focus", loadSidebarCounts);
+      return () => {
+        isMounted = false;
+        window.clearInterval(intervalId);
+        window.removeEventListener("focus", loadSidebarCounts);
+      };
+    }, []);
+
+    useEffect(() => {
       if (activeSection !== "connections") return undefined;
       const controller = new AbortController();
       async function loadFriendRequests() {
@@ -123,6 +168,7 @@ function FeedPage(){
             throw new Error(data.message || "Không thể tải lời mời kết bạn.");
           }
           setFriendRequests(data.request);
+          setPendingFriendRequestCount(data.request.length);
         } catch (requestError) {
           if (requestError.name !== "AbortError") {
             setFriendRequestError(requestError.message);
@@ -571,6 +617,7 @@ function FeedPage(){
         setFriendRequests((currentRequests) => currentRequests.filter(
           (request) => request._id !== requestId
         ));
+        setPendingFriendRequestCount((count) => Math.max(0, count - 1));
       } catch (requestError) {
         setPeopleError(requestError.message);
       }
@@ -907,10 +954,12 @@ function FeedPage(){
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>Bảng tin
                 </button>
                 <button className={`menu-item ${activeSection === "messages" ? "active" : ""}`} type="button" onClick={() => setActiveSection("messages")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>Tin nhắn
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg><span className="menu-item-label">Tin nhắn</span>
+                  {unreadMessageCount > 0 && <span className="sidebar-count" role="status" aria-label={unreadMessageCount + " tin nhắn chưa đọc"}>{unreadMessageCount > 99 ? "99+" : unreadMessageCount}</span>}
                 </button>
                 <button className={`menu-item ${activeSection === "connections" ? "active" : ""}`} type="button" onClick={() => setActiveSection("connections")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.2.7 3.5 2.6 3.5 5.7" /></svg>Kết bạn
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.2.7 3.5 2.6 3.5 5.7" /></svg><span className="menu-item-label">Kết bạn</span>
+                  {pendingFriendRequestCount > 0 && <span className="sidebar-count" role="status" aria-label={pendingFriendRequestCount + " lời mời kết bạn mới"}>{pendingFriendRequestCount > 99 ? "99+" : pendingFriendRequestCount}</span>}
                 </button>
                 <button className={`menu-item ${activeSection === "reels" ? "active" : ""}`} type="button" onClick={() => setActiveSection("reels")}>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M3 9h18M8 4l3 5m3-5 3 5m-6 3.5v4l3.5-2z" /></svg>Reels
