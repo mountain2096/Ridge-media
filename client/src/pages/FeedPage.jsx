@@ -936,13 +936,18 @@ function FeedPage(){
 
             <section className="home-content">
             <header className="home-topbar">
+                <div className="news-search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
                 <input
                   type="search"
+                  aria-label="Tìm người dùng"
                   placeholder="Tìm người dùng..."
                   value={searchQuery}
                   onFocus={() => setActiveSection("connections")}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
+                </div>
+                <div className="news-topbar-right">
                 <div className="topbar-user">
                 <div className="notification-wrap">
                   <button
@@ -992,6 +997,7 @@ function FeedPage(){
                   ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
                 </span>
                 <span>{currentUser?.username || "Tài khoản"}</span>
+                </div>
                 </div>
             </header>
             {profileError && <p className="profile-load-error">{profileError}</p>}
