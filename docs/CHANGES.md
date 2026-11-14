@@ -36,3 +36,10 @@
 - Chặn tạo hội thoại, gửi tin, đọc lịch sử và đánh dấu đã đọc nếu một trong hai người chặn người kia.
 - Lọc hội thoại bị block khỏi danh sách. Kiểm tra blockList từ hai phía, kể cả dữ liệu hội thoại cũ.
 - Thêm test cho block từ phía người nhận và người gửi; không tạo tin nhắn khi bị chặn.
+
+## Giai đoạn 6: Report và Admin
+
+- Thêm API gửi báo cáo bài viết/bình luận đang hoạt động; báo cáo trùng trả 409 theo unique index sẵn có.
+- Thêm API Admin liệt kê người dùng, khóa/mở khóa tài khoản, xem báo cáo và cập nhật trạng thái. Tất cả `/api/admin` được bảo vệ bằng `protect` và `requireAdmin`.
+- Bổ sung `reviewedBy`/`reviewedAt` để lưu người và thời điểm xử lý. Trạng thái `actioned` ghi nhận quyết định Admin nhưng không tự xóa bài hay khóa tài khoản; giữ nguyên nội dung và tài khoản trừ khi Admin dùng thao tác tương ứng.
+- Thêm test cho báo cáo trùng, khóa tài khoản và audit thông tin người duyệt.

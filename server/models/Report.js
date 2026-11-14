@@ -7,6 +7,8 @@ const reportSchema = new mongoose.Schema({
   reason: { type: String, enum: ["spam", "violence", "abuse", "misinfo", "other"], required: true },
   description: { type: String, maxlength: 500, default: "" },
   status: { type: String, enum: ["pending", "reviewed", "actioned"], default: "pending" },
+  reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  reviewedAt: { type: Date, default: null },
 }, { timestamps: true });
 
 reportSchema.index({ reporterId: 1, targetType: 1, targetId: 1 }, { unique: true });
