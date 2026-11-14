@@ -928,6 +928,25 @@
   stroke: var(--news-like);
 }
 
+.post-action-button.liked svg {
+  fill: currentColor;
+}
+
+.post-action-button.liked {
+  animation: post-like-pop 200ms ease-out;
+}
+
+@keyframes post-like-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-action-button.liked {
+    animation: none;
+  }
+}
+
 .post-action-button.saved,
 .post-action-button.saved svg {
   color: var(--news-accent);
