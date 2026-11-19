@@ -1568,7 +1568,7 @@
 }
 
 .home-layout .comment-edit-actions button {
-  min-height: 40px;
+  min-height: var(--news-tap);
   padding: 0 16px;
   border: 1px solid var(--news-border);
   border-radius: 999px;
@@ -1635,3 +1635,4 @@
     min-height: var(--news-tap);
   }
 }
+  min-height: var(--news-tap);
