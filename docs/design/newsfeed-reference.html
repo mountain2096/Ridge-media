@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ridge – Bảng tin (bản thiết kế tham chiếu)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<!--
+  FILE THAM CHIẾU THIẾT KẾ — KHÔNG phải code chạy của dự án.
+  Mục đích: cho thấy giao diện News Feed mới (màu, cỡ chữ, bo góc, bố cục, thứ tự các phần tử).
+  Hãy làm lại giao diện thật của dự án (React) cho GIỐNG file này, dùng đúng cách viết style của dự án.
+  Mở file này bằng trình duyệt để xem. Dữ liệu trong file chỉ là mẫu.
+-->
+<style>
+/* ===== Design tokens: chuyển thành biến/theme trong dự án ===== */
+:root{
+  --bg:#F4F5F9;        /* nền trang */
+  --surface:#FFFFFF;   /* card */
+  --border:#E6E8EF;
+  --ink:#0F172A;       /* chữ chính, nền mục menu đang chọn, logo */
+  --muted:#5B6478;     /* chữ phụ */
+  --nav:#3A4358;       /* chữ menu, icon */
+  --accent:#2F4BE0;    /* nút chính, vòng story, link */
+  --danger:#B42318;    /* Báo cáo */
+  --like:#E5484D;      /* tim đã thích */
+  --hover:#EEF0F7;     /* nền khi rê chuột */
+  --field:#F8F9FC;     /* nền ô nhập */
+  --radius-card:16px;
+  --tap:44px;          /* chiều cao tối thiểu của mọi nút/ô bấm */
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font-family:inherit;font-size:inherit}
+svg{flex:none}
+.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+a:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,.chip:focus-within,.search:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+::placeholder{color:#6B7488;opacity:1}
+
+/* ===== Khung trang: sidebar | cột chính ===== */
+.app{display:flex;flex-wrap:wrap;align-items:stretch;min-height:100vh}
+.sidebar{flex:1 1 248px;padding:28px 20px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;gap:32px}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+
+/* ===== Sidebar ===== */
+.logo{display:flex;align-items:center;gap:12px;padding:0 8px}
+.logo-mark{width:44px;height:44px;border-radius:12px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px}
+.logo-text{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a,.nav-logout{display:flex;align-items:center;gap:14px;min-height:48px;padding:0 16px;border-radius:12px;font-weight:500;color:var(--nav)}
+.nav a:hover,.nav-logout:hover{background:var(--hover)}
+.nav a.active{background:var(--ink);color:#fff;font-weight:600}
+.nav-logout{margin-top:auto}
+
+/* ===== Thanh trên cùng ===== */
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 32px;background:var(--surface);border-bottom:1px solid var(--border)}
+.search{flex:1 1 280px;max-width:480px;display:flex;align-items:center;gap:10px;height:48px;padding:0 18px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.search input{flex:1;min-width:0;border:0;outline:none;background:transparent;color:var(--ink)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.iconbtn{width:var(--tap);height:var(--tap);border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--nav);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.iconbtn.ghost{border:0;background:transparent}
+.iconbtn.ghost:hover{background:var(--hover)}
+.user{display:flex;align-items:center;gap:10px;min-height:var(--tap);padding:0 8px 0 4px;border-radius:999px;font-weight:600}
+
+/* ===== Avatar (chữ cái đầu) ===== */
+.avatar{flex:none;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.av-40{width:40px;height:40px}
+.av-44{width:44px;height:44px}
+.av-46{width:46px;height:46px;font-size:18px}
+.av-navy{background:#0F172A}
+.av-blue{background:#3F6C99}
+.av-purple{background:#7A5BB0}
+
+/* ===== Nội dung: cột giữa + cột phải ===== */
+.content{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;padding:28px 32px 48px}
+.feed{flex:999 1 520px;min-width:0;max-width:720px;display:flex;flex-direction:column;gap:20px}
+.rail{flex:1 1 300px;max-width:340px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card)}
+
+/* ===== Stories ===== */
+.stories{padding:18px 20px;display:flex;gap:20px;overflow-x:auto}
+.story{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:76px;font-size:13px;font-weight:500;color:var(--nav)}
+.ring{position:relative;width:72px;height:72px;border-radius:50%;border:2px solid var(--accent);padding:3px;display:flex}
+.ring.add{border:2px dashed #AEB5CA}
+.ring .avatar{flex:1;font-size:24px}
+.plus{position:absolute;right:-4px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:var(--accent);border:2px solid #fff;color:#fff;display:flex;align-items:center;justify-content:center}
+.plus svg{width:14px;height:14px;stroke-width:2.5}
+
+/* ===== Thẻ "Tạo bài viết" ===== */
+.composer{padding:20px;display:flex;flex-direction:column;gap:14px}
+.composer h2{margin:0;font-size:17px;font-weight:600}
+.composer-row{display:flex;gap:12px;align-items:flex-start}
+.composer textarea{flex:1;min-width:0;min-height:84px;resize:vertical;border:1px solid var(--border);border-radius:14px;background:var(--field);padding:12px 14px;color:var(--ink)}
+.hint{margin:0;font-size:13px;color:var(--muted)}
+.composer-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.spacer{flex:1 1 0}
+/* nút Ảnh/Video: <label> bọc <input type="file"> ẩn, thay cho nút "Choose File" mặc định */
+.chip{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:var(--tap);padding:0 16px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--nav);font-weight:500;cursor:pointer}
+.chip input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.select-label{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+.select-label select{height:var(--tap);border:1px solid var(--border);border-radius:999px;padding:0 14px;background:var(--surface);font-size:14px;font-weight:500;color:var(--ink)}
+.btn-primary{min-height:var(--tap);padding:0 26px;border:0;border-radius:999px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+.btn-outline{min-height:var(--tap);padding:0 18px;border:1.5px solid var(--accent);border-radius:999px;background:var(--surface);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer}
+
+/* ===== Thẻ bài viết ===== */
+.post-head{display:flex;align-items:center;gap:12px;padding:18px 20px 12px}
+.post-who{flex:1;min-width:0}
+.post-name{font-weight:600;font-size:16px;line-height:1.3}
+.post-meta{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.post-meta svg{width:14px;height:14px}
+.post-more{position:relative}
+/* menu ba chấm: "Báo cáo" nằm ở đây, không còn nút riêng ở dưới bài */
+.menu{position:absolute;right:0;top:48px;z-index:5;min-width:232px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 32px rgba(15,23,42,.14);display:flex;flex-direction:column}
+.menu button{display:flex;align-items:center;gap:12px;min-height:var(--tap);padding:0 12px;border:0;border-radius:10px;background:transparent;font-weight:500;color:var(--ink);cursor:pointer;text-align:left}
+.menu button:hover{background:var(--hover)}
+.menu button.danger{color:var(--danger)}
+.menu svg{width:18px;height:18px}
+/* bài CHỈ có chữ: không hiện khung xám "Bài viết không có ảnh" */
+.post-text{margin:0;padding:4px 20px 20px;font-size:22px;line-height:1.45;font-weight:500;overflow-wrap:anywhere}
+/* bài có ảnh/video */
+.media{margin:0 20px;height:380px;border-radius:14px;background:#E6EAF4;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:14px}
+.caption{margin:0;padding:14px 20px 4px;overflow-wrap:anywhere}
+.likes{padding:6px 20px 10px;font-size:14px;font-weight:500;color:var(--muted)}
+.actions{display:flex;align-items:center;gap:4px;padding:6px 12px 10px;border-top:1px solid #EEF0F6}
+.action{display:inline-flex;align-items:center;gap:8px;min-height:var(--tap);padding:0 14px;border:0;border-radius:999px;background:transparent;font-size:14px;font-weight:500;color:var(--nav);cursor:pointer}
+.action:hover{background:var(--hover)}
+.action.liked svg{fill:var(--like);stroke:var(--like)} /* đã thích: tim đỏ đầy */
+
+/* ===== Cột phải: Bạn bè ===== */
+.friends{padding:20px;display:flex;flex-direction:column;gap:12px}
+.friends-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.friends-head h2{margin:0;font-size:18px;font-weight:700}
+.friends-head a{display:inline-flex;align-items:center;min-height:var(--tap);font-size:14px;font-weight:600;color:var(--accent)}
+.friend{display:flex;align-items:center;gap:12px}
+.friend-name{flex:1;min-width:0;font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <a href="#" class="logo"><span class="logo-mark">R</span><span class="logo-text">Ridge</span></a>
+    <nav class="nav" aria-label="Điều hướng chính">
+      <a href="#" class="active" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Bảng tin</a>
+      <a href="#"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Tin nhắn</a>
+      <a href="#"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.3c2.2.7 3.5 2.6 3.5 5.7"/></svg>Kết bạn</a>
+      <a href="#"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M8 4l3 5M14 4l3 5"/><path d="M10.5 12.5v4l3.5-2z"/></svg>Reels</a>
+      <a href="#"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z"/></svg>Đã lưu</a>
+      <a href="#"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Hoạt động của bạn</a>
+      <a href="#"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Cài đặt</a>
+    </nav>
+    <a href="#" class="nav-logout"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Đăng xuất</a>
+  </aside>
+
+  <!-- ===== CỘT CHÍNH ===== -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="search">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" aria-label="Tìm người dùng" placeholder="Tìm người dùng...">
+      </div>
+      <div class="topbar-right">
+        <button type="button" class="iconbtn" aria-label="Thông báo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button>
+        <a href="#" class="user"><span class="avatar av-40 av-navy">R</span>Ridge12</a>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ===== CỘT GIỮA ===== -->
+      <section class="feed" aria-label="Bảng tin">
+
+        <!-- Stories: "Tin của bạn" viền nét đứt có nút +, story người khác viền màu nhấn -->
+        <div class="card stories">
+          <a href="#" class="story"><span class="ring add"><span class="avatar av-navy">R</span><span class="plus"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></span>Tin của bạn</a>
+          <a href="#" class="story"><span class="ring"><span class="avatar av-purple">R</span></span>Ridge13</a>
+          <a href="#" class="story"><span class="ring"><span class="avatar av-blue">R</span></span>Ridge3</a>
+        </div>
+
+        <!-- Tạo bài viết -->
+        <section class="card composer" aria-label="Tạo bài viết">
+          <h2>Tạo bài viết</h2>
+          <div class="composer-row">
+            <span class="avatar av-44 av-navy">R</span>
+            <textarea aria-label="Nội dung bài viết" placeholder="Bạn đang nghĩ gì?" rows="3"></textarea>
+          </div>
+          <p class="hint">Ảnh hoặc video tùy chọn, tối đa 30 MB mỗi tệp.</p>
+          <div class="composer-actions">
+            <label class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></svg>Ảnh<input type="file" accept="image/*"></label>
+            <label class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3"/></svg>Video<input type="file" accept="video/*"></label>
+            <span class="spacer"></span>
+            <label class="select-label">Ai có thể xem?
+              <select><option>Mọi người</option><option>Bạn bè</option><option>Chỉ mình tôi</option></select>
+            </label>
+            <button type="button" class="btn-primary">Đăng bài</button>
+          </div>
+        </section>
+
+        <!-- Bài 1: CHỈ CÓ CHỮ (menu ba chấm đang mở để minh họa vị trí nút Báo cáo) -->
+        <article class="card">
+          <header class="post-head">
+            <span class="avatar av-46 av-blue">R</span>
+            <div class="post-who">
+              <div class="post-name">Ridge3</div>
+              <div class="post-meta"><span>Ridge</span><span aria-hidden="true">·</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>Mọi người</span></div>
+            </div>
+            <div class="post-more">
+              <button type="button" class="iconbtn ghost" aria-label="Tùy chọn bài viết" aria-expanded="true"><svg class="i" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+              <div class="menu">
+                <button type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z"/></svg>Lưu bài viết</button>
+                <button type="button" class="danger"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>Báo cáo bài viết</button>
+              </div>
+            </div>
+          </header>
+          <p class="post-text">hiiiiiiiii</p>
+          <div class="likes">0 lượt thích</div>
+          <div class="actions">
+            <button type="button" class="action"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z"/></svg>Thích</button>
+            <button type="button" class="action"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"/></svg>Bình luận</button>
+            <button type="button" class="action"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z"/></svg>Chia sẻ</button>
+            <span class="spacer"></span>
+            <button type="button" class="iconbtn ghost" aria-label="Lưu bài viết"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z"/></svg></button>
+          </div>
+        </article>
+
+        <!-- Bài 2: CÓ ẢNH/VIDEO (mẫu minh họa, nội dung giả) -->
+        <article class="card">
+          <header class="post-head">
+            <span class="avatar av-46 av-purple">R</span>
+            <div class="post-who">
+              <div class="post-name">Ridge13</div>
+              <div class="post-meta"><span>Ridge</span><span aria-hidden="true">·</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>Mọi người</span></div>
+            </div>
+            <div class="post-more">
+              <button type="button" class="iconbtn ghost" aria-label="Tùy chọn bài viết" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+            </div>
+          </header>
+          <div class="media">[Ảnh hoặc video của bài viết]</div>
+          <p class="caption"><strong>Ridge13</strong> [Nội dung bài viết có ảnh]</p>
+          <div class="likes">0 lượt thích</div>
+          <div class="actions">
+            <button type="button" class="action"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z"/></svg>Thích</button>
+            <button type="button" class="action"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"/></svg>Bình luận</button>
+            <button type="button" class="action"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z"/></svg>Chia sẻ</button>
+            <span class="spacer"></span>
+            <button type="button" class="iconbtn ghost" aria-label="Lưu bài viết"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z"/></svg></button>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- ===== CỘT PHẢI ===== -->
+      <aside class="rail" aria-label="Bạn bè">
+        <div class="card friends">
+          <div class="friends-head"><h2>Bạn bè</h2><a href="#">Xem tất cả</a></div>
+          <div class="friend">
+            <span class="avatar av-44 av-purple">R</span>
+            <span class="friend-name">Ridge13</span>
+            <button type="button" class="btn-outline">Nhắn tin</button>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>
