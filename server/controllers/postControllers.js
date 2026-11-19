@@ -71,6 +71,12 @@ const getPosts = async (req,res) =>{
                 ] },
             ],
         };
+        if (req.query.authorId !== undefined) {
+            if (typeof req.query.authorId !== "string" || !/^[a-f\d]{24}$/i.test(req.query.authorId)) {
+                return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+            }
+            filter.authorId = { $eq: req.query.authorId, $nin: blockedUserIds };
+        }
         const [posts, total] = await Promise.all([
             Post.find(filter)
                 .populate("authorId", "username profilePicture")

@@ -166,7 +166,8 @@ const updateMe = async (req, res) =>{
 const getUserById = async (req,res) =>{
     try{
         const user = await User.findById(req.params.id)
-            .select("-password -email -resetPasswordToken -resetPasswordExpires");
+            .select("username profilePicture coverPicture bio createdAt friend blockList")
+            .populate("friend", "username profilePicture");
 
         if(!user){
             return res.status(404).json({
@@ -174,9 +175,37 @@ const getUserById = async (req,res) =>{
             })
         }
 
-        res.status(200).json({
-            user,
-        })
+        const viewerId = req.user._id.toString();
+        const targetId = user._id.toString();
+        const viewerBlockedTarget = (req.user.blockList || []).some((id) => id.toString() === targetId);
+        const targetBlockedViewer = (user.blockList || []).some((id) => id.toString() === viewerId);
+        if (viewerBlockedTarget || targetBlockedViewer) {
+            return res.status(404).json({ message: "Người dùng không tồn tại!" });
+        }
+
+        const [outgoingRequest, incomingRequest] = targetId === viewerId ? [null, null] : await Promise.all([
+            FriendRequest.findOne({ senderId: req.user._id, receiverId: user._id, status: "pending" }).select("_id"),
+            FriendRequest.findOne({ senderId: user._id, receiverId: req.user._id, status: "pending" }).select("_id"),
+        ]);
+        const profile = user.toObject();
+        profile.friendCount = user.friend.length;
+        delete profile.friend;
+        delete profile.blockList;
+        profile.friends = user.friend.filter(Boolean).slice(0, 9).map((friend) => ({
+            _id: friend._id,
+            username: friend.username,
+            profilePicture: friend.profilePicture,
+        }));
+        return res.status(200).json({
+            user: profile,
+            relationship: {
+                isSelf: targetId === viewerId,
+                isFriend: (req.user.friend || []).some((id) => id.toString() === targetId),
+                hasSentRequest: Boolean(outgoingRequest),
+                hasReceivedRequest: Boolean(incomingRequest),
+                incomingRequestId: incomingRequest?._id || null,
+            },
+        });
     } catch(err){
         res.status(400).json({
             message: err.message

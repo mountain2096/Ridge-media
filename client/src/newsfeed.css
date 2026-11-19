@@ -287,20 +287,58 @@
   padding: 28px 32px 48px;
 }
 
+.home-layout .home-columns {
+  display: flex;
+  grid-template-columns: none;
+}
+
+.home-columns:not(.home-columns-single) {
+  width: min(1040px, 100%);
+  justify-content: center;
+  margin-inline: auto;
+  gap: 28px;
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
 .feed-column {
-  flex: 999 1 520px;
+  flex: 0 1 640px;
+  width: min(640px, 100%);
   min-width: 0;
-  max-width: 720px;
+  max-width: 680px;
   gap: 20px;
+}
+
+.home-columns-single {
+  width: 100%;
+  max-width: none;
+  justify-content: center;
+}
+
+.feed-column-single {
+  flex: 1 1 900px;
+  width: min(960px, 100%);
+  max-width: 1000px;
+  margin-inline: auto;
+}
+
+.feed-column-single > .friends-page {
+  width: min(900px, 100%);
+  max-width: 900px;
+  margin-inline: auto;
 }
 
 .right-column {
   display: flex;
-  flex: 1 1 300px;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+  flex: 0 1 320px;
   flex-direction: column;
   gap: 20px;
   min-width: 0;
   max-width: 340px;
+  width: 320px;
 }
 
 .friends-card {
@@ -311,6 +349,85 @@
   border: 1px solid var(--news-border);
   border-radius: var(--news-radius-card);
   background: var(--news-surface);
+}
+
+.menu-item-hidden {
+  display: none !important;
+}
+
+.home-menu a.menu-item {
+  text-decoration: none;
+}
+
+.connections-page .connection-person-avatar {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, #344fc4, #8293ee);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.connections-page .connection-person-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.connections-page .connection-person-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--news-ink);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.connections-page .connection-person-name:hover {
+  text-decoration: underline;
+}
+
+.connections-page .friend-request-row .connection-person-name,
+.connections-page .connection-friend-row .connection-person-name {
+  flex: 1;
+  margin-right: auto;
+}
+
+.connections-friends-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.connection-friend-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.connection-unfriend-button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--news-border);
+  border-radius: 999px;
+  color: var(--news-nav);
+  background: var(--news-surface);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.connection-unfriend-button:hover {
+  background: var(--news-hover);
 }
 
 .friends-head {
@@ -1030,6 +1147,48 @@
   }
 }
 
+@media (max-width: 1023px) {
+  .home-columns:not(.home-columns-single) {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .home-columns:not(.home-columns-single) .feed-column {
+    flex: 1 1 680px;
+    width: min(680px, 100%);
+    max-width: 680px;
+    margin-inline: auto;
+  }
+
+  .home-columns .right-column {
+    display: none;
+  }
+
+  .home-columns-single {
+    width: 100%;
+    max-width: 100%;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .feed-column-single {
+    flex: 1 1 900px;
+    width: min(900px, 100%);
+    max-width: 900px;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-columns:not(.home-columns-single),
+  .home-columns-single {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}
+
 .settings-page {
   display: flex;
   flex: 1 1 100%;
@@ -1364,6 +1523,11 @@
     max-width: none;
   }
 
+  .feed-column-single {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
   .right-column {
     flex: 1 0 100%;
     max-width: none;
@@ -1412,6 +1576,14 @@
 
   .friend-row {
     gap: 8px;
+  }
+
+  .connection-friend-row {
+    gap: 7px;
+  }
+
+  .connection-friend-row .connection-person-name {
+    flex-basis: calc(100% - 56px);
   }
 
   .btn-outline {

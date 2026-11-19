@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
-function MessagesView({ currentUser, reloadKey }) {
+function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -34,6 +35,9 @@ function MessagesView({ currentUser, reloadKey }) {
         }
         setError("");
         setConversations(data.conversations);
+        if (initialConversationId && data.conversations.some((item) => item._id === initialConversationId)) {
+          setActiveConversationId(initialConversationId);
+        }
       } catch (requestError) {
         if (requestError.name !== "AbortError") setError(requestError.message);
       } finally {
@@ -47,7 +51,7 @@ function MessagesView({ currentUser, reloadKey }) {
       controller.abort();
       window.clearInterval(intervalId);
     };
-  }, [reloadKey]);
+  }, [reloadKey, initialConversationId]);
 
   useEffect(() => {
     if (!activeConversationId) {
@@ -173,25 +177,33 @@ function MessagesView({ currentUser, reloadKey }) {
             (person) => person._id !== currentUser?._id
           );
           return (
-            <button
+            <div
               className={`conversation-item ${activeConversationId === conversation._id ? "active" : ""}`}
               key={conversation._id}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => handleSelectConversation(conversation._id)}
+              onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleSelectConversation(conversation._id);
+                }
+              }}
             >
-              <span className="person-avatar">
+              <Link className="person-avatar" to={`/profile/${participant?._id}`} aria-label={`Xem trang cá nhân ${participant?.username || "người dùng"}`} onClick={(event) => event.stopPropagation()}>
                 {participant?.profilePicture ? (
                   <img src={participant.profilePicture} alt="" />
                 ) : (participant?.username?.charAt(0).toUpperCase() || "?")}
-              </span>
+              </Link>
               <span className="conversation-summary">
-                <strong>{participant?.username || "Người dùng"}</strong>
+                <Link to={`/profile/${participant?._id}`} onClick={(event) => event.stopPropagation()}>{participant?.username || "Người dùng"}</Link>
                 <span>{conversation.lastMessage?.content || "Chưa có tin nhắn"}</span>
               </span>
               {conversation.unreadCount > 0 && (
                 <span className="unread-count">{conversation.unreadCount}</span>
               )}
-            </button>
+            </div>
           );
         })}
       </aside>
@@ -200,12 +212,12 @@ function MessagesView({ currentUser, reloadKey }) {
         {activeConversation ? (
           <>
             <header className="conversation-header">
-              <span className="person-avatar">
+              <Link className="person-avatar" to={`/profile/${otherParticipant?._id}`} aria-label={`Xem trang cá nhân ${otherParticipant?.username || "người dùng"}`}>
                 {otherParticipant?.profilePicture ? (
                   <img src={otherParticipant.profilePicture} alt="" />
                 ) : (otherParticipant?.username?.charAt(0).toUpperCase() || "?")}
-              </span>
-              <strong>{otherParticipant?.username || "Người dùng"}</strong>
+              </Link>
+              <Link to={`/profile/${otherParticipant?._id}`}>{otherParticipant?.username || "Người dùng"}</Link>
             </header>
             <div className="message-list" aria-live="polite">
               {isLoadingMessages && <p>Đang tải tin nhắn...</p>}

@@ -1,6 +1,11 @@
 import { useState } from 'react'
-import { Navigate, Route, Routes, useNavigate, Link } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext, Link } from "react-router-dom";
+import AppLayout from "./AppLayout.jsx";
 import FeedPage from "./pages/FeedPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import MessagesView from "./components/MessagesView.jsx";
+import ProfileSettings from "./components/ProfileSettings.jsx";
+import AdminPanel from "./components/AdminPanel.jsx";
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import './App.css'
@@ -210,10 +215,10 @@ function AuthPage() {
 }
 
 
-function ProtectedFeed() {
+function RequireAuth() {
   const token = localStorage.getItem("token");
 
-  return token ? <FeedPage /> : <Navigate to="/" replace />;
+  return token ? <Outlet /> : <Navigate to="/" replace />;
 }
 
 function AuthRoute(){
@@ -226,15 +231,48 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<AuthRoute />} />
-      <Route
-        path="/feed"
-        element={<ProtectedFeed/>}
-      />
-      <Route path="/reset-password/:token" element={<ResetPasswordPage></ResetPasswordPage>}></Route>
-      <Route path="/forgot-password" element={<ForgotPasswordPage></ForgotPasswordPage>}></Route>
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route element={<RequireAuth />}>
+        <Route element={<AppLayout />}>
+          <Route path="feed" element={<FeedPage section="feed" />} />
+          <Route path="messages" element={<MessagesViewRoute />} />
+          <Route path="friends" element={<FeedPage section="connections" />} />
+          <Route path="profile/:id" element={<ProfilePage embedded />} />
+          <Route path="saved" element={<FeedPage section="saved" />} />
+          <Route path="settings" element={<ProfileSettingsRoute />} />
+          <Route path="admin" element={<AdminPanelRoute />} />
+          <Route path="reels" element={<FeedPage section="reels" />} />
+          <Route path="activity" element={<FeedPage section="activity" />} />
+        </Route>
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
+}
+
+function MessagesViewRoute() {
+  const { currentUser } = useOutletContext();
+  const location = useLocation();
+  return <section className="feed-column feed-column-single">
+    <MessagesView currentUser={currentUser} initialConversationId={location.state?.openConversationId} />
+  </section>;
+}
+
+function ProfileSettingsRoute() {
+  const { currentUser, setCurrentUser } = useOutletContext();
+  return <section className="feed-column feed-column-single">
+    <ProfileSettings
+      currentUser={currentUser}
+      onProfileSaved={(savedUser) => setCurrentUser((current) => ({
+        ...current, ...savedUser, _id: savedUser.id || current?._id,
+      }))}
+    />
+  </section>;
+}
+
+function AdminPanelRoute() {
+  return <section className="feed-column feed-column-single"><AdminPanel /></section>;
 }
 
 export default App;

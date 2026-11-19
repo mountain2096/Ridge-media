@@ -1,18 +1,18 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import MessagesView from "../components/MessagesView.jsx";
 import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import "../newsfeed.css";
-function FeedPage(){
+function FeedPage({ section = "feed" }){
     const navigate = useNavigate();
     const location = useLocation();
-    const [activeSection, setActiveSection] = useState("feed");
+    const { currentUser, setCurrentUser, searchQuery } = useOutletContext();
+    const activeSection = section;
     const [posts, setPosts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
-    const [profileError, setProfileError] = useState("");
     const [postContent, setPostContent] = useState("");
     const [postPrivacy, setPostPrivacy] = useState("public");
     const [feedPage, setFeedPage] = useState(1);
@@ -41,13 +41,6 @@ function FeedPage(){
     const [editingPostContent, setEditingPostContent] = useState("");
     const [postActionError, setPostActionError] = useState("");
     const [isSavingPost, setIsSavingPost] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
-    const [notifications, setNotifications] = useState([]);
-    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-    const [notificationError, setNotificationError] = useState("");
-    const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-    const [pendingFriendRequestCount, setPendingFriendRequestCount] = useState(0);
-    const [searchQuery, setSearchQuery] = useState("");
     const [people, setPeople] = useState([]);
     const [isLoadingPeople, setIsLoadingPeople] = useState(false);
     const [peopleError, setPeopleError] = useState("");
@@ -56,7 +49,6 @@ function FeedPage(){
     const [isLoadingFriendRequests, setIsLoadingFriendRequests] = useState(false);
     const [friendRequestError, setFriendRequestError] = useState("");
     const [friends, setFriends] = useState([]);
-    const [messagesReload, setMessagesReload] = useState(0);
     const [shareFeedback, setShareFeedback] = useState("");
     const [failedImagePostIds, setFailedImagePostIds] = useState([]);
     const [stories, setStories] = useState([]);
@@ -67,89 +59,6 @@ function FeedPage(){
     const [storyFeedback, setStoryFeedback] = useState("");
     const [activeStoryGroup, setActiveStoryGroup] = useState(null);
     const [activeStoryIndex, setActiveStoryIndex] = useState(0);
-
-    useEffect(() => {
-      async function loadCurrentUser() {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/user/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.message || "Không thể tải hồ sơ người dùng.");
-          }
-          setCurrentUser(data.user);
-        } catch (requestError) {
-          setProfileError(requestError.message);
-        }
-      }
-
-      loadCurrentUser();
-    }, []);
-
-    useEffect(() => {
-      async function loadNotifications() {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/notification", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.message || "Không thể tải thông báo.");
-          }
-          setNotifications(data.notifications);
-        } catch (requestError) {
-          setNotificationError(requestError.message);
-        }
-      }
-
-      loadNotifications();
-    }, []);
-
-    useEffect(() => {
-      let isMounted = true;
-      let isLoadingCounts = false;
-
-      async function loadSidebarCounts() {
-        if (isLoadingCounts) return;
-        isLoadingCounts = true;
-        try {
-          const token = localStorage.getItem("token");
-          const headers = { Authorization: "Bearer " + token };
-          const [messagesResponse, requestsResponse] = await Promise.all([
-            fetch("http://localhost:5000/api/message/conversations", { headers }),
-            fetch("http://localhost:5000/api/friend/requests", { headers }),
-          ]);
-          const [messagesData, requestsData] = await Promise.all([
-            messagesResponse.json(),
-            requestsResponse.json(),
-          ]);
-          if (!messagesResponse.ok || !requestsResponse.ok) return;
-          if (!isMounted) return;
-
-          setUnreadMessageCount((messagesData.conversations || []).reduce(
-            (total, conversation) => total + Number(conversation.unreadCount || 0),
-            0
-          ));
-          setPendingFriendRequestCount((requestsData.request || []).length);
-        } catch {
-          // Sidebar counts are optional; keep the feed usable if a count request fails.
-        } finally {
-          isLoadingCounts = false;
-        }
-      }
-
-      loadSidebarCounts();
-      const intervalId = window.setInterval(loadSidebarCounts, 10000);
-      window.addEventListener("focus", loadSidebarCounts);
-      return () => {
-        isMounted = false;
-        window.clearInterval(intervalId);
-        window.removeEventListener("focus", loadSidebarCounts);
-      };
-    }, []);
 
     useEffect(() => {
       if (activeSection !== "connections") return undefined;
@@ -168,7 +77,6 @@ function FeedPage(){
             throw new Error(data.message || "Không thể tải lời mời kết bạn.");
           }
           setFriendRequests(data.request);
-          setPendingFriendRequestCount(data.request.length);
         } catch (requestError) {
           if (requestError.name !== "AbortError") {
             setFriendRequestError(requestError.message);
@@ -503,52 +411,6 @@ function FeedPage(){
       setIsLoadingMorePosts(true);
       setFeedPage((currentPage) => currentPage + 1);
     }
-    async function handleToggleNotifications() {
-      if (isNotificationOpen) {
-        setIsNotificationOpen(false);
-        return;
-      }
-
-      setIsNotificationOpen(true);
-      setNotificationError("");
-
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/notification", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Không thể tải thông báo.");
-        }
-        setNotifications(data.notifications);
-      } catch (requestError) {
-        setNotificationError(requestError.message);
-      }
-    }
-    async function handleReadNotification(notificationId) {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          `http://localhost:5000/api/notification/${notificationId}/read`,
-          {
-            method: "PATCH",
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Không thể cập nhật thông báo.");
-        }
-        setNotifications((currentNotifications) => currentNotifications.map(
-          (notification) => notification._id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        ));
-      } catch (requestError) {
-        setNotificationError(requestError.message);
-      }
-    }
     async function handleSendFriendRequest(userId) {
       setPeopleError("");
       try {
@@ -617,7 +479,6 @@ function FeedPage(){
         setFriendRequests((currentRequests) => currentRequests.filter(
           (request) => request._id !== requestId
         ));
-        setPendingFriendRequestCount((count) => Math.max(0, count - 1));
       } catch (requestError) {
         setPeopleError(requestError.message);
       }
@@ -637,8 +498,21 @@ function FeedPage(){
         if (!response.ok) {
           throw new Error(data.message || "Không thể mở cuộc trò chuyện.");
         }
-        setMessagesReload((currentValue) => currentValue + 1);
-        setActiveSection("messages");
+        navigate("/messages", { state: { openConversationId: data.conversation._id } });
+      } catch (requestError) {
+        setPeopleError(requestError.message);
+      }
+    }
+    async function handleUnfriend(userId) {
+      setPeopleError("");
+      try {
+        const response = await fetch(`http://localhost:5000/api/friend/${userId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Không thể hủy kết bạn.");
+        setFriends((currentFriends) => currentFriends.filter((friend) => friend._id !== userId));
       } catch (requestError) {
         setPeopleError(requestError.message);
       }
@@ -917,11 +791,6 @@ function FeedPage(){
         setIsUpdatingComment(false);
       }
     }
-    function handleLogout(){
-        localStorage.removeItem("token");
-        navigate("/", {replace: true})
-    }
-
     const displayedPosts = activeSection === "saved"
       ? posts.filter((post) => post.isSaved)
       : activeSection === "activity"
@@ -942,119 +811,9 @@ function FeedPage(){
     const currentStory = activeStoryGroup?.items[activeStoryIndex];
 
     return (
-        <main className="home-layout">
-            <aside className="home-sidebar">
-            <div className="home-brand">
-                <span className="home-brand-icon">R</span>
-                <span>Ridge</span>
-            </div>
-
-            <nav className="home-menu" aria-label="Điều hướng chính">
-                <button className={`menu-item ${activeSection === "feed" ? "active" : ""}`} type="button" onClick={() => setActiveSection("feed")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>Bảng tin
-                </button>
-                <button className={`menu-item ${activeSection === "messages" ? "active" : ""}`} type="button" onClick={() => setActiveSection("messages")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg><span className="menu-item-label">Tin nhắn</span>
-                  {unreadMessageCount > 0 && <span className="sidebar-count" role="status" aria-label={unreadMessageCount + " tin nhắn chưa đọc"}>{unreadMessageCount > 99 ? "99+" : unreadMessageCount}</span>}
-                </button>
-                <button className={`menu-item ${activeSection === "connections" ? "active" : ""}`} type="button" onClick={() => setActiveSection("connections")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.2.7 3.5 2.6 3.5 5.7" /></svg><span className="menu-item-label">Kết bạn</span>
-                  {pendingFriendRequestCount > 0 && <span className="sidebar-count" role="status" aria-label={pendingFriendRequestCount + " lời mời kết bạn mới"}>{pendingFriendRequestCount > 99 ? "99+" : pendingFriendRequestCount}</span>}
-                </button>
-                <button className={`menu-item ${activeSection === "reels" ? "active" : ""}`} type="button" onClick={() => setActiveSection("reels")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M3 9h18M8 4l3 5m3-5 3 5m-6 3.5v4l3.5-2z" /></svg>Reels
-                </button>
-                <button className={`menu-item ${activeSection === "saved" ? "active" : ""}`} type="button" onClick={() => setActiveSection("saved")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>Đã lưu
-                </button>
-                <button className={`menu-item ${activeSection === "activity" ? "active" : ""}`} type="button" onClick={() => setActiveSection("activity")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg>Hoạt động của bạn
-                </button>
-                <button className={`menu-item ${activeSection === "settings" ? "active" : ""}`} type="button" onClick={() => setActiveSection("settings")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10m4 0h2M4 17h2m4 0h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>Cài đặt
-                </button>
-                {currentUser?.isAdmin && <button className={`menu-item ${activeSection === "admin" ? "active" : ""}`} type="button" onClick={() => setActiveSection("admin")}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v5c0 5 3.4 8 8 10 4.6-2 8-5 8-10V6z" /><path d="m9 12 2 2 4-4" /></svg>Quản trị
-                </button>}
-            </nav>
-
-            <button className="logout-button" type="button" onClick={handleLogout}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5m5 5H9" /></svg>Đăng xuất
-            </button>
-            </aside>
-
-            <section className="home-content">
-            <header className="home-topbar">
-                <div className="news-search">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-                <input
-                  type="search"
-                  aria-label="Tìm người dùng"
-                  placeholder="Tìm người dùng..."
-                  value={searchQuery}
-                  onFocus={() => setActiveSection("connections")}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                />
-                </div>
-                <div className="news-topbar-right">
-                <div className="topbar-user">
-                <div className="notification-wrap">
-                  <button
-                    className="notification-button"
-                    type="button"
-                    aria-label="Thông báo"
-                    aria-expanded={isNotificationOpen}
-                    onClick={handleToggleNotifications}
-                  >
-                    🔔
-                    {notifications.some((notification) => !notification.isRead) && (
-                      <span className="notification-dot" />
-                    )}
-                  </button>
-                  {isNotificationOpen && (
-                    <div className="notification-panel">
-                      <h2>Thông báo</h2>
-                      {notificationError && (
-                        <p className="feedback-message error">{notificationError}</p>
-                      )}
-                      {!notificationError && notifications.length === 0 && (
-                        <p>Chưa có thông báo nào.</p>
-                      )}
-                      {notifications.map((notification) => (
-                        <button
-                          className={`notification-item ${notification.isRead ? "read" : "unread"}`}
-                          key={notification._id}
-                          type="button"
-                          onClick={() => handleReadNotification(notification._id)}
-                        >
-                          <strong>{notification.senderId?.username || "Người dùng"}</strong>{" "}
-                          {notification.type === "like" ? "đã thích bài viết của bạn" :
-                           notification.type === "comment" ? "đã bình luận bài viết của bạn" :
-                           notification.type === "friend_request" ? "đã gửi lời mời kết bạn" :
-                           notification.type === "friend_accept" ? "đã chấp nhận lời mời kết bạn" :
-                           notification.type === "message" ? "đã gửi tin nhắn cho bạn" :
-                           notification.type === "share" ? "đã chia sẻ bài viết của bạn" :
-                           "có cập nhật mới"}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <span className="user-avatar">
-                  {currentUser?.profilePicture ? (
-                    <img src={currentUser.profilePicture} alt="Ảnh đại diện" />
-                  ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
-                </span>
-                <span>{currentUser?.username || "Tài khoản"}</span>
-                </div>
-                </div>
-            </header>
-            {profileError && <p className="profile-load-error">{profileError}</p>}
-
-            <div className="home-columns">
-                <section className="feed-column">
+        <><section className={"feed-column " + (section === "feed" ? "" : "feed-column-single")}>
                 {activeSection === "messages" ? (
-                  <MessagesView currentUser={currentUser} reloadKey={messagesReload} />
+                  <MessagesView currentUser={currentUser} initialConversationId={location.state?.openConversationId} />
                 ) : activeSection === "settings" ? (
                   <ProfileSettings
                     key={currentUser?._id || "profile-loading"}
@@ -1074,10 +833,10 @@ function FeedPage(){
                       <div className="friends-page-list">
                         {friends.map((friend) => (
                           <div className="friend-row" key={friend._id}>
-                            <span className="friend-avatar">
+                            <Link className="friend-avatar" to={`/profile/${friend._id}`} aria-label={`Xem trang cá nhân ${friend.username}`}>
                               {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
-                            </span>
-                            <strong className="friend-name">{friend.username}</strong>
+                            </Link>
+                            <Link className="friend-name profile-name-link" to={`/profile/${friend._id}`}>{friend.username}</Link>
                             <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
                           </div>
                         ))}
@@ -1098,7 +857,10 @@ function FeedPage(){
                         <div className="people-list">
                           {friendRequests.map((request) => (
                             <div className="friend-request-row" key={request._id}>
-                              <strong>{request.senderId?.username || "Người dùng"}</strong>
+                              <Link className="connection-person-avatar" to={"/profile/" + request.senderId?._id} aria-label={`Xem trang cá nhân ${request.senderId?.username || "người dùng"}`}>
+                                {request.senderId?.profilePicture ? <img src={request.senderId.profilePicture} alt="" /> : (request.senderId?.username?.charAt(0).toUpperCase() || "?")}
+                              </Link>
+                              <Link className="connection-person-name profile-name-link" to={"/profile/" + request.senderId?._id}>{request.senderId?.username || "Người dùng"}</Link>
                               <div>
                                 <button type="button" onClick={() => handleFriendRequestAction(request._id, "accept")}>Chấp nhận</button>
                                 <button
@@ -1107,6 +869,23 @@ function FeedPage(){
                                   onClick={() => handleFriendRequestAction(request._id, "reject")}
                                 >Từ chối</button>
                               </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                    <section className="side-card connections-friends-card">
+                      <h2>Bạn bè của bạn</h2>
+                      {friends.length === 0 ? <p className="friends-empty">Chưa có bạn bè.</p> : (
+                        <div className="connections-friends-list">
+                          {friends.map((friend) => (
+                            <div className="connection-friend-row" key={friend._id}>
+                              <Link className="connection-person-avatar" to={"/profile/" + friend._id} aria-label={`Xem trang cá nhân ${friend.username}`}>
+                                {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                              </Link>
+                              <Link className="connection-person-name profile-name-link" to={"/profile/" + friend._id}>{friend.username}</Link>
+                              <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
+                              <button className="connection-unfriend-button" type="button" onClick={() => handleUnfriend(friend._id)}>Hủy kết bạn</button>
                             </div>
                           ))}
                         </div>
@@ -1122,11 +901,11 @@ function FeedPage(){
                       <div className="people-list">
                         {people.map((person) => (
                           <div className="person-row" key={person._id}>
-                            <span className="person-avatar">
+                            <Link className="person-avatar" to={`/profile/${person._id}`} aria-label={`Xem trang cá nhân ${person.username}`}>
                               {person.profilePicture ? <img src={person.profilePicture} alt="" /> : (person.username?.charAt(0).toUpperCase() || "?")}
-                            </span>
+                            </Link>
                             <div className="person-info">
-                              <strong>{person.username}</strong>
+                              <Link className="profile-name-link" to={`/profile/${person._id}`}>{person.username}</Link>
                               {person.bio && <span>{person.bio}</span>}
                             </div>
                             <button
@@ -1226,20 +1005,22 @@ function FeedPage(){
                       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m21 16-5-5-9 9" /></svg>
                       Ảnh
                       <input
+                        id="post-image-input"
                         type="file"
                         accept="image/jpeg,image/png,image/webp,image/gif"
                         aria-label="Chọn ảnh cho bài viết"
-                        onChange={(event) => setPostImageFile(event.target.files?.[0] || null)}
+                        onChange={(event) => { setPostImageFile(event.target.files?.[0] || null); setPostVideoFile(null); }}
                       />
                     </label>
                     <label className="chip">
                       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="3" /><path d="m16 10 5-3v10l-5-3" /></svg>
                       Video
                       <input
+                        id="post-video-input"
                         type="file"
                         accept="video/mp4,video/webm"
                         aria-label="Chọn video cho bài viết"
-                        onChange={(event) => setPostVideoFile(event.target.files?.[0] || null)}
+                        onChange={(event) => { setPostVideoFile(event.target.files?.[0] || null); setPostImageFile(null); }}
                       />
                     </label>
                     {(postImageFile || postVideoFile) && (
@@ -1304,14 +1085,14 @@ function FeedPage(){
       <article className="post-card card" id={`post-${post._id}`} key={post._id}>
         <header className="post-header">
           <div className="post-author">
-            <span className="post-avatar">
+            <Link className="post-avatar" to={`/profile/${post.authorId?._id}`} aria-label={`Xem trang cá nhân ${username}`}>
               {post.authorId?.profilePicture ? (
                 <img src={post.authorId.profilePicture} alt="" />
               ) : username.charAt(0).toUpperCase()}
-            </span>
+            </Link>
 
             <div className="post-author-info">
-              <strong>{username}</strong>
+              <Link className="profile-name-link" to={`/profile/${post.authorId?._id}`}>{username}</Link>
               <span className="post-meta">
                 <span>Ridge</span><span aria-hidden="true">·</span>
                 <span>{postDate}</span><span aria-hidden="true">·</span>
@@ -1482,11 +1263,11 @@ function FeedPage(){
               !commentError &&
               comments.map((comment) => (
                 <div className="comment-item" key={comment._id}>
-                  <span className="comment-avatar">
+                  <Link className="comment-avatar" to={`/profile/${comment.authorId?._id}`} aria-label={`Xem trang cá nhân ${comment.authorId?.username || "người dùng"}`}>
                     {comment.authorId?.profilePicture ? (
                       <img src={comment.authorId.profilePicture} alt="" />
                     ) : (comment.authorId?.username || "U").charAt(0).toUpperCase()}
-                  </span>
+                  </Link>
                   <div className="comment-main">
                     {editingCommentId === comment._id ? (
                       <form
@@ -1523,7 +1304,7 @@ function FeedPage(){
                     ) : (
                       <>
                         <div className="comment-bubble">
-                          <strong>{comment.authorId?.username || "Người dùng"}</strong>
+                          <Link className="profile-name-link" to={`/profile/${comment.authorId?._id}`}>{comment.authorId?.username || "Người dùng"}</Link>
                           <p>{comment.content}</p>
                         </div>
                         <div className="comment-controls">
@@ -1584,29 +1365,23 @@ function FeedPage(){
                   </>
                 )}
                 </section>
-                <aside className="right-column">
-                  <section className="side-card friends-card">
-                    <div className="friends-head">
-                      <h2>Bạn bè</h2>
-                      <button type="button" onClick={() => setActiveSection("friends")}>Xem tất cả</button>
-                    </div>
+                {activeSection === "feed" && <aside className="right-column">
+                  <section className="contacts-panel">
+                    <h2>Người liên hệ</h2>
                     {friends.length === 0 ? <p className="friends-empty">Bạn chưa có bạn bè nào.</p> : (
-                      <div className="friends-list">
-                        {friends.slice(0, 5).map((friend) => (
-                          <div className="friend-row" key={friend._id}>
-                            <span className="friend-avatar">
+                      <div className="contacts-list">
+                        {friends.map((friend) => (
+                          <button className="contact-row" type="button" key={friend._id} onClick={() => handleStartConversation(friend._id)}>
+                            <span className="contact-avatar">
                               {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
                             </span>
-                            <strong className="friend-name">{friend.username}</strong>
-                            <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
-                          </div>
+                            <span>{friend.username}</span>
+                          </button>
                         ))}
                       </div>
                     )}
                   </section>
-                </aside>
-            </div>
-            </section>
+                </aside>}
             {isStoryComposerOpen && (
               <div className="modal-backdrop">
                 <section className="story-dialog" role="dialog" aria-modal="true" aria-labelledby="story-dialog-title">
@@ -1669,7 +1444,7 @@ function FeedPage(){
                 </section>
               </div>
             )}
-        </main>
+        </>
         );
 }
 export default FeedPage;
