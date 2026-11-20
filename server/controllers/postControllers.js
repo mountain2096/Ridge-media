@@ -59,20 +59,10 @@ const getPosts = async (req,res) =>{
             { authorId: req.user._id },
             { privacy: "friends", authorId: { $in: req.user.friend || [] } },
         ];
-        const blockedSourcePostIds = blockedUserIds.length
-            ? await Post.find({ authorId: { $in: blockedUserIds } }).distinct("_id")
-            : [];
-        const inactiveSourcePostIds = await Post.find({ status: { $ne: "active" } }).distinct("_id");
         const filter = {
             status: "active",
             authorId: { $nin: blockedUserIds },
-            $and: [
-                { $or: visibleByPrivacy },
-                { $or: [
-                    { originalPostId: null },
-                    { originalPostId: { $nin: [...blockedSourcePostIds, ...inactiveSourcePostIds] } },
-                ] },
-            ],
+            $or: visibleByPrivacy,
         };
         if (req.query.authorId !== undefined) {
             if (typeof req.query.authorId !== "string" || !/^[a-f\d]{24}$/i.test(req.query.authorId)) {
@@ -83,14 +73,33 @@ const getPosts = async (req,res) =>{
         const [posts, total] = await Promise.all([
             Post.find(filter)
                 .populate("authorId", "username profilePicture")
-                .populate("originalPostId", "content image video authorId privacy status")
+                .populate({
+                    path: "originalPostId",
+                    select: "content image video authorId privacy status createdAt",
+                    match: {
+                        status: "active",
+                        authorId: { $nin: blockedUserIds },
+                        $or: [
+                            { privacy: "public" },
+                            { authorId: req.user._id },
+                            { privacy: "friends", authorId: { $in: req.user.friend || [] } },
+                        ],
+                    },
+                    populate: { path: "authorId", select: "username profilePicture" },
+                })
                 .sort({ createdAt: -1 })
                 .skip((page - 1) * limit)
                 .limit(limit),
             Post.countDocuments(filter),
         ]);
-        
+        const commentCounts = posts.length ? await Comment.aggregate([
+            { $match: { postId: { $in: posts.map((post) => post._id) }, status: "active" } },
+            { $group: { _id: "$postId", count: { $sum: 1 } } },
+        ]) : [];
+        const commentCountByPost = new Map(commentCounts.map((entry) => [entry._id.toString(), entry.count]));
+
         const postWithLikeStatus = posts.map((post) =>{
+            const hasOriginalReference = Boolean(post.originalPostId || post.populated?.("originalPostId"));
             const postData = post.toObject();
 
             postData.isLiked = post.likes.some(
@@ -101,6 +110,13 @@ const getPosts = async (req,res) =>{
             postData.isSaved = req.user.savedPosts.some(
                 (postId) => postId.toString() === post._id.toString()
             );
+            postData.commentsCount = commentCountByPost.get(post._id.toString()) || 0;
+            postData.originalUnavailable = hasOriginalReference && !postData.originalPostId;
+            if (postData.originalUnavailable) {
+                postData.content = "";
+                postData.image = "";
+                postData.video = "";
+            }
             return postData
         })
         res.status(200).json({

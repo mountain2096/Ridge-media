@@ -1872,6 +1872,23 @@
 .home-layout .post-comments { min-width: 0; }
 .home-layout .post-comments .comment-form,
 .home-layout .post-comments .profile-comment-form { margin-top: 8px; }
+.home-layout .post-stats { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; padding: 6px 20px 10px; }
+.home-layout .post-stats .post-likes { margin: 0; padding: 0; }
+.home-layout .post-comment-count { min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--news-muted); font: inherit; font-size: 14px; cursor: pointer; }
+.home-layout .post-comment-count:hover { color: var(--news-accent); text-decoration: underline; }
+.home-layout .post-name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.home-layout .post-share-label { color: var(--news-muted); font-size: 13px; font-weight: 400; }
+.home-layout .post-share-text { padding-top: 8px; }
+.home-layout .shared-post-card { min-width: 0; margin: 4px 20px 16px; overflow: hidden; border: 1px solid var(--news-border); border-radius: 14px; background: var(--news-surface); }
+.home-layout .shared-post-header { display: flex; align-items: center; gap: 10px; padding: 14px 14px 8px; }
+.home-layout .shared-post-avatar { display: grid; flex: 0 0 36px; width: 36px; height: 36px; place-items: center; overflow: hidden; border-radius: 50%; background: #3f6c99; color: #fff; text-decoration: none; }
+.home-layout .shared-post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.home-layout .shared-post-header > div { display: grid; gap: 2px; min-width: 0; }
+.home-layout .shared-post-header time { color: var(--news-muted); font-size: 12px; }
+.home-layout .shared-post-card .post-caption,
+.home-layout .shared-post-card .post-text { padding-right: 14px; padding-left: 14px; }
+.home-layout .shared-post-media { display: block; width: 100%; max-height: 560px; margin: 0; object-fit: cover; }
+.home-layout .shared-post-unavailable { margin: 0; padding: 26px 16px; color: var(--news-muted); text-align: center; }
 
 .home-layout .comment-item {
   display: flex;

@@ -740,6 +740,10 @@ function FeedPage({ section = "feed" }){
           throw new Error(data.message || "Không thể gửi bình luận.");
         }
 
+        setPosts((currentPosts) => currentPosts.map((post) => post._id === postId
+          ? { ...post, commentsCount: (post.commentsCount || 0) + 1 }
+          : post));
+
         setCommentContent("");
 
         const commentsResponse = await fetch(
@@ -764,7 +768,7 @@ function FeedPage({ section = "feed" }){
         setIsSendingComment(false);
       }
     }
-    async function handleDeleteComment(commentId) {
+    async function handleDeleteComment(commentId, postId = openCommentsFor) {
       const confirmed = await confirmAction({
         title: "Xóa bình luận",
         message: "Bạn có chắc muốn xóa bình luận này?",
@@ -800,6 +804,9 @@ function FeedPage({ section = "feed" }){
         setComments((currentComments) =>
           currentComments.filter((comment) => comment._id !== commentId)
         );
+        setPosts((currentPosts) => currentPosts.map((post) => post._id === postId
+          ? { ...post, commentsCount: Math.max(0, (post.commentsCount || 0) - 1) }
+          : post));
       } catch (requestError) {
         setCommentError(requestError.message);
       }
@@ -1138,6 +1145,7 @@ function FeedPage({ section = "feed" }){
   post={post}
   currentUser={currentUser}
   isLiked={post.isLiked ?? likedPostIds.includes(post._id)}
+  commentsCount={post.commentsCount ?? 0}
   failedImagePost={failedImagePostIds.includes(post._id)}
   editingPostId={editingPostId}
   editingPostContent={editingPostContent}
@@ -1168,7 +1176,7 @@ function FeedPage({ section = "feed" }){
   onCommentEditingChange={setEditingCommentContent}
   onCancelCommentEdit={() => { setEditingCommentId(null); setEditingCommentContent(''); }}
   onUpdateComment={handleUpdateComment}
-  onDeleteComment={(item) => handleDeleteComment(item._id)}
+  onDeleteComment={(item) => handleDeleteComment(item._id, post._id)}
   onReportComment={(item) => handleReport('comment', item._id)}
   onImageError={(item) => setFailedImagePostIds((ids) => ids.includes(item._id) ? ids : [...ids, item._id])}
 />)}

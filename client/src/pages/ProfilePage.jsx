@@ -37,7 +37,7 @@ function ProfilePage({ profileId, embedded = false }) {
   const [reportTarget, setReportTarget] = useState(null);
   const [commentToast, setCommentToast] = useState("");
   const [postActionError, setPostActionError] = useState("");
-  const [, setSharingPostId] = useState(null);
+  const [sharingPostId, setSharingPostId] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileDraft, setProfileDraft] = useState({ username: "", bio: "" });
   const [totalPosts, setTotalPosts] = useState(0);
@@ -326,6 +326,9 @@ function ProfilePage({ profileId, embedded = false }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể gửi bình luận.");
+      setPosts((current) => current.map((post) => post._id === postId
+        ? { ...post, commentsCount: (post.commentsCount || 0) + 1 }
+        : post));
       setComments((current) => [...current, {
         ...data.comment,
         authorId: { _id: currentUser?._id, username: "Bạn" },
@@ -337,7 +340,7 @@ function ProfilePage({ profileId, embedded = false }) {
     }
   }
 
-  async function handleDeleteComment(commentId) {
+  async function handleDeleteComment(commentId, postId) {
     const confirmed = await confirmAction({
       title: "Xóa bình luận",
       message: "Bạn có chắc muốn xóa bình luận này?",
@@ -355,6 +358,9 @@ function ProfilePage({ profileId, embedded = false }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể xóa bình luận.");
       setComments((current) => current.filter((comment) => comment._id !== commentId));
+      setPosts((current) => current.map((post) => post._id === postId
+        ? { ...post, commentsCount: Math.max(0, (post.commentsCount || 0) - 1) }
+        : post));
     } catch (requestError) {
       setPostActionError(requestError.message);
     }
@@ -611,9 +617,11 @@ function ProfilePage({ profileId, embedded = false }) {
   post={post}
   currentUser={currentUser}
   isLiked={Boolean(post.isLiked)}
+  commentsCount={post.commentsCount ?? 0}
   editingPostId={editingPostId}
   editingPostContent={editingPostContent}
   isSavingPost={isSavingPost}
+  isSharing={sharingPostId === post._id}
   postActionError={postActionError}
   commentsOpen={openCommentsFor === post._id}
   comments={comments}
@@ -637,7 +645,7 @@ function ProfilePage({ profileId, embedded = false }) {
   onCommentEditingChange={setEditingCommentContent}
   onCancelCommentEdit={() => { setEditingCommentId(null); setEditingCommentContent(''); }}
   onUpdateComment={handleUpdateComment}
-  onDeleteComment={(item) => handleDeleteComment(item._id)}
+  onDeleteComment={(item) => handleDeleteComment(item._id, post._id)}
   onReportComment={(item) => handleReportComment(item._id)}
 />)}
               </div>
