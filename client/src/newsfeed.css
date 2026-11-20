@@ -1858,6 +1858,21 @@
   border-top: 1px solid var(--news-border);
 }
 
+.home-layout .post-image,
+.home-layout .post-video {
+  width: calc(100% - 40px);
+  height: auto;
+  max-height: 560px;
+  margin: 0 20px;
+  border-radius: 14px;
+  background: transparent;
+  object-fit: cover;
+}
+
+.home-layout .post-comments { min-width: 0; }
+.home-layout .post-comments .comment-form,
+.home-layout .post-comments .profile-comment-form { margin-top: 8px; }
+
 .home-layout .comment-item {
   display: flex;
   align-items: flex-start;

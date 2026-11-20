@@ -8,7 +8,7 @@ import { API_BASE } from "../lib/api.js";
 import { useConfirm } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
-import CommentItem from "../components/CommentItem.jsx";
+import PostCard from "../components/PostCard.jsx";
 import "../newsfeed.css";
 
 function FriendPresence({ friend }) {
@@ -53,7 +53,6 @@ function FeedPage({ section = "feed" }){
     const [isUpdatingComment, setIsUpdatingComment] = useState(false);
     const [postImageFile, setPostImageFile] = useState(null);
     const [postVideoFile, setPostVideoFile] = useState(null);
-    const [openPostMenuId, setOpenPostMenuId] = useState(null);
     const [editingPostId, setEditingPostId] = useState(null);
     const [editingPostContent, setEditingPostContent] = useState("");
     const [postActionError, setPostActionError] = useState("");
@@ -338,7 +337,6 @@ function FeedPage({ section = "feed" }){
         }
 
         setPosts((currentPosts) => currentPosts.filter((post) => post._id !== postId));
-        setOpenPostMenuId(null);
         if (openCommentsFor === postId) {
           setOpenCommentsFor(null);
           setComments([]);
@@ -1135,246 +1133,45 @@ function FeedPage({ section = "feed" }){
 {postActionError && (
   <p className="feedback-message error">{postActionError}</p>
 )}
-{!isLoading &&
-  !error &&
-  displayedPosts.map((post) => {
-    const username = post.authorId?.username || "Người dùng";
-    const visiblePost = post.originalPostId || post;
-    const visibleAuthor = visiblePost.authorId?.username || username;
-    const hasLiked = likedPostIds.includes(post._id);
-    const visibilityLabel = post.privacy === "private" ? "Chỉ mình tôi" : post.privacy === "friends" ? "Bạn bè" : "Mọi người";
-    const postDate = post.createdAt
-      ? new Date(post.createdAt).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })
-      : "Mới đăng";
-    const hasMedia = Boolean(visiblePost.image || visiblePost.video);
-
-    return (
-      <article className="post-card card" id={`post-${post._id}`} key={post._id}>
-        <header className="post-header">
-          <div className="post-author">
-            <Link className="post-avatar" to={`/profile/${post.authorId?._id}`} aria-label={`Xem trang cá nhân ${username}`}>
-              {post.authorId?.profilePicture ? (
-                <img src={post.authorId.profilePicture} alt="" />
-              ) : username.charAt(0).toUpperCase()}
-            </Link>
-
-            <div className="post-author-info">
-              <Link className="profile-name-link" to={`/profile/${post.authorId?._id}`}>{username}</Link>
-              <span className="post-meta">
-                <span>Ridge</span><span aria-hidden="true">·</span>
-                <span>{postDate}</span><span aria-hidden="true">·</span>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>
-                <span>{visibilityLabel}</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="post-menu-wrap">
-            <button
-              className="post-more"
-              type="button"
-              aria-label="Tùy chọn bài viết"
-              aria-expanded={openPostMenuId === post._id}
-              onClick={() => setOpenPostMenuId(
-                openPostMenuId === post._id ? null : post._id
-              )}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
-            </button>
-            {openPostMenuId === post._id && (
-              <div className="post-menu" role="group" aria-label="Tùy chọn bài viết">
-                <button type="button" onClick={() => {
-                  handleToggleSavedPost(post._id, Boolean(post.isSaved));
-                  setOpenPostMenuId(null);
-                }}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>
-                  {post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
-                </button>
-                {!post.isMine && <button className="danger" type="button" onClick={() => {
-                  setOpenPostMenuId(null);
-                  handleReport("post", post._id);
-                }}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0h11l-2 4 2 4H5" /></svg>
-                  Báo cáo bài viết
-                </button>}
-                {post.isMine ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingPostId(post._id);
-                        setEditingPostContent(post.content);
-                        setOpenPostMenuId(null);
-                      }}
-                    >
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" /></svg>
-                      Chỉnh sửa bài viết
-                    </button>
-                    <button
-                      className="post-menu-delete"
-                      type="button"
-                      onClick={() => handleDeletePost(post._id)}
-                    >
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>
-                      Xóa bài viết
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </header>
-
-        {visiblePost.video ? (
-          <video
-            className="post-video"
-            src={visiblePost.video}
-            controls
-            preload="metadata"
-          />
-        ) : visiblePost.image && !failedImagePostIds.includes(post._id) ? (
-          <img
-            className="post-image"
-            src={visiblePost.image}
-            alt={`Bài viết của ${username}`}
-            onError={() => setFailedImagePostIds((ids) => [...ids, post._id])}
-          />
-        ) : null}
-
-        {editingPostId === post._id ? (
-          <form
-            className="post-edit-form"
-            onSubmit={(event) => handleUpdatePost(event, post._id)}
-          >
-            <textarea
-              value={editingPostContent}
-              onChange={(event) => setEditingPostContent(event.target.value)}
-              maxLength="500"
-              aria-label="Chỉnh sửa nội dung bài viết"
-            />
-            <div>
-              <button type="submit" disabled={isSavingPost}>
-                {isSavingPost ? "Đang lưu..." : "Lưu"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingPostId(null);
-                  setEditingPostContent("");
-                  setPostActionError("");
-                }}
-              >
-                Hủy
-              </button>
-            </div>
-          </form>
-        ) : hasMedia ? (
-          <p className="post-caption">
-            <strong>{username}</strong>{" "}
-            {post.originalPostId && <span className="shared-post-by">Chia sẻ từ {visibleAuthor}: </span>}
-            {visiblePost.content}
-          </p>
-        ) : (
-          <p className="post-text">{visiblePost.content}</p>
-        )}
-
-        <p className="post-likes">
-          {post.likes?.length ?? 0} lượt thích
-        </p>
-
-        <div className="post-actions">
-          <div className="post-action-group">
-            <button
-              className={`post-action-button ${hasLiked ? "liked" : ""}`}
-              type="button"
-              aria-label={hasLiked ? "Bỏ thích" : "Thích"}
-              aria-pressed={hasLiked}
-              onClick={() => handleLike(post._id, hasLiked)}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg>
-              <span>{hasLiked ? "Đã thích" : "Thích"}</span>
-            </button>
-            <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => handleToggleComments(post._id)}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận</span>
-            </button>
-            <button className="post-action-button" type="button" aria-label="Chia sẻ bài viết" onClick={() => handleSharePost(post._id)}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>Chia sẻ</span>
-            </button>
-          </div>
-
-          <button
-            className={`post-action-button ${post.isSaved ? "saved" : ""}`}
-            type="button"
-            aria-label={post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
-            aria-pressed={Boolean(post.isSaved)}
-            onClick={() => handleToggleSavedPost(post._id, Boolean(post.isSaved))}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>
-          </button>
-        </div>
-
-        {openCommentsFor === post._id && (
-          <div>
-          <div className="comments-list">
-            {isLoadingComments && <p>Đang tải bình luận...</p>}
-
-            {!isLoadingComments && commentError && (
-              <p className="feedback-message error">{commentError}</p>
-            )}
-
-            {!isLoadingComments && !commentError && comments.length === 0 && (
-              <p>Chưa có bình luận nào.</p>
-            )}
-
-            {!isLoadingComments &&
-              !commentError &&
-              comments.map((comment) => (
-                <CommentItem
-                  key={comment._id}
-                  comment={comment}
-                  currentUserId={currentUser?._id}
-                  postOwnerId={post.authorId?._id}
-                  isAdmin={currentUser?.isAdmin}
-                  isEditing={editingCommentId === comment._id}
-                  editingContent={editingCommentContent}
-                  isUpdating={isUpdatingComment}
-                  onEdit={(item) => {
-                    setEditingCommentId(item._id);
-                    setEditingCommentContent(item.content);
-                  }}
-                  onEditingChange={setEditingCommentContent}
-                  onCancelEdit={() => {
-                    setEditingCommentId(null);
-                    setEditingCommentContent("");
-                  }}
-                  onUpdate={handleUpdateComment}
-                  onDelete={() => handleDeleteComment(comment._id)}
-                  onReport={() => handleReport("comment", comment._id)}
-                />
-              ))}
-          </div>
-          <form
-            className="comment-form"
-            onSubmit={(event) => handleCreateComment(event, post._id)}
-          >
-            <input
-              type="text"
-              placeholder="Viết bình luận..."
-              aria-label="Viết bình luận"
-              maxLength="500"
-              value={commentContent}
-              onChange={(event) => setCommentContent(event.target.value)}
-            />
-
-            <button type="submit" disabled={isSendingComment}>
-              {isSendingComment ? "Đang gửi..." : "Gửi"}
-            </button>
-          </form>
-          </div>
-        )}
-      </article>
-    );
-  })}
+{!isLoading && !error && displayedPosts.map((post) => <PostCard
+  key={post._id}
+  post={post}
+  currentUser={currentUser}
+  isLiked={post.isLiked ?? likedPostIds.includes(post._id)}
+  failedImagePost={failedImagePostIds.includes(post._id)}
+  editingPostId={editingPostId}
+  editingPostContent={editingPostContent}
+  isSavingPost={isSavingPost}
+  postActionError={postActionError}
+  commentsOpen={openCommentsFor === post._id}
+  comments={comments}
+  isLoadingComments={isLoadingComments}
+  commentError={commentError}
+  commentContent={commentContent}
+  isSendingComment={isSendingComment}
+  editingCommentId={editingCommentId}
+  editingCommentContent={editingCommentContent}
+  isUpdatingComment={isUpdatingComment}
+  onLike={(item) => handleLike(item._id, Boolean(item.isLiked ?? likedPostIds.includes(item._id)))}
+  onToggleComments={(item) => handleToggleComments(item._id)}
+  onShare={(item) => handleSharePost(item._id)}
+  onToggleSaved={(item, saved) => handleToggleSavedPost(item._id, saved)}
+  onStartEdit={(item) => { setEditingPostId(item._id); setEditingPostContent(item.content || ''); }}
+  onEditingPostContentChange={setEditingPostContent}
+  onUpdatePost={(event, item) => handleUpdatePost(event, item._id)}
+  onCancelEditPost={() => { setEditingPostId(null); setEditingPostContent(''); setPostActionError(''); }}
+  onDeletePost={(item) => handleDeletePost(item._id)}
+  onReportPost={(item) => handleReport('post', item._id)}
+  onCommentChange={setCommentContent}
+  onCreateComment={(event, item) => handleCreateComment(event, item._id)}
+  onCommentEdit={(item) => { setEditingCommentId(item._id); setEditingCommentContent(item.content); }}
+  onCommentEditingChange={setEditingCommentContent}
+  onCancelCommentEdit={() => { setEditingCommentId(null); setEditingCommentContent(''); }}
+  onUpdateComment={handleUpdateComment}
+  onDeleteComment={(item) => handleDeleteComment(item._id)}
+  onReportComment={(item) => handleReport('comment', item._id)}
+  onImageError={(item) => setFailedImagePostIds((ids) => ids.includes(item._id) ? ids : [...ids, item._id])}
+/>)}
                   </>
                 )}
                 </section>

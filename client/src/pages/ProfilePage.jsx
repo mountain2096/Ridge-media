@@ -4,7 +4,7 @@ import { API_BASE } from "../lib/api.js";
 import { useConfirm } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
-import CommentItem from "../components/CommentItem.jsx";
+import PostCard from "../components/PostCard.jsx";
 import "../newsfeed.css";
 import "../profile.css";
 
@@ -37,11 +37,10 @@ function ProfilePage({ profileId, embedded = false }) {
   const [reportTarget, setReportTarget] = useState(null);
   const [commentToast, setCommentToast] = useState("");
   const [postActionError, setPostActionError] = useState("");
-  const [sharingPostId, setSharingPostId] = useState(null);
+  const [, setSharingPostId] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileDraft, setProfileDraft] = useState({ username: "", bio: "" });
   const [totalPosts, setTotalPosts] = useState(0);
-  const [openPostMenuId, setOpenPostMenuId] = useState(null);
   const [editingPostId, setEditingPostId] = useState(null);
   const [editingPostContent, setEditingPostContent] = useState("");
   const [isSavingPost, setIsSavingPost] = useState(false);
@@ -202,7 +201,6 @@ function ProfilePage({ profileId, embedded = false }) {
       setPosts((current) => current.filter((post) => post._id !== postId));
       setTotalPosts((count) => Math.max(0, count - 1));
       setProfile((current) => current?.postCount == null ? current : { ...current, postCount: Math.max(0, current.postCount - 1) });
-      setOpenPostMenuId(null);
       if (openCommentsFor === postId) {
         setOpenCommentsFor(null);
         setComments([]);
@@ -608,65 +606,40 @@ function ProfilePage({ profileId, embedded = false }) {
             {postActionError && <p className="feedback-message error">{postActionError}</p>}
             {posts.length === 0 ? <div className="profile-empty-posts">Chưa có bài viết nào được chia sẻ.<br /><small>Các bài đăng riêng tư hoặc không thể xem sẽ không hiện ở đây.</small></div> : (
               <div className="profile-post-list">
-                {posts.map((post) => {
-                  const visiblePost = post.originalPostId || post;
-                  const hasLiked = Boolean(post.isLiked);
-                  return <article className="post-card card profile-post-card" key={post._id}>
-                    <header className="post-header">
-                      <div className="post-author">
-                        <span className="post-avatar">{profile.profilePicture ? <img src={profile.profilePicture} alt="" /> : profile.username.charAt(0).toUpperCase()}</span>
-                        <div className="post-author-info"><strong>{profile.username}</strong><span className="post-meta">Ridge · {post.createdAt ? new Date(post.createdAt).toLocaleString("vi-VN") : ""}</span></div>
-                      </div>
-                      <div className="post-menu-wrap">
-                        <button className="post-more" type="button" aria-label="Tùy chọn bài viết" aria-expanded={openPostMenuId === post._id} onClick={() => setOpenPostMenuId((openId) => openId === post._id ? null : post._id)}>
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
-                        </button>
-                        {openPostMenuId === post._id && <div className="post-menu" role="group" aria-label="Tùy chọn bài viết">
-                          {post.isMine ? <>
-                            <button type="button" onClick={() => { setEditingPostId(post._id); setEditingPostContent(post.content || ""); setOpenPostMenuId(null); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" /></svg>Chỉnh sửa bài viết</button>
-                            <button className="post-menu-delete" type="button" onClick={() => handleDeletePost(post._id)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>Xóa bài viết</button>
-                          </> : <>
-                            <button type="button" onClick={() => { void handleToggleSavedPost(post._id, Boolean(post.isSaved)); setOpenPostMenuId(null); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>{post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}</button>
-                            <button className="danger" type="button" onClick={() => { setOpenPostMenuId(null); handleReportPost(post._id); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0h11l-2 4 2 4H5" /></svg>Báo cáo bài viết</button>
-                          </>}
-                        </div>}
-                      </div>
-                    </header>
-                    {editingPostId === post._id ? <form className="post-edit-form" onSubmit={(event) => handleUpdatePost(event, post._id)}>
-                      <textarea value={editingPostContent} onChange={(event) => setEditingPostContent(event.target.value)} maxLength="500" aria-label="Chỉnh sửa nội dung bài viết" />
-                      <div><button type="submit" disabled={isSavingPost}>{isSavingPost ? "Đang lưu..." : "Lưu"}</button><button type="button" onClick={() => { setEditingPostId(null); setEditingPostContent(""); setPostActionError(""); }}>Hủy</button></div>
-                    </form> : visiblePost.content && <p className={visiblePost.image || visiblePost.video ? "post-caption" : "post-text"}>{visiblePost.content}</p>}
-                    {visiblePost.image && <img className="post-image" src={visiblePost.image} alt={`Bài viết của ${profile.username}`} loading="lazy" />}
-                    {visiblePost.video && <video className="post-video" src={visiblePost.video} controls preload="metadata" />}
-                    <p className="post-likes">{post.likes?.length || 0} lượt thích</p>
-                    <div className="post-actions profile-post-actions">
-                      <div className="post-action-group">
-                        <button className={`post-action-button ${hasLiked ? "liked" : ""}`} type="button" aria-pressed={hasLiked} onClick={() => handleLike(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg><span>{hasLiked ? "Đã thích" : "Thích"}</span></button>
-                        <button className="post-action-button" type="button" onClick={() => handleToggleComments(post._id)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận</span></button>
-                        <button className="post-action-button" type="button" disabled={sharingPostId === post._id} onClick={() => handleShare(post._id)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>{sharingPostId === post._id ? "Đang chia sẻ" : "Chia sẻ"}</span></button>
-                      </div>
-                    </div>
-                    {openCommentsFor === post._id && <div className="profile-comments ridge-comments-list">
-                      {comments.map((comment) => <CommentItem
-                        key={comment._id}
-                        comment={comment}
-                        currentUserId={currentUser?._id}
-                        postOwnerId={post.authorId?._id || profile._id}
-                        isAdmin={currentUser?.isAdmin}
-                        isEditing={editingCommentId === comment._id}
-                        editingContent={editingCommentContent}
-                        isUpdating={isUpdatingComment}
-                        onEdit={(item) => { setEditingCommentId(item._id); setEditingCommentContent(item.content); }}
-                        onEditingChange={setEditingCommentContent}
-                        onCancelEdit={() => { setEditingCommentId(null); setEditingCommentContent(""); }}
-                        onUpdate={handleUpdateComment}
-                        onDelete={() => handleDeleteComment(comment._id)}
-                        onReport={() => handleReportComment(comment._id)}
-                      />)}
-                      <form className="profile-comment-form" onSubmit={(event) => handleCommentSubmit(event, post._id)}><input aria-label="Viết bình luận" placeholder="Viết bình luận..." value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} maxLength="500" /><button type="submit" disabled={!commentDraft.trim()}>Gửi</button></form>
-                    </div>}
-                  </article>;
-                })}
+                {posts.map((post) => <PostCard
+  key={post._id}
+  post={post}
+  currentUser={currentUser}
+  isLiked={Boolean(post.isLiked)}
+  editingPostId={editingPostId}
+  editingPostContent={editingPostContent}
+  isSavingPost={isSavingPost}
+  postActionError={postActionError}
+  commentsOpen={openCommentsFor === post._id}
+  comments={comments}
+  commentContent={commentDraft}
+  editingCommentId={editingCommentId}
+  editingCommentContent={editingCommentContent}
+  isUpdatingComment={isUpdatingComment}
+  onLike={handleLike}
+  onToggleComments={(item) => handleToggleComments(item._id)}
+  onShare={(item) => handleShare(item._id)}
+  onToggleSaved={(item, saved) => handleToggleSavedPost(item._id, saved)}
+  onStartEdit={(item) => { setEditingPostId(item._id); setEditingPostContent(item.content || ''); }}
+  onEditingPostContentChange={setEditingPostContent}
+  onUpdatePost={(event, item) => handleUpdatePost(event, item._id)}
+  onCancelEditPost={() => { setEditingPostId(null); setEditingPostContent(''); setPostActionError(''); }}
+  onDeletePost={(item) => handleDeletePost(item._id)}
+  onReportPost={(item) => handleReportPost(item._id)}
+  onCommentChange={setCommentDraft}
+  onCreateComment={(event, item) => handleCommentSubmit(event, item._id)}
+  onCommentEdit={(item) => { setEditingCommentId(item._id); setEditingCommentContent(item.content); }}
+  onCommentEditingChange={setEditingCommentContent}
+  onCancelCommentEdit={() => { setEditingCommentId(null); setEditingCommentContent(''); }}
+  onUpdateComment={handleUpdateComment}
+  onDeleteComment={(item) => handleDeleteComment(item._id)}
+  onReportComment={(item) => handleReportComment(item._id)}
+/>)}
               </div>
             )}
             {hasMore && <button className="profile-load-more" type="button" disabled={loadingMore} onClick={handleLoadMore}>{loadingMore ? "Đang tải..." : "Xem thêm bài viết"}</button>}

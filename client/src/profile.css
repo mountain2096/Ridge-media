@@ -204,23 +204,8 @@
 
 .public-profile-posts { min-width: 0; }
 .profile-post-list { display: grid; gap: 16px; }
-.public-profile-page .profile-post-card { overflow: hidden; border-radius: var(--news-radius-card); box-shadow: 0 5px 20px rgb(15 23 42 / 5%); }
-.profile-post-card .post-header { display: flex; }
-.profile-post-card .post-author { display: flex; align-items: center; }
-.profile-post-card .post-avatar { display: grid; flex: 0 0 46px; place-items: center; }
-.profile-post-card .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.profile-post-card .post-author-info { display: grid; }
-.profile-post-card .post-author-info > strong { color: var(--news-ink); font-size: 15px; }
-.profile-post-card .post-meta { color: var(--news-muted); font-size: 12px; }
 .home-layout .post-author-info > .profile-name-link { color: var(--news-ink); font-size: 16px; font-weight: 600; line-height: 1.3; text-decoration: none; }
 .home-layout .post-author-info > .profile-name-link:hover { text-decoration: underline; }
-.profile-post-card .post-caption { padding-bottom: 4px; white-space: pre-wrap; line-height: 1.55; }
-.public-profile-page .profile-post-card .post-image,
-.public-profile-page .profile-post-card .post-video { height: auto; max-height: 560px; min-height: 0; object-fit: contain; background: #f3f5f9; }
-.profile-post-card .post-likes { padding-top: 3px; padding-bottom: 8px; }
-.profile-post-card .post-action-button { gap: 7px; font-size: 14px; }
-.profile-post-card .post-action-button svg { width: 19px; height: 19px; }
-.profile-post-actions { justify-content: flex-start; }
 .profile-comments { padding: 12px 18px 16px; border-top: 1px solid var(--news-border); }
 .profile-comment-form { display: flex; gap: 8px; margin-top: 8px; }
 .profile-comment-form input { flex: 1; min-width: 0; height: 40px; min-height: 40px; padding: 0 14px; border: 1px solid var(--news-border); border-radius: 20px; color: var(--news-ink); background: var(--news-field); font: inherit; font-size: 14px; }
