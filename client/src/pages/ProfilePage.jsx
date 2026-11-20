@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
-import { useConfirm } from "../components/ConfirmDialog.jsx";
+import { useConfirm, useModalBehavior } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
 import PostCard from "../components/PostCard.jsx";
+import { uploadMedia } from "../lib/uploadMedia.js";
 import "../newsfeed.css";
 import "../profile.css";
 
@@ -40,6 +41,12 @@ function ProfilePage({ profileId, embedded = false }) {
   const [sharingPostId, setSharingPostId] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileDraft, setProfileDraft] = useState({ username: "", bio: "" });
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [coverPreview, setCoverPreview] = useState("");
+  const profileEditDialogRef = useRef(null);
+  const profileEditCancelRef = useRef(null);
   const [totalPosts, setTotalPosts] = useState(0);
   const [editingPostId, setEditingPostId] = useState(null);
   const [editingPostContent, setEditingPostContent] = useState("");
@@ -50,6 +57,16 @@ function ProfilePage({ profileId, embedded = false }) {
   const [isSavingBio, setIsSavingBio] = useState(false);
   const [aboutMenuOpen, setAboutMenuOpen] = useState(false);
   const [friendSearch, setFriendSearch] = useState("");
+
+  useModalBehavior(isEditingProfile, working, () => setIsEditingProfile(false), profileEditCancelRef, profileEditDialogRef);
+
+  useEffect(() => () => {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview]);
+
+  useEffect(() => () => {
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+  }, [coverPreview]);
 
   const loadPosts = useCallback(async (nextPage, append = false) => {
     const token = localStorage.getItem("token");
@@ -444,6 +461,10 @@ function ProfilePage({ profileId, embedded = false }) {
     setWorking(true);
     setActionError("");
     try {
+      const [uploadedAvatar, uploadedCover] = await Promise.all([
+        avatarFile ? uploadMedia(avatarFile) : null,
+        coverFile ? uploadMedia(coverFile) : null,
+      ]);
       const response = await fetch(`${API}/user/me`, {
         method: "PUT",
         headers: {
@@ -453,13 +474,18 @@ function ProfilePage({ profileId, embedded = false }) {
         body: JSON.stringify({
           username: profileDraft.username.trim(),
           bio: profileDraft.bio.trim(),
-          profilePicture: profile.profilePicture || "",
-          coverPicture: profile.coverPicture || "",
+          profilePicture: uploadedAvatar?.url || profile.profilePicture || "",
+          coverPicture: uploadedCover?.url || profile.coverPicture || "",
+          dateOfBirth: profile.dateOfBirth || null,
         }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể cập nhật trang cá nhân.");
       setProfile((current) => ({ ...current, ...data.user, _id: current._id }));
+      setAvatarFile(null);
+      setCoverFile(null);
+      setAvatarPreview("");
+      setCoverPreview("");
       setIsEditingProfile(false);
     } catch (requestError) {
       setActionError(requestError.message);
@@ -531,7 +557,7 @@ function ProfilePage({ profileId, embedded = false }) {
           </div>
           <div className="public-profile-actions">
             {relationship?.isSelf ? (
-              <button type="button" onClick={() => { setProfileDraft({ username: profile.username || "", bio: profile.bio || "" }); setIsEditingProfile(true); }}>Chỉnh sửa trang cá nhân</button>
+              <button type="button" onClick={() => { setProfileDraft({ username: profile.username || "", bio: profile.bio || "" }); setAvatarFile(null); setCoverFile(null); setAvatarPreview(""); setCoverPreview(""); setActionError(""); setIsEditingProfile(true); }}>Chỉnh sửa trang cá nhân</button>
             ) : relationship?.hasReceivedRequest ? (
               <button type="button" disabled={working} onClick={handleFriendAction}>{working ? "Đang xử lý..." : "Chấp nhận lời mời"}</button>
             ) : relationship?.isFriend ? (
@@ -545,7 +571,7 @@ function ProfilePage({ profileId, embedded = false }) {
             {!relationship?.isSelf && <button className="profile-message-button" type="button" disabled={working || !relationship?.isFriend} onClick={handleMessage}>Nhắn tin</button>}
           </div>
         </div>
-        {actionError && <p className="feedback-message error profile-action-error">{actionError}</p>}
+        {!isEditingProfile && actionError && <p className="feedback-message error profile-action-error" role="alert">{actionError}</p>}
         <nav className="profile-tabs" aria-label="Điều hướng trang cá nhân">
           <button className={activeTab === "posts" ? "active" : ""} type="button" onClick={() => setActiveTab("posts")}>Bài viết</button>
           <button className={activeTab === "about" ? "active" : ""} type="button" onClick={() => setActiveTab("about")}>Giới thiệu</button>
@@ -553,14 +579,25 @@ function ProfilePage({ profileId, embedded = false }) {
         </nav>
       </section>
 
-      {isEditingProfile && <div className="profile-edit-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsEditingProfile(false); }}>
-        <section className="profile-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title">
+      {isEditingProfile && <div className="ridge-dialog-backdrop profile-edit-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !working) setIsEditingProfile(false); }}>
+        <section className="ridge-dialog profile-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title" ref={profileEditDialogRef} tabIndex={-1}>
           <h2 id="profile-edit-title">Chỉnh sửa trang cá nhân</h2>
           <form onSubmit={handleProfileSave}>
-            <label>Tên hiển thị<input value={profileDraft.username} onChange={(event) => setProfileDraft((current) => ({ ...current, username: event.target.value }))} required maxLength="80" /></label>
+            <label>Tên hiển thị<input value={profileDraft.username} onChange={(event) => setProfileDraft((current) => ({ ...current, username: event.target.value }))} required minLength="2" maxLength="40" /></label>
             <label>Giới thiệu<textarea value={profileDraft.bio} onChange={(event) => setProfileDraft((current) => ({ ...current, bio: event.target.value }))} maxLength="255" rows="4" /></label>
-            {actionError && <p className="feedback-message error">{actionError}</p>}
-            <div><button type="button" className="profile-edit-cancel" onClick={() => setIsEditingProfile(false)}>Hủy</button><button type="submit" disabled={working}>{working ? "Đang lưu..." : "Lưu thay đổi"}</button></div>
+            <span className="profile-edit-counter">{profileDraft.bio.length}/255 ký tự</span>
+            <div className="profile-edit-image-fields">
+              <label>Ảnh đại diện
+                <span className="profile-edit-image-preview">{avatarPreview || profile.profilePicture ? <img src={avatarPreview || profile.profilePicture} alt="Xem trước ảnh đại diện" /> : profile.username?.charAt(0).toUpperCase()}</span>
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0] || null; setAvatarFile(file); setAvatarPreview(file ? URL.createObjectURL(file) : ""); }} />
+              </label>
+              <label>Ảnh bìa
+                <span className="profile-edit-cover-preview">{coverPreview || profile.coverPicture ? <img src={coverPreview || profile.coverPicture} alt="Xem trước ảnh bìa" /> : "Chưa có ảnh bìa"}</span>
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0] || null; setCoverFile(file); setCoverPreview(file ? URL.createObjectURL(file) : ""); }} />
+              </label>
+            </div>
+            {actionError && <p className="feedback-message error" role="alert">{actionError}</p>}
+            <div className="ridge-dialog-actions"><button ref={profileEditCancelRef} type="button" className="ridge-dialog-button is-secondary" onClick={() => setIsEditingProfile(false)}>Hủy</button><button className="ridge-dialog-button is-primary" type="submit" disabled={working}>{working ? "Đang lưu..." : "Lưu thay đổi"}</button></div>
           </form>
         </section>
       </div>}
@@ -590,7 +627,7 @@ function ProfilePage({ profileId, embedded = false }) {
               {bioContent}
             </section>
             <section className="profile-info-card profile-featured-card">
-              <h2>Ảnh</h2>
+              <header className="profile-panel-heading"><h2>Ảnh</h2></header>
               {featuredImages.length > 0 ? (
                 <div className="profile-featured-photos">
                   {featuredImages.map((post, index) => <img src={post.image} alt={`Ảnh trong bài viết ${index + 1}`} key={`${post._id || post.image}-${index}`} loading="lazy" />)}
@@ -598,7 +635,7 @@ function ProfilePage({ profileId, embedded = false }) {
               ) : <p className="profile-empty-bio">Chưa có ảnh.</p>}
             </section>
             <section className="profile-info-card">
-              <header className="profile-panel-heading"><h2>Bạn bè {friendCount !== undefined && <span>{friendCount}</span>}</h2>{profile.friends?.length > 9 && <button className="profile-view-more" type="button" onClick={() => setActiveTab("friends")}>Xem thêm</button>}</header>
+              <header className="profile-panel-heading"><h2>Bạn bè {friendCount !== undefined && <span className="profile-card-count">· {friendCount}</span>}</h2>{profile.friends?.length > 9 && <button className="profile-view-more" type="button" onClick={() => setActiveTab("friends")}>Xem thêm</button>}</header>
               {profile.friends?.length ? <div className="profile-friend-grid profile-friend-grid-compact">
                 {profile.friends.slice(0, 9).map((friend) => <Link className="profile-friend-card" to={`/profile/${friend._id}`} key={friend._id}>
                   <span className="profile-friend-photo">{friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : friend.username?.charAt(0).toUpperCase()}</span>
