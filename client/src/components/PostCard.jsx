@@ -17,7 +17,7 @@ function PostCard({
   const isShare = Boolean(post.originalPostId || post.originalUnavailable);
   const originalPost = post.originalPostId && typeof post.originalPostId === "object" ? post.originalPostId : null;
   const visiblePost = isShare ? originalPost : post;
-  const shareText = isShare && originalPost && post.content !== originalPost.content ? post.content : "";
+  const shareText = isShare && originalPost && (post.content || "").trim() !== (originalPost.content || "").trim() ? post.content : "";
   const username = post.authorId?.username || "Người dùng";
   const originalUsername = originalPost?.authorId?.username || "Người dùng";
   const authorId = post.authorId?._id;
@@ -82,7 +82,7 @@ function PostCard({
         </div>
       </header>
 
-      {visiblePost.video ? <video className="post-video" src={visiblePost.video} controls preload="metadata" /> : visiblePost.image && !failedImagePost ? <img className="post-image" src={visiblePost.image} alt={`Bài viết của ${username}`} loading="lazy" onError={() => onImageError?.(post)} /> : null}
+      {!isShare && (visiblePost.video ? <video className="post-video" src={visiblePost.video} controls preload="metadata" /> : visiblePost.image && !failedImagePost ? <img className="post-image" src={visiblePost.image} alt={`Bài viết của ${username}`} loading="lazy" onError={() => onImageError?.(post)} /> : null)}
       {isShare && shareText && <p className="post-caption post-share-text">{shareText}</p>}
       {isShare ? <article className="shared-post-card">
         {originalPost ? <>
