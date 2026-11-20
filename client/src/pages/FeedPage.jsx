@@ -10,6 +10,17 @@ import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
 import CommentItem from "../components/CommentItem.jsx";
 import "../newsfeed.css";
+
+function FriendPresence({ friend }) {
+  const label = friend.isOnline ? "Đang hoạt động" : "Không hoạt động";
+  return (
+    <span className="friend-presence" title={label}>
+      <span className={`friend-presence-dot ${friend.isOnline ? "is-online" : "is-offline"}`} aria-hidden="true" />
+      <span className="friend-presence-sr-only">{label}</span>
+    </span>
+  );
+}
+
 function FeedPage({ section = "feed" }){
     const confirmAction = useConfirm();
     const navigate = useNavigate();
@@ -59,6 +70,10 @@ function FeedPage({ section = "feed" }){
     const [friendSearch, setFriendSearch] = useState("");
     const normalizeFriendName = (name = "") => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d").toLowerCase();
     const filteredFriends = friends.filter((friend) => normalizeFriendName(friend.username || "").includes(normalizeFriendName(friendSearch)));
+    const sortedContactFriends = [...friends].sort((first, second) =>
+      Number(Boolean(second.isOnline)) - Number(Boolean(first.isOnline)) ||
+      String(first.username || "").localeCompare(String(second.username || ""), "vi", { sensitivity: "base" })
+    );
     const [shareFeedback, setShareFeedback] = useState("");
     const [reportTarget, setReportTarget] = useState(null);
     const [failedImagePostIds, setFailedImagePostIds] = useState([]);
@@ -127,22 +142,31 @@ function FeedPage({ section = "feed" }){
     }, [storyReloadKey]);
 
     useEffect(() => {
+      let mounted = true;
+      let loading = false;
       async function loadFriends() {
+        if (loading) return;
+        loading = true;
         try {
           const token = localStorage.getItem("token");
           const response = await fetch(`${API_BASE}/api/friend`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          if (response.ok) {
-            setFriends(data.friend);
-          }
+          if (mounted && response.ok) setFriends(data.friend || []);
         } catch {
           // Friend suggestions and feed remain usable if this optional list fails.
+        } finally {
+          loading = false;
         }
       }
 
-      loadFriends();
+      void loadFriends();
+      const refreshInterval = window.setInterval(loadFriends, 60_000);
+      return () => {
+        mounted = false;
+        window.clearInterval(refreshInterval);
+      };
     }, []);
 
     useEffect(() => {
@@ -878,6 +902,7 @@ function FeedPage({ section = "feed" }){
                               {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
                             </Link>
                             <Link className="friend-name profile-name-link" to={`/profile/${friend._id}`}>{friend.username}</Link>
+                            <FriendPresence friend={friend} />
                             <button className="btn-outline" type="button" onClick={() => navigate("/messages", { state: { openUserId: friend._id } })}>Nhắn tin</button>
                           </div>
                         ))}
@@ -926,7 +951,7 @@ function FeedPage({ section = "feed" }){
                               <Link className="connection-person-avatar" to={"/profile/" + friend._id} aria-label={`Xem trang cá nhân ${friend.username}`}>
                                 {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
                               </Link>
-                              <Link className="connection-person-name profile-name-link" to={"/profile/" + friend._id}>{friend.username}</Link>
+                              <Link className="connection-person-name profile-name-link" to={"/profile/" + friend._id}>{friend.username}<FriendPresence friend={friend} /></Link>
                               <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
                               <button className="connection-unfriend-button" type="button" onClick={() => handleUnfriend(friend)}>Hủy kết bạn</button>
                             </div>
@@ -1358,12 +1383,13 @@ function FeedPage({ section = "feed" }){
                     <h2>Người liên hệ</h2>
                     {friends.length === 0 ? <p className="friends-empty">Bạn chưa có bạn bè nào.</p> : (
                       <div className="contacts-list">
-                        {friends.map((friend) => (
+                        {sortedContactFriends.map((friend) => (
                           <button className="contact-row" type="button" key={friend._id} onClick={() => handleStartConversation(friend._id)}>
                             <span className="contact-avatar">
                               {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
                             </span>
                             <span>{friend.username}</span>
+                            <FriendPresence friend={friend} />
                           </button>
                         ))}
                       </div>

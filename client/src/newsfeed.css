@@ -525,6 +525,16 @@
   color: var(--news-muted);
 }
 
+.home-layout .contact-row::after { display: none; content: none; }
+.friend-presence { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; margin-left: auto; }
+.friend-presence-dot { display: inline-block; width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: #98a2b3; }
+.friend-presence-dot.is-online { background: #45a66b; }
+.friend-presence-dot.is-offline { background: #98a2b3; }
+.friend-presence-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.friend-row > .friend-presence { margin-left: 0; }
+.connections-friends-list .connection-person-name { display: flex; align-items: center; }
+.connections-friends-list .connection-person-name .friend-presence { margin-left: 8px; }
+
 .connections-friends-card .friends-search-label {
   position: absolute;
   width: 1px;

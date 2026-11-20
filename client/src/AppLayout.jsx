@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "./lib/api.js";
 import { ConfirmProvider } from "./components/ConfirmDialog.jsx";
@@ -16,6 +16,7 @@ function AppLayout() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationError, setNotificationError] = useState("");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const stopHeartbeatRef = useRef(() => {});
   const isFeed = location.pathname === "/feed";
 
   useEffect(() => {
@@ -31,6 +32,53 @@ function AppLayout() {
       if (error.name !== "AbortError") setCurrentUser(null);
     });
     return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    let stopped = false;
+    let lastSentAt = 0;
+    const controllers = new Set();
+
+    function sendHeartbeat() {
+      const now = Date.now();
+      if (stopped || now - lastSentAt < 1000) return;
+      lastSentAt = now;
+      try {
+        const controller = new AbortController();
+        controllers.add(controller);
+        fetch(`${API_BASE}/api/user/heartbeat`, {
+          method: "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+          signal: controller.signal,
+        }).catch(() => {}).finally(() => controllers.delete(controller));
+      } catch {
+        // Heartbeat failures are intentionally silent.
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") sendHeartbeat();
+    }
+
+    sendHeartbeat();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") sendHeartbeat();
+    }, 60_000);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    function stopHeartbeat() {
+      stopped = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      controllers.forEach((controller) => controller.abort());
+      controllers.clear();
+    }
+
+    stopHeartbeatRef.current = stopHeartbeat;
+    return () => {
+      stopHeartbeat();
+      stopHeartbeatRef.current = () => {};
+    };
   }, []);
 
   useEffect(() => {
@@ -98,6 +146,7 @@ function AppLayout() {
   const navClass = ({ isActive }) => "menu-item " + (isActive ? "active" : "");
   const outletContext = { currentUser, setCurrentUser, searchQuery, setSearchQuery };
   function handleLogout() {
+    stopHeartbeatRef.current();
     try {
       if (currentUser?._id) {
         localStorage.removeItem(`ridge:recent-searches:${currentUser._id}`);
