@@ -1009,18 +1009,18 @@ function FeedPage({ section = "feed" }){
                   {storyFeedback && <p className="feedback-message error">{storyFeedback}</p>}
                   <div className="story-list">
                     <div className="story-item story-item-self">
-                      <button className="story-avatar-button" type="button" aria-label={myStoryGroup ? "Xem story của bạn" : "Ảnh đại diện của bạn"} onClick={() => { if (myStoryGroup) { setActiveStoryGroup(myStoryGroup); setActiveStoryIndex(0); } }}>
-                        <span className={`story-ring ${myStoryGroup ? "" : "story-ring-add"}`}>
-                        <span className="story-avatar story-self">
-                          {currentUser?.profilePicture ? (
-                            <img src={currentUser.profilePicture} alt="" />
-                          ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
-                        </span>
-                        </span>
-                      </button>
-                      <button className="story-add story-add-button" type="button" aria-label="Đăng story" onClick={() => { setStoryFeedback(""); setStoryFile(null); setIsStoryComposerOpen(true); }}>
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-                      </button>
+                      <span className="story-avatar-wrap">
+                        <button className="story-avatar-button" type="button" aria-label={myStoryGroup ? "Xem story của bạn" : "Ảnh đại diện của bạn"} onClick={() => { if (myStoryGroup) { setActiveStoryGroup(myStoryGroup); setActiveStoryIndex(0); } }}>
+                          <span className={`story-ring ${myStoryGroup ? "" : "story-ring-add"}`}>
+                            <span className="story-avatar story-self">
+                              {currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
+                            </span>
+                          </span>
+                        </button>
+                        <button className="story-add-button" type="button" aria-label="Thêm story" onClick={() => { setStoryFeedback(""); setStoryFile(null); setIsStoryComposerOpen(true); }}>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                        </button>
+                      </span>
                       <span className="story-name">Tin của bạn</span>
                     </div>
                     {storyGroups
