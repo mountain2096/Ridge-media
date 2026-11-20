@@ -41,6 +41,16 @@ function ProfilePage({ profileId, embedded = false }) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileDraft, setProfileDraft] = useState({ username: "", bio: "" });
   const [totalPosts, setTotalPosts] = useState(0);
+  const [openPostMenuId, setOpenPostMenuId] = useState(null);
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editingPostContent, setEditingPostContent] = useState("");
+  const [isSavingPost, setIsSavingPost] = useState(false);
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bioDraft, setBioDraft] = useState("");
+  const [bioError, setBioError] = useState("");
+  const [isSavingBio, setIsSavingBio] = useState(false);
+  const [aboutMenuOpen, setAboutMenuOpen] = useState(false);
+  const [friendSearch, setFriendSearch] = useState("");
 
   const loadPosts = useCallback(async (nextPage, append = false) => {
     const token = localStorage.getItem("token");
@@ -109,6 +119,13 @@ function ProfilePage({ profileId, embedded = false }) {
 
   async function handleFriendAction() {
     if (relationship.isFriend) {
+      const confirmed = await confirmAction({
+        title: "Hủy kết bạn",
+        message: `Bạn có chắc muốn hủy kết bạn với ${profile.username}?`,
+        confirmLabel: "Hủy kết bạn",
+        danger: true,
+      });
+      if (!confirmed) return;
       await runAction(`/friend/${id}`, "DELETE", () => setRelationship((current) => ({ ...current, isFriend: false })));
     } else if (relationship.hasReceivedRequest) {
       await runAction(`/friend/request/${relationship.incomingRequestId}/accept`, "PUT", () => setRelationship((current) => ({ ...current, isFriend: true, hasReceivedRequest: false })));
@@ -163,6 +180,116 @@ function ProfilePage({ profileId, embedded = false }) {
         : item));
     } catch (requestError) {
       setPostActionError(requestError.message);
+    }
+  }
+
+  async function handleDeletePost(postId) {
+    if (!(await confirmAction({
+      title: "Xóa bài viết",
+      message: "Bạn có chắc muốn xóa bài viết này?",
+      confirmLabel: "Xóa bài viết",
+      danger: true,
+    }))) return;
+
+    setPostActionError("");
+    try {
+      const response = await fetch(`${API}/post/${postId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể xóa bài viết.");
+      setPosts((current) => current.filter((post) => post._id !== postId));
+      setTotalPosts((count) => Math.max(0, count - 1));
+      setProfile((current) => current?.postCount == null ? current : { ...current, postCount: Math.max(0, current.postCount - 1) });
+      setOpenPostMenuId(null);
+      if (openCommentsFor === postId) {
+        setOpenCommentsFor(null);
+        setComments([]);
+      }
+    } catch (requestError) {
+      setPostActionError(requestError.message);
+    }
+  }
+
+  async function handleUpdatePost(event, postId) {
+    event.preventDefault();
+    const content = editingPostContent.trim();
+    if (!content) {
+      setPostActionError("Nội dung bài viết không được để trống.");
+      return;
+    }
+    setIsSavingPost(true);
+    setPostActionError("");
+    try {
+      const response = await fetch(`${API}/post/${postId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ content }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể cập nhật bài viết.");
+      setPosts((current) => current.map((post) => post._id === postId
+        ? { ...post, content: data.post.content }
+        : post));
+      setEditingPostId(null);
+      setEditingPostContent("");
+    } catch (requestError) {
+      setPostActionError(requestError.message);
+    } finally {
+      setIsSavingPost(false);
+    }
+  }
+
+  async function handleToggleSavedPost(postId, isSaved) {
+    setPostActionError("");
+    try {
+      const response = await fetch(`${API}/post/${postId}/save`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ isSaved: !isSaved }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể cập nhật bài viết đã lưu.");
+      setPosts((current) => current.map((post) => post._id === postId
+        ? { ...post, isSaved: data.isSaved }
+        : post));
+    } catch (requestError) {
+      setPostActionError(requestError.message);
+    }
+  }
+
+  function handleReportPost(postId) {
+    setReportTarget({ targetType: "post", targetId: postId });
+  }
+
+  async function handleBioSave(event) {
+    event.preventDefault();
+    setIsSavingBio(true);
+    setBioError("");
+    try {
+      const response = await fetch(`${API}/user/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ bio: bioDraft.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể cập nhật giới thiệu.");
+      setProfile((current) => ({ ...current, ...data.user, _id: current._id }));
+      setIsEditingBio(false);
+    } catch (requestError) {
+      setBioError(requestError.message);
+    } finally {
+      setIsSavingBio(false);
     }
   }
 
@@ -349,6 +476,31 @@ function ProfilePage({ profileId, embedded = false }) {
   const friendButtonLabel = relationship?.isFriend
     ? "Bạn bè"
     : relationship?.hasSentRequest ? "Hủy lời mời" : "Thêm bạn bè";
+  const normalizedFriendSearch = friendSearch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLocaleLowerCase("vi");
+  const filteredFriends = (profile.friends || []).filter((friend) => friend.username
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLocaleLowerCase("vi")
+    .includes(normalizedFriendSearch));
+  const bioContent = isEditingBio ? (
+    <form className="profile-bio-edit" onSubmit={handleBioSave}>
+      <label className="profile-visually-hidden" htmlFor="profile-bio-draft">Giới thiệu</label>
+      <textarea id="profile-bio-draft" value={bioDraft} maxLength={255} rows={4} onChange={(event) => setBioDraft(event.target.value)} />
+      <div className="profile-bio-edit-footer"><span>{bioDraft.length}/255</span><div>
+        <button type="button" className="profile-bio-cancel" onClick={() => { setIsEditingBio(false); setBioError(""); }}>Hủy</button>
+        <button type="submit" disabled={isSavingBio}>{isSavingBio ? "Đang lưu..." : "Lưu"}</button>
+      </div></div>
+      {bioError && <p className="feedback-message error" role="alert">{bioError}</p>}
+    </form>
+  ) : <p>{profile.bio || <span className="profile-empty-bio">Chưa có giới thiệu</span>}</p>;
+  const aboutMenu = relationship?.isSelf && (
+    <div className="profile-about-menu-wrap">
+      <button className="profile-about-menu-button" type="button" aria-label="Tùy chọn giới thiệu" aria-expanded={aboutMenuOpen} onClick={() => setAboutMenuOpen((open) => !open)}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+      </button>
+      {aboutMenuOpen && <div className="profile-about-menu" role="group">
+        <button type="button" onClick={() => { setBioDraft(profile.bio || ""); setBioError(""); setIsEditingBio(true); setAboutMenuOpen(false); }}>Chỉnh sửa giới thiệu</button>
+      </div>}
+    </div>
+  );
 
   return (
     <ProfileRoot className={`public-profile-page ${embedded ? "public-profile-embedded" : ""}`}>
@@ -411,25 +563,27 @@ function ProfilePage({ profileId, embedded = false }) {
 
       {activeTab === "about" ? (
         <section className="profile-tab-panel profile-about-panel">
-          <h2>Giới thiệu</h2>
-          <p>{profile.bio || "Chưa có giới thiệu."}</p>
+          <header className="profile-panel-heading"><h2>Giới thiệu</h2>{aboutMenu}</header>
+          {bioContent}
         </section>
       ) : activeTab === "friends" ? (
         <section className="profile-tab-panel profile-about-panel">
           <h2>Bạn bè</h2>
-          {profile.friends?.length ? <div className="profile-friend-grid">
-            {profile.friends.map((friend) => <Link className="profile-friend-card" to={`/profile/${friend._id}`} key={friend._id}>
+          <label className="profile-friend-search-label" htmlFor="profile-friend-search">Tìm bạn bè</label>
+          <input id="profile-friend-search" className="profile-friend-search" type="search" placeholder="Tìm bạn bè" value={friendSearch} onChange={(event) => setFriendSearch(event.target.value)} />
+          {filteredFriends.length ? <div className="profile-friend-grid">
+            {filteredFriends.map((friend) => <Link className="profile-friend-card" to={`/profile/${friend._id}`} key={friend._id}>
               <span className="profile-friend-photo">{friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : friend.username?.charAt(0).toUpperCase()}</span>
               <strong>{friend.username}</strong>
             </Link>)}
-          </div> : <p>Chưa có bạn bè</p>}
+          </div> : <p>Không tìm thấy bạn bè nào.</p>}
         </section>
       ) : (
         <section className="profile-content-grid">
           <aside className="profile-left-column">
             <section className="profile-info-card">
-              <h2>Giới thiệu</h2>
-              <p>{profile.bio || <span className="profile-empty-bio">Chưa có giới thiệu</span>}</p>
+              <header className="profile-panel-heading"><h2>Giới thiệu</h2>{aboutMenu}</header>
+              {bioContent}
             </section>
             <section className="profile-info-card profile-featured-card">
               <h2>Ảnh</h2>
@@ -440,7 +594,7 @@ function ProfilePage({ profileId, embedded = false }) {
               ) : <p className="profile-empty-bio">Chưa có ảnh.</p>}
             </section>
             <section className="profile-info-card">
-              <h2>Bạn bè {friendCount !== undefined && <span>{friendCount}</span>}</h2>
+              <header className="profile-panel-heading"><h2>Bạn bè {friendCount !== undefined && <span>{friendCount}</span>}</h2>{profile.friends?.length > 9 && <button className="profile-view-more" type="button" onClick={() => setActiveTab("friends")}>Xem thêm</button>}</header>
               {profile.friends?.length ? <div className="profile-friend-grid profile-friend-grid-compact">
                 {profile.friends.slice(0, 9).map((friend) => <Link className="profile-friend-card" to={`/profile/${friend._id}`} key={friend._id}>
                   <span className="profile-friend-photo">{friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : friend.username?.charAt(0).toUpperCase()}</span>
@@ -463,8 +617,25 @@ function ProfilePage({ profileId, embedded = false }) {
                         <span className="post-avatar">{profile.profilePicture ? <img src={profile.profilePicture} alt="" /> : profile.username.charAt(0).toUpperCase()}</span>
                         <div className="post-author-info"><strong>{profile.username}</strong><span className="post-meta">Ridge · {post.createdAt ? new Date(post.createdAt).toLocaleString("vi-VN") : ""}</span></div>
                       </div>
+                      <div className="post-menu-wrap">
+                        <button className="post-more" type="button" aria-label="Tùy chọn bài viết" aria-expanded={openPostMenuId === post._id} onClick={() => setOpenPostMenuId((openId) => openId === post._id ? null : post._id)}>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+                        </button>
+                        {openPostMenuId === post._id && <div className="post-menu" role="group" aria-label="Tùy chọn bài viết">
+                          {post.isMine ? <>
+                            <button type="button" onClick={() => { setEditingPostId(post._id); setEditingPostContent(post.content || ""); setOpenPostMenuId(null); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" /></svg>Chỉnh sửa bài viết</button>
+                            <button className="post-menu-delete" type="button" onClick={() => handleDeletePost(post._id)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>Xóa bài viết</button>
+                          </> : <>
+                            <button type="button" onClick={() => { void handleToggleSavedPost(post._id, Boolean(post.isSaved)); setOpenPostMenuId(null); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg>{post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}</button>
+                            <button className="danger" type="button" onClick={() => { setOpenPostMenuId(null); handleReportPost(post._id); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0h11l-2 4 2 4H5" /></svg>Báo cáo bài viết</button>
+                          </>}
+                        </div>}
+                      </div>
                     </header>
-                    {visiblePost.content && <p className={visiblePost.image || visiblePost.video ? "post-caption" : "post-text"}>{visiblePost.content}</p>}
+                    {editingPostId === post._id ? <form className="post-edit-form" onSubmit={(event) => handleUpdatePost(event, post._id)}>
+                      <textarea value={editingPostContent} onChange={(event) => setEditingPostContent(event.target.value)} maxLength="500" aria-label="Chỉnh sửa nội dung bài viết" />
+                      <div><button type="submit" disabled={isSavingPost}>{isSavingPost ? "Đang lưu..." : "Lưu"}</button><button type="button" onClick={() => { setEditingPostId(null); setEditingPostContent(""); setPostActionError(""); }}>Hủy</button></div>
+                    </form> : visiblePost.content && <p className={visiblePost.image || visiblePost.video ? "post-caption" : "post-text"}>{visiblePost.content}</p>}
                     {visiblePost.image && <img className="post-image" src={visiblePost.image} alt={`Bài viết của ${profile.username}`} loading="lazy" />}
                     {visiblePost.video && <video className="post-video" src={visiblePost.video} controls preload="metadata" />}
                     <p className="post-likes">{post.likes?.length || 0} lượt thích</p>

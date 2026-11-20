@@ -523,7 +523,15 @@ function FeedPage({ section = "feed" }){
         setPeopleError(requestError.message);
       }
     }
-    async function handleUnfriend(userId) {
+    async function handleUnfriend(friend) {
+      if (!(await confirmAction({
+        title: "Hủy kết bạn",
+        message: `Bạn có chắc muốn hủy kết bạn với ${friend.username}?`,
+        confirmLabel: "Hủy kết bạn",
+        danger: true,
+      }))) return;
+
+      const userId = friend._id;
       setPeopleError("");
       try {
         const response = await fetch(`${API_BASE}/api/friend/${userId}`, {
@@ -915,7 +923,7 @@ function FeedPage({ section = "feed" }){
                               </Link>
                               <Link className="connection-person-name profile-name-link" to={"/profile/" + friend._id}>{friend.username}</Link>
                               <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
-                              <button className="connection-unfriend-button" type="button" onClick={() => handleUnfriend(friend._id)}>Hủy kết bạn</button>
+                              <button className="connection-unfriend-button" type="button" onClick={() => handleUnfriend(friend)}>Hủy kết bạn</button>
                             </div>
                           ))}
                         </div>
