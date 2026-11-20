@@ -5,6 +5,7 @@ import { useConfirm, useModalBehavior } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
 import PostCard from "../components/PostCard.jsx";
+import MediaPicker from "../components/MediaPicker.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import "../newsfeed.css";
 import "../profile.css";
@@ -587,14 +588,8 @@ function ProfilePage({ profileId, embedded = false }) {
             <label>Giới thiệu<textarea value={profileDraft.bio} onChange={(event) => setProfileDraft((current) => ({ ...current, bio: event.target.value }))} maxLength="255" rows="4" /></label>
             <span className="profile-edit-counter">{profileDraft.bio.length}/255 ký tự</span>
             <div className="profile-edit-image-fields">
-              <label>Ảnh đại diện
-                <span className="profile-edit-image-preview">{avatarPreview || profile.profilePicture ? <img src={avatarPreview || profile.profilePicture} alt="Xem trước ảnh đại diện" /> : profile.username?.charAt(0).toUpperCase()}</span>
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0] || null; setAvatarFile(file); setAvatarPreview(file ? URL.createObjectURL(file) : ""); }} />
-              </label>
-              <label>Ảnh bìa
-                <span className="profile-edit-cover-preview">{coverPreview || profile.coverPicture ? <img src={coverPreview || profile.coverPicture} alt="Xem trước ảnh bìa" /> : "Chưa có ảnh bìa"}</span>
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0] || null; setCoverFile(file); setCoverPreview(file ? URL.createObjectURL(file) : ""); }} />
-              </label>
+              <MediaPicker label="Ảnh đại diện" kind="avatar" file={avatarFile} previewUrl={avatarPreview} currentUrl={profile.profilePicture} onFileChange={(file) => { setAvatarFile(file); setAvatarPreview(file ? URL.createObjectURL(file) : ""); }} onRemove={() => { setAvatarFile(null); setAvatarPreview(""); }} />
+              <MediaPicker label="Ảnh bìa" kind="cover" file={coverFile} previewUrl={coverPreview} currentUrl={profile.coverPicture} onFileChange={(file) => { setCoverFile(file); setCoverPreview(file ? URL.createObjectURL(file) : ""); }} onRemove={() => { setCoverFile(null); setCoverPreview(""); }} />
             </div>
             {actionError && <p className="feedback-message error" role="alert">{actionError}</p>}
             <div className="ridge-dialog-actions"><button ref={profileEditCancelRef} type="button" className="ridge-dialog-button is-secondary" onClick={() => setIsEditingProfile(false)}>Hủy</button><button className="ridge-dialog-button is-primary" type="submit" disabled={working}>{working ? "Đang lưu..." : "Lưu thay đổi"}</button></div>

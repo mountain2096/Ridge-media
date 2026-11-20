@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../lib/api.js";
 import { uploadMedia } from "../lib/uploadMedia.js";
+import MediaPicker from "./MediaPicker.jsx";
 
 function ProfileSettings({ currentUser, onProfileSaved }) {
   const [username, setUsername] = useState(currentUser?.username || "");
@@ -190,48 +191,8 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
             />
           </label>
           <div className="settings-image-row">
-            <div className="settings-image-field">
-              <span className="settings-label">Ảnh đại diện</span>
-              <label className="settings-file-button">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m21 16-5-5-9 9" /></svg>
-                Chọn ảnh
-                <input
-                  className="settings-file-input"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] || null;
-                    setProfilePictureFile(file);
-                    setProfilePreviewUrl(file ? URL.createObjectURL(file) : "");
-                  }}
-                />
-              </label>
-              <span className="settings-file-name">{profilePictureFile?.name || (profilePicture ? "Ảnh hiện tại" : "Chưa chọn ảnh")}</span>
-              {(profilePreviewUrl || profilePicture) && (
-                <img className="settings-avatar-preview" src={profilePreviewUrl || profilePicture} alt="Xem trước ảnh đại diện" />
-              )}
-            </div>
-            <div className="settings-image-field">
-              <span className="settings-label">Ảnh bìa</span>
-              <label className="settings-file-button">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m21 16-5-5-9 9" /></svg>
-                Chọn ảnh
-                <input
-                  className="settings-file-input"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] || null;
-                    setCoverPictureFile(file);
-                    setCoverPreviewUrl(file ? URL.createObjectURL(file) : "");
-                  }}
-                />
-              </label>
-              <span className="settings-file-name">{coverPictureFile?.name || (coverPicture ? "Ảnh hiện tại" : "Chưa chọn ảnh")}</span>
-              {(coverPreviewUrl || coverPicture) && (
-                <img className="settings-cover-preview" src={coverPreviewUrl || coverPicture} alt="Xem trước ảnh bìa" />
-              )}
-            </div>
+            <MediaPicker label="Ảnh đại diện" kind="avatar" file={profilePictureFile} previewUrl={profilePreviewUrl} currentUrl={profilePicture} onFileChange={(file) => { setProfilePictureFile(file); setProfilePreviewUrl(file ? URL.createObjectURL(file) : ""); }} onRemove={() => { setProfilePictureFile(null); setProfilePreviewUrl(""); }} />
+            <MediaPicker label="Ảnh bìa" kind="cover" file={coverPictureFile} previewUrl={coverPreviewUrl} currentUrl={coverPicture} onFileChange={(file) => { setCoverPictureFile(file); setCoverPreviewUrl(file ? URL.createObjectURL(file) : ""); }} onRemove={() => { setCoverPictureFile(null); setCoverPreviewUrl(""); }} />
           </div>
           {feedback.text && (
             <p className={`feedback-message ${feedback.type}`} role={feedback.type === "error" ? "alert" : "status"} aria-live={feedback.type === "error" ? "assertive" : "polite"}>{feedback.text}</p>
