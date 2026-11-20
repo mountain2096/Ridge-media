@@ -878,7 +878,7 @@ function FeedPage({ section = "feed" }){
                               {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
                             </Link>
                             <Link className="friend-name profile-name-link" to={`/profile/${friend._id}`}>{friend.username}</Link>
-                            <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
+                            <button className="btn-outline" type="button" onClick={() => navigate("/messages", { state: { openUserId: friend._id } })}>Nhắn tin</button>
                           </div>
                         ))}
                       </div>

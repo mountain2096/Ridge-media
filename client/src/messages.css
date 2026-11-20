@@ -50,7 +50,11 @@
 }
 
 .ridge-list-header {
+  display: flex;
   flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   padding: 20px 20px 14px;
   border-bottom: 1px solid var(--news-border, #e6e8ef);
 }
@@ -62,6 +66,47 @@
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
+.ridge-new-message-button {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 50%;
+  color: var(--news-ink, #0f172a);
+  background: var(--news-surface, #fff);
+  cursor: pointer;
+}
+
+.ridge-new-message-button:hover { background: var(--news-hover, #eef0f7); }
+.ridge-new-message-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
+.ridge-list-header-picker { justify-content: flex-start; }
+
+.ridge-picker-back {
+  min-height: 36px;
+  flex: 0 0 auto;
+  padding: 0 9px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 9px;
+  color: var(--news-ink, #0f172a);
+  background: var(--news-surface, #fff);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ridge-list-header-picker h1 { min-width: 0; font-size: 18px; }
+.ridge-list-search { flex: 0 0 auto; width: calc(100% - 24px); min-height: 40px; margin: 12px; padding: 0 12px; border: 1px solid var(--news-border, #e6e8ef); border-radius: 10px; color: var(--news-ink, #0f172a); background: var(--news-field, #f8f9fc); font: inherit; font-size: 14px; }
+.ridge-list-search:focus-visible { border-color: var(--news-accent, #2f4be0); }
+.ridge-friend-picker-list { padding-top: 0; }
+.ridge-picker-friend { display: flex; width: 100%; min-height: 62px; align-items: center; gap: 11px; padding: 8px 10px; border: 0; border-radius: 11px; color: var(--news-ink, #0f172a); background: transparent; font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.ridge-picker-friend:hover { background: var(--news-hover, #eef0f7); }
+.ridge-picker-friend .ridge-avatar { width: 42px; height: 42px; min-width: 42px; flex-basis: 42px; }
+.ridge-list-error { margin: 0; padding: 12px; color: var(--news-danger, #b42318); font-size: 13px; overflow-wrap: anywhere; }
 
 .ridge-conversation-scroll {
   min-height: 0;
