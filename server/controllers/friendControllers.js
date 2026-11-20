@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const FriendRequest = require("../models/FriendRequest");
 const Notification = require("../models/Notification");
+const errorResponse = require("../utils/errorResponse");
 
 const sendFriendRequest = async (req, res) =>{
     try{
@@ -88,9 +89,8 @@ const sendFriendRequest = async (req, res) =>{
             friendRequest
         });
     }catch (error) {
-        res.status(400).json({
-            message: error.message,
-        });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+        return errorResponse(res, error);
     }
 }
 const getReceivedRequest = async (req, res) =>{
@@ -105,9 +105,7 @@ const getReceivedRequest = async (req, res) =>{
             request,
         })
     } catch (err){
-        res.status(500).json({
-            message: err.message,
-        });
+        return errorResponse(res, err);
     }
 }
 const acceptFriendRequest = async (req,res) =>{
@@ -213,11 +211,8 @@ const getListFriend = async (req, res) =>{
             friend: user.friend,
         })
     } catch (error) {
-        console.error(error);
-
-        res.status(400).json({
-        message: error.message,
-    });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+        return errorResponse(res, error);
     }
 }
 const unFriend = async (req, res) =>{

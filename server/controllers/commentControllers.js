@@ -1,6 +1,7 @@
 const Comment = require("../models/Comment");
 const Post = require("../models/Post")
 const Notification = require("../models/Notification");
+const errorResponse = require("../utils/errorResponse");
 
 const createComment = async (req, res) =>{
     try{
@@ -49,9 +50,7 @@ const createComment = async (req, res) =>{
             });
         }
 
-        return res.status(500).json({
-            message: err.message,
-        });
+        return errorResponse(res, err);
     }
     }
 const getCommentByPost = async (req, res) =>{

@@ -2,6 +2,7 @@ const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 const Message = require("../models/Message");
 const Notification = require("../models/Notification");
+const errorResponse = require("../utils/errorResponse");
 
 const idString = (value) => (value?._id || value).toString();
 
@@ -97,9 +98,7 @@ const createOrGetConversation = async (req, res) => {
             });
         }
 
-        res.status(500).json({
-            message: error.message,
-        });
+        return errorResponse(res, error);
     }
 };
 const sendMessage = async (req, res) => {
@@ -180,9 +179,7 @@ const sendMessage = async (req, res) => {
             });
         }
 
-        res.status(500).json({
-            message: error.message,
-        });
+        return errorResponse(res, error);
     }
 };
 const getMessage = async (req, res) =>{
@@ -228,9 +225,7 @@ const getMessage = async (req, res) =>{
         });
     }
 
-    res.status(500).json({
-        message: error.message,
-    });
+    return errorResponse(res, error);
 }
 }
 const getConversations = async (req, res) =>{
@@ -278,7 +273,7 @@ const getConversations = async (req, res) =>{
             conversations: conversationWithUnreadCount
         })
     }catch (error) {
-            res.status(500).json({ message: error.message });
+            return errorResponse(res, error);
         }
     };
 const markMessageIsRead = async (req, res) =>{
@@ -331,9 +326,7 @@ const markMessageIsRead = async (req, res) =>{
             });
         }
 
-        return res.status(500).json({
-            message: error.message,
-        });
+        return errorResponse(res, error);
     }
 }
 

@@ -1,6 +1,8 @@
+const errorResponse = require("../utils/errorResponse");
 const User = require("../models/User");
 const FriendRequest = require("../models/FriendRequest");
 const Conversation = require("../models/Conversation")
+const validateMediaUrl = require("../utils/validateMediaUrl");
 
 const searchUsers = async (req, res) => {
     try {
@@ -45,7 +47,7 @@ const searchUsers = async (req, res) => {
             })),
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
@@ -64,9 +66,7 @@ const getMe = async (req,res) =>{
             user,
         })
     } catch(err){
-        res.status(500).json({
-            message: err.message,
-        })
+        return errorResponse(res, err);
     }
 }
 
@@ -79,7 +79,7 @@ const getBlockedUsers = async (req, res) => {
         }
         res.status(200).json({ blockedUsers: user.blockList.filter(Boolean) });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
@@ -104,6 +104,12 @@ const updateMe = async (req, res) =>{
         }
         if (coverPicture !== undefined && typeof coverPicture !== "string") {
             return res.status(400).json({ message: "Đường dẫn ảnh bìa không hợp lệ!" });
+        }
+        if (!validateMediaUrl(profilePicture, req)) {
+            return res.status(400).json({ message: "Ảnh đại diện phải là URL hợp lệ từ máy chủ tải lên của chúng tôi." });
+        }
+        if (!validateMediaUrl(coverPicture, req)) {
+            return res.status(400).json({ message: "Ảnh bìa phải là URL hợp lệ từ máy chủ tải lên của chúng tôi." });
         }
         if (dateOfBirth !== undefined) {
             const parsedDate = dateOfBirth === null || dateOfBirth === "" ? null : new Date(dateOfBirth);
@@ -158,9 +164,7 @@ const updateMe = async (req, res) =>{
             },
         });
     }catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
+        return errorResponse(res, error);
     }
 }
 const getUserById = async (req,res) =>{
@@ -207,9 +211,8 @@ const getUserById = async (req,res) =>{
             },
         });
     } catch(err){
-        res.status(400).json({
-            message: err.message
-        })
+        if (err.name === "CastError") return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+        return errorResponse(res, err);
     }
 }
 const block = async (req, res) =>{
@@ -293,9 +296,7 @@ const block = async (req, res) =>{
             message:"đã chặn người dùng này!",
         })
     } catch(err){
-        return res.status(500).json({
-            message: err.message
-        })
+        return errorResponse(res, err);
     }
 }
 const unblock = async (req, res) => {
@@ -353,9 +354,7 @@ const unblock = async (req, res) => {
             message: "Bo chan thanh cong!"
         });
     } catch (err) {
-        return res.status(500).json({
-            message: err.message
-        });
+        return errorResponse(res, err);
     }
 };
 
