@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../lib/api.js";
+import { useConfirm } from "./ConfirmDialog.jsx";
 import "../admin.css";
 
 function AdminPanel() {
+  const confirmAction = useConfirm();
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
   const [error, setError] = useState("");
@@ -37,7 +39,12 @@ function AdminPanel() {
   }, [loadData]);
 
   async function updateUserLock(user) {
-    if (!user.isLocked && !window.confirm(`Khóa tài khoản ${user.username}?`)) return;
+    if (!user.isLocked && !(await confirmAction({
+      title: "Khóa tài khoản",
+      message: `Khóa tài khoản ${user.username}?`,
+      confirmLabel: "Khóa tài khoản",
+      danger: true,
+    }))) return;
     try {
       const response = await fetch(`${API_BASE}/api/admin/users/${user._id}/${user.isLocked ? "unlock" : "lock"}`, {
         method: "PATCH",

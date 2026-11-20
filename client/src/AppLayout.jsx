@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "./lib/api.js";
+import { ConfirmProvider } from "./components/ConfirmDialog.jsx";
 import "./newsfeed.css";
 
 function AppLayout() {
@@ -96,6 +97,7 @@ function AppLayout() {
   const navClass = ({ isActive }) => "menu-item " + (isActive ? "active" : "");
   const outletContext = { currentUser, setCurrentUser, searchQuery, setSearchQuery };
   return (
+    <ConfirmProvider>
     <main className="home-layout">
       <header className="home-topbar">
         <div className="header-brand-search">
@@ -136,6 +138,7 @@ function AppLayout() {
         <div className={"home-columns " + (isFeed ? "" : "home-columns-single")}><Outlet context={outletContext} /></div>
       </section>
     </main>
+    </ConfirmProvider>
   );
 }
 

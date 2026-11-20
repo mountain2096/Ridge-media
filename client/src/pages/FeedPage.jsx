@@ -5,8 +5,12 @@ import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import { API_BASE } from "../lib/api.js";
+import { useConfirm } from "../components/ConfirmDialog.jsx";
+import ReportDialog from "../components/ReportDialog.jsx";
+import Toast from "../components/Toast.jsx";
 import "../newsfeed.css";
 function FeedPage({ section = "feed" }){
+    const confirmAction = useConfirm();
     const navigate = useNavigate();
     const location = useLocation();
     const { currentUser, setCurrentUser, searchQuery } = useOutletContext();
@@ -52,6 +56,7 @@ function FeedPage({ section = "feed" }){
     const [friendRequestError, setFriendRequestError] = useState("");
     const [friends, setFriends] = useState([]);
     const [shareFeedback, setShareFeedback] = useState("");
+    const [reportTarget, setReportTarget] = useState(null);
     const [failedImagePostIds, setFailedImagePostIds] = useState([]);
     const [stories, setStories] = useState([]);
     const [storyReloadKey, setStoryReloadKey] = useState(0);
@@ -281,7 +286,12 @@ function FeedPage({ section = "feed" }){
       }
     }
     async function handleDeletePost(postId) {
-      if (!window.confirm("Bạn có chắc muốn xóa bài viết này?")) {
+      if (!(await confirmAction({
+        title: "Xóa bài viết",
+        message: "Bạn có chắc muốn xóa bài viết này?",
+        confirmLabel: "Xóa bài viết",
+        danger: true,
+      }))) {
         return;
       }
 
@@ -382,31 +392,29 @@ function FeedPage({ section = "feed" }){
         setShareFeedback(data.message);
         setFeedPage(1);
         setReloadPosts((currentValue) => currentValue + 1);
-        window.setTimeout(() => setShareFeedback(""), 2500);
       } catch (requestError) {
         setPostActionError(requestError.message);
       }
     }
 
-    async function handleReport(targetType, targetId) {
-      const reason = window.prompt("Chọn lý do: spam, violence, abuse, misinfo, other", "other");
-      if (!reason) return;
-      if (!["spam", "violence", "abuse", "misinfo", "other"].includes(reason)) {
-        setPostActionError("Lý do báo cáo không hợp lệ.");
-        return;
-      }
-      const description = window.prompt("Mô tả lý do báo cáo (không bắt buộc):") || "";
-      try {
-        const response = await fetch(`${API_BASE}/api/report`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-          body: JSON.stringify({ targetType, targetId, reason, description }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Không thể gửi báo cáo.");
-        setShareFeedback(data.message);
-        window.setTimeout(() => setShareFeedback(""), 2500);
-      } catch (requestError) { setPostActionError(requestError.message); }
+    function handleReport(targetType, targetId) {
+      setReportTarget({ targetType, targetId });
+    }
+
+    async function submitReport({ reason, description }) {
+      const response = await fetch(`${API_BASE}/api/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: JSON.stringify({
+          targetType: reportTarget.targetType,
+          targetId: reportTarget.targetId,
+          reason,
+          description,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể gửi báo cáo.");
+      setShareFeedback(data.message);
     }
 
     function handleLoadMorePosts() {
@@ -438,7 +446,12 @@ function FeedPage({ section = "feed" }){
       }
     }
     async function handleBlockUser(userId) {
-      if (!window.confirm("Bạn có chắc muốn chặn người dùng này?")) return;
+      if (!(await confirmAction({
+        title: "Chặn người dùng",
+        message: "Bạn có chắc muốn chặn người dùng này?",
+        confirmLabel: "Chặn người dùng",
+        danger: true,
+      }))) return;
       setPeopleError("");
       try {
         const token = localStorage.getItem("token");
@@ -557,7 +570,12 @@ function FeedPage({ section = "feed" }){
       }
     }
     async function handleDeleteStory(storyId) {
-      if (!window.confirm("Bạn có chắc muốn xóa story này?")) return;
+      if (!(await confirmAction({
+        title: "Xóa story",
+        message: "Bạn có chắc muốn xóa story này?",
+        confirmLabel: "Xóa story",
+        danger: true,
+      }))) return;
 
       setStoryFeedback("");
       try {
@@ -713,7 +731,12 @@ function FeedPage({ section = "feed" }){
       }
     }
     async function handleDeleteComment(commentId) {
-      const confirmed = window.confirm("Bạn có chắc muốn xóa bình luận này?");
+      const confirmed = await confirmAction({
+        title: "Xóa bình luận",
+        message: "Bạn có chắc muốn xóa bình luận này?",
+        confirmLabel: "Xóa bình luận",
+        danger: true,
+      });
 
       if (!confirmed) {
         return;
@@ -1067,7 +1090,6 @@ function FeedPage({ section = "feed" }){
     {isLoadingMorePosts ? "Đang tải..." : "Tải thêm bài viết"}
   </button>
 )}
-{shareFeedback && <p className="feedback-message success">{shareFeedback}</p>}
 {likeError && (
   <p className="feedback-message error">{likeError}</p>
 )}
@@ -1450,6 +1472,14 @@ function FeedPage({ section = "feed" }){
                 </section>
               </div>
             )}
+            <ReportDialog
+              key={reportTarget?.targetId || "closed"}
+              open={Boolean(reportTarget)}
+              targetType={reportTarget?.targetType}
+              onClose={() => setReportTarget(null)}
+              onSubmit={submitReport}
+            />
+            <Toast message={shareFeedback} onDismiss={() => setShareFeedback("")} />
         </>
         );
 }
