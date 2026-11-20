@@ -1799,6 +1799,57 @@
   .home-layout .home-columns .right-column { display: none; }
 }
 
+/* Keep single-column routes aligned with the feed track on wide shells. */
+@media (min-width: 1280px) {
+  .home-layout .home-columns-single {
+    --news-feed-reference-width: 680px;
+    --news-feed-track-reserved: 324px;
+    --news-main-content-inset: max(0px, calc((100% - var(--news-feed-track-reserved) - var(--news-feed-reference-width)) / 2));
+  }
+
+  .home-layout .home-columns-single > .feed-column-single,
+  .home-layout .home-columns-single > .settings-page {
+    width: min(680px, calc(100% - var(--news-main-content-inset)));
+    max-width: 680px;
+    margin-right: 0;
+    margin-left: var(--news-main-content-inset);
+    justify-self: start;
+  }
+
+  .home-layout .home-columns-single > .public-profile-embedded,
+  .home-layout .home-columns-single > .ridge-messages,
+  .home-layout .home-columns-single > .ridge-admin-page {
+    width: min(1120px, calc(100% - var(--news-main-content-inset)));
+    max-width: 1120px;
+    margin-right: 0;
+    margin-left: var(--news-main-content-inset);
+    justify-self: start;
+  }
+
+  .home-layout .home-columns-single > .feed-column-single > .friends-page {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1279px) {
+  .home-layout .home-columns-single > .feed-column-single,
+  .home-layout .home-columns-single > .settings-page,
+  .home-layout .home-columns-single > .public-profile-embedded,
+  .home-layout .home-columns-single > .ridge-messages,
+  .home-layout .home-columns-single > .ridge-admin-page {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .home-layout .home-columns-single > .feed-column-single,
+  .home-layout .home-columns-single > .settings-page { width: min(680px, 100%); max-width: 680px; }
+  .home-layout .home-columns-single > .public-profile-embedded,
+  .home-layout .home-columns-single > .ridge-messages,
+  .home-layout .home-columns-single > .ridge-admin-page { width: min(1120px, 100%); max-width: 1120px; }
+}
+
 .home-layout .comments-list {
   display: grid;
   gap: 6px;
