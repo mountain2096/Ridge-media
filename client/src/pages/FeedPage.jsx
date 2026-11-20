@@ -46,6 +46,7 @@ function FeedPage({ section = "feed" }){
     const [isLoadingPeople, setIsLoadingPeople] = useState(false);
     const [peopleError, setPeopleError] = useState("");
     const [sentRequestIds, setSentRequestIds] = useState([]);
+    const [sendingFriendRequestIds, setSendingFriendRequestIds] = useState([]);
     const [friendRequests, setFriendRequests] = useState([]);
     const [isLoadingFriendRequests, setIsLoadingFriendRequests] = useState(false);
     const [friendRequestError, setFriendRequestError] = useState("");
@@ -413,7 +414,9 @@ function FeedPage({ section = "feed" }){
       setFeedPage((currentPage) => currentPage + 1);
     }
     async function handleSendFriendRequest(userId) {
+      if (sentRequestIds.includes(userId) || sendingFriendRequestIds.includes(userId)) return;
       setPeopleError("");
+      setSendingFriendRequestIds((currentIds) => [...currentIds, userId]);
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
@@ -430,6 +433,8 @@ function FeedPage({ section = "feed" }){
         setSentRequestIds((currentIds) => [...currentIds, userId]);
       } catch (requestError) {
         setPeopleError(requestError.message);
+      } finally {
+        setSendingFriendRequestIds((currentIds) => currentIds.filter((id) => id !== userId));
       }
     }
     async function handleBlockUser(userId) {
@@ -911,7 +916,7 @@ function FeedPage({ section = "feed" }){
                             </div>
                             <button
                               type="button"
-                              disabled={sentRequestIds.includes(person._id)}
+                              disabled={sentRequestIds.includes(person._id) || sendingFriendRequestIds.includes(person._id)}
                               onClick={() => handleSendFriendRequest(person._id)}
                             >{sentRequestIds.includes(person._id) ? "Đã gửi" : "Kết bạn"}</button>
                             <button
