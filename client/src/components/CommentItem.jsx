@@ -106,7 +106,7 @@ function CommentItem({
                   ref={menuButtonRef}
                   onClick={() => setMenuOpen((open) => !open)}
                 >
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>
                 </button>
                 {menuOpen && (
                   <div className="post-menu ridge-comment-menu" role="menu" ref={menuRef} aria-label="Tùy chọn bình luận">
