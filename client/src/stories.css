@@ -1,0 +1,63 @@
+.story-composer-backdrop { z-index: 1300; }
+.story-composer { width: min(100%, 520px); }
+.story-composer h2 { margin: 0 0 8px; font-size: 21px; }
+.story-composer > p { margin: 0 0 18px; color: var(--news-muted); }
+.story-composer form { display: grid; gap: 12px; }
+.story-file-label { display: grid; gap: 8px; color: var(--news-ink); font-weight: 600; }
+.story-composer input[type="file"] { width: 100%; min-width: 0; padding: 10px; border: 1px solid var(--news-border); border-radius: 10px; background: var(--news-field); color: var(--news-muted); font: inherit; font-size: 13px; }
+.story-composer-preview { display: block; width: 100%; max-height: 52vh; border-radius: 12px; background: #0b1020; object-fit: contain; }
+.story-file-name { margin: 0; color: var(--news-muted); font-size: 13px; overflow-wrap: anywhere; }
+
+.story-viewer-backdrop { position: fixed; z-index: 2200; inset: 0; display: grid; overflow: auto; place-items: center; padding: 24px 72px; background: rgb(5 8 18 / 96%); color: #fff; }
+.story-viewer-dialog { position: relative; display: flex; width: min(100%, 420px); height: min(90vh, 880px); min-height: 420px; flex-direction: column; overflow: hidden; border: 1px solid rgb(255 255 255 / 10%); border-radius: 18px; background: #0b1020; box-shadow: 0 24px 80px rgb(0 0 0 / 42%); }
+.story-progress-list { position: absolute; z-index: 3; top: 12px; right: 12px; left: 12px; display: flex; gap: 4px; }
+.story-progress-track { height: 3px; flex: 1; overflow: hidden; border-radius: 99px; background: rgb(255 255 255 / 42%); }
+.story-progress-fill { display: block; width: 100%; height: 100%; border-radius: inherit; background: #fff; transform: scaleX(0); transform-origin: left; }
+.story-progress-fill.is-complete { transform: scaleX(1); }
+.story-progress-fill.is-current { animation: story-progress var(--story-duration, 5s) linear forwards; }
+@keyframes story-progress { to { transform: scaleX(1); } }
+.story-viewer-header { position: absolute; z-index: 4; top: 24px; right: 10px; left: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.story-viewer-author { display: flex; min-width: 0; align-items: center; gap: 9px; color: #fff; text-decoration: none; }
+.story-viewer-avatar { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; overflow: hidden; border: 1px solid rgb(255 255 255 / 55%); border-radius: 50%; background: var(--news-accent); color: #fff; }
+.story-viewer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.story-viewer-author > span:last-child { display: grid; gap: 1px; min-width: 0; }
+.story-viewer-author strong { font-size: 14px; }
+.story-viewer-author time { color: rgb(255 255 255 / 75%); font-size: 11px; }
+.story-viewer-controls { display: flex; align-items: center; gap: 5px; }
+.story-viewer-icon-button { display: grid; width: 38px; height: 38px; place-items: center; border: 0; border-radius: 50%; background: rgb(15 20 35 / 45%); color: #fff; font: inherit; font-size: 25px; cursor: pointer; }
+.story-viewer-icon-button:hover { background: rgb(255 255 255 / 18%); }
+.story-viewer-icon-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.story-viewer-menu-wrap { position: relative; }
+.story-viewer-menu { position: absolute; top: calc(100% + 5px); right: 0; min-width: 140px; padding: 5px; border: 1px solid var(--news-border); border-radius: 10px; background: var(--news-surface); box-shadow: 0 10px 28px rgb(0 0 0 / 28%); }
+.story-viewer-menu button { width: 100%; min-height: 40px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: var(--news-danger); font: inherit; text-align: left; cursor: pointer; }
+.story-viewer-menu button:hover { background: var(--news-hover); }
+.story-viewer-media { display: block; width: 100%; height: 100%; min-height: 0; flex: 1; object-fit: contain; background: #060910; }
+.story-viewer-error { position: absolute; z-index: 5; top: 70px; right: 12px; left: 12px; margin: 0; padding: 9px 12px; border-radius: 9px; background: rgb(180 35 24 / 90%); color: #fff; font-size: 13px; }
+.story-tap-zone { position: absolute; z-index: 2; top: 72px; bottom: 0; width: 32%; border: 0; background: transparent; cursor: pointer; }
+.story-tap-previous { left: 0; }
+.story-tap-next { right: 0; }
+.story-arrow { position: fixed; z-index: 2201; top: 50%; display: grid; width: 44px; height: 44px; place-items: center; transform: translateY(-50%); border: 1px solid rgb(255 255 255 / 30%); border-radius: 50%; background: rgb(255 255 255 / 12%); color: #fff; cursor: pointer; }
+.story-arrow:hover { background: rgb(255 255 255 / 22%); }
+.story-arrow svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.story-arrow-previous { left: max(12px, calc(50% - 250px)); }
+.story-arrow-next { right: max(12px, calc(50% - 250px)); }
+.story-viewer-dialog :focus-visible,
+.story-viewer-backdrop :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+body:has(.story-viewer-backdrop) .ridge-dialog-backdrop { z-index: 2400; }
+
+.stories-card .story-list { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.stories-card .story-item { position: relative; flex: 0 0 76px; }
+.stories-card .story-item-friend .story-ring { border-color: var(--news-accent); }
+.story-avatar-button { display: block; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.story-avatar-button:focus-visible,
+.story-add-button:focus-visible { outline: 3px solid var(--news-accent); outline-offset: 3px; }
+.stories-card .story-add-button { position: absolute; right: 2px; bottom: 26px; width: 28px; height: 28px; padding: 0; border: 2px solid var(--news-surface); cursor: pointer; }
+.stories-card .story-add-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+@media (max-width: 600px) {
+  .story-viewer-backdrop { padding: 0; }
+  .story-viewer-dialog { width: 100%; height: 100dvh; min-height: 0; border: 0; border-radius: 0; }
+  .story-arrow { position: absolute; width: 38px; height: 38px; }
+  .story-arrow-previous { left: 8px; }
+  .story-arrow-next { right: 8px; }
+}

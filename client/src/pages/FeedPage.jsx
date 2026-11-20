@@ -9,7 +9,10 @@ import { useConfirm } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
 import PostCard from "../components/PostCard.jsx";
+import StoryComposer from "../components/StoryComposer.jsx";
+import StoryViewer from "../components/StoryViewer.jsx";
 import "../newsfeed.css";
+import "../stories.css";
 
 function FriendPresence({ friend }) {
   const label = friend.isOnline ? "Đang hoạt động" : "Không hoạt động";
@@ -82,6 +85,7 @@ function FeedPage({ section = "feed" }){
     const [storyFile, setStoryFile] = useState(null);
     const [isPostingStory, setIsPostingStory] = useState(false);
     const [storyFeedback, setStoryFeedback] = useState("");
+    const [storyToast, setStoryToast] = useState("");
     const [activeStoryGroup, setActiveStoryGroup] = useState(null);
     const [activeStoryIndex, setActiveStoryIndex] = useState(0);
 
@@ -596,6 +600,7 @@ function FeedPage({ section = "feed" }){
         setStoryFile(null);
         form.reset();
         setIsStoryComposerOpen(false);
+        setStoryToast(data.message);
         setStoryReloadKey((value) => value + 1);
       } catch (requestError) {
         setStoryFeedback(requestError.message);
@@ -604,13 +609,6 @@ function FeedPage({ section = "feed" }){
       }
     }
     async function handleDeleteStory(storyId) {
-      if (!(await confirmAction({
-        title: "Xóa story",
-        message: "Bạn có chắc muốn xóa story này?",
-        confirmLabel: "Xóa story",
-        danger: true,
-      }))) return;
-
       setStoryFeedback("");
       try {
         const token = localStorage.getItem("token");
@@ -624,8 +622,10 @@ function FeedPage({ section = "feed" }){
         }
         setActiveStoryGroup(null);
         setStoryReloadKey((value) => value + 1);
+        return true;
       } catch (requestError) {
         setStoryFeedback(requestError.message);
+        return false;
       }
     }
     async function handleLike(postId, hasLiked) {
@@ -1008,34 +1008,26 @@ function FeedPage({ section = "feed" }){
                 <div className="stories-card card">
                   {storyFeedback && <p className="feedback-message error">{storyFeedback}</p>}
                   <div className="story-list">
-                    <button
-                      className="story-item"
-                      type="button"
-                      onClick={() => {
-                        if (myStoryGroup) {
-                          setActiveStoryGroup(myStoryGroup);
-                          setActiveStoryIndex(0);
-                        } else {
-                          setStoryFeedback("");
-                          setIsStoryComposerOpen(true);
-                        }
-                      }}
-                    >
-                      <span className="story-ring story-ring-add">
+                    <div className="story-item story-item-self">
+                      <button className="story-avatar-button" type="button" aria-label={myStoryGroup ? "Xem story của bạn" : "Ảnh đại diện của bạn"} onClick={() => { if (myStoryGroup) { setActiveStoryGroup(myStoryGroup); setActiveStoryIndex(0); } }}>
+                        <span className={`story-ring ${myStoryGroup ? "" : "story-ring-add"}`}>
                         <span className="story-avatar story-self">
                           {currentUser?.profilePicture ? (
                             <img src={currentUser.profilePicture} alt="" />
                           ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
                         </span>
-                        <span className="story-add" aria-hidden="true">+</span>
-                      </span>
+                        </span>
+                      </button>
+                      <button className="story-add story-add-button" type="button" aria-label="Đăng story" onClick={() => { setStoryFeedback(""); setStoryFile(null); setIsStoryComposerOpen(true); }}>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                      </button>
                       <span className="story-name">Tin của bạn</span>
-                    </button>
+                    </div>
                     {storyGroups
                       .filter((group) => group.author._id !== currentUser?._id)
                       .map((group) => (
                         <button
-                          className="story-item"
+                          className="story-item story-item-friend"
                           key={group.author._id}
                           type="button"
                           onClick={() => {
@@ -1201,68 +1193,8 @@ function FeedPage({ section = "feed" }){
                     )}
                   </section>
                 </aside>}
-            {isStoryComposerOpen && (
-              <div className="modal-backdrop">
-                <section className="story-dialog" role="dialog" aria-modal="true" aria-labelledby="story-dialog-title">
-                  <h2 id="story-dialog-title">Đăng story</h2>
-                  <p>Story sẽ tự hết hạn sau 24 giờ. Chọn ảnh hoặc video tối đa 30 MB từ thiết bị.</p>
-                  <form onSubmit={handleCreateStory}>
-                    <label>
-                      Ảnh hoặc video
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
-                        onChange={(event) => setStoryFile(event.target.files?.[0] || null)}
-                        required
-                      />
-                    </label>
-                    {storyFile && <p className="selected-media-name">{storyFile.name}</p>}
-                    {storyFeedback && <p className="feedback-message error">{storyFeedback}</p>}
-                    <div className="dialog-actions">
-                      <button type="button" onClick={() => setIsStoryComposerOpen(false)}>Hủy</button>
-                      <button type="submit" disabled={isPostingStory}>
-                        {isPostingStory ? "Đang đăng..." : "Đăng story"}
-                      </button>
-                    </div>
-                  </form>
-                </section>
-              </div>
-            )}
-            {activeStoryGroup && currentStory && (
-              <div className="modal-backdrop">
-                <section className="story-viewer" role="dialog" aria-modal="true" aria-label="Xem story">
-                  <header>
-                    <div className="story-viewer-author">
-                      <strong>{activeStoryGroup.author.username}</strong>
-                      <span>{activeStoryIndex + 1} / {activeStoryGroup.items.length}</span>
-                    </div>
-                    <button type="button" aria-label="Đóng story" onClick={() => setActiveStoryGroup(null)}>×</button>
-                  </header>
-                  {currentStory.mediaType === "video" ? (
-                    <video src={currentStory.mediaUrl} controls autoPlay />
-                  ) : (
-                    <img src={currentStory.mediaUrl} alt={`Story của ${activeStoryGroup.author.username}`} />
-                  )}
-                  <footer>
-                    {activeStoryGroup.author._id === currentUser?._id && (
-                      <button className="story-delete-button" type="button" onClick={() => handleDeleteStory(currentStory._id)}>
-                        Xóa story
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      disabled={activeStoryIndex === 0}
-                      onClick={() => setActiveStoryIndex((index) => index - 1)}
-                    >Trước</button>
-                    <button
-                      type="button"
-                      disabled={activeStoryIndex >= activeStoryGroup.items.length - 1}
-                      onClick={() => setActiveStoryIndex((index) => index + 1)}
-                    >Tiếp</button>
-                  </footer>
-                </section>
-              </div>
-            )}
+            <StoryComposer open={isStoryComposerOpen} file={storyFile} setFile={setStoryFile} submitting={isPostingStory} error={storyFeedback} onClose={() => { setIsStoryComposerOpen(false); setStoryFile(null); setStoryFeedback(""); }} onSubmit={handleCreateStory} />
+            {activeStoryGroup && currentStory && <StoryViewer groups={storyGroups} activeGroup={activeStoryGroup} activeIndex={activeStoryIndex} currentUserId={currentUser?._id} error={storyFeedback} onChange={(group, index) => { setActiveStoryGroup(group); setActiveStoryIndex(index); }} onClose={() => setActiveStoryGroup(null)} onDelete={handleDeleteStory} />}
             <ReportDialog
               key={reportTarget?.targetId || "closed"}
               open={Boolean(reportTarget)}
@@ -1271,6 +1203,7 @@ function FeedPage({ section = "feed" }){
               onSubmit={submitReport}
             />
             <Toast message={shareFeedback} onDismiss={() => setShareFeedback("")} />
+            <Toast message={storyToast} onDismiss={() => setStoryToast("")} />
         </>
         );
 }
