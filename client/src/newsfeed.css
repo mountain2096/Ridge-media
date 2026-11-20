@@ -1411,6 +1411,49 @@
   color: var(--news-muted);
 }
 
+.async-data-state {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--news-border);
+  border-radius: 12px;
+  background: var(--news-surface);
+}
+
+.async-data-state .async-data-message,
+.async-data-state .feedback-message {
+  margin: 0;
+  text-align: left;
+}
+
+.async-data-state .async-data-message {
+  color: var(--news-muted);
+}
+
+.async-retry-button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--news-border);
+  border-radius: 10px;
+  background: var(--news-field);
+  color: var(--news-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.async-retry-button:hover {
+  background: var(--news-hover);
+}
+
+.async-retry-button:focus-visible {
+  outline: 2px solid var(--news-accent);
+  outline-offset: 2px;
+}
+
 .blocked-users-list {
   display: grid;
   gap: 4px;

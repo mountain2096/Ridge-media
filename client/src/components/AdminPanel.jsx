@@ -5,9 +5,12 @@ function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const token = localStorage.getItem("token");
 
   const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const [userResponse, reportResponse] = await Promise.all([
@@ -22,6 +25,8 @@ function AdminPanel() {
       setReports(reportData.reports);
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setIsLoading(false);
     }
   }, [token]);
 
@@ -59,28 +64,36 @@ function AdminPanel() {
   return (
     <section className="connections-page">
       <h1 className="section-title">Quản trị</h1>
-      {error && <p className="feedback-message error">{error}</p>}
-      <section className="side-card">
-        <h2>Báo cáo đang chờ</h2>
-        {reports.length === 0 ? <p>Không có báo cáo đang chờ.</p> : reports.map((report) => (
-          <div className="friend-request-row" key={report._id}>
-            <span>{report.targetType} · {report.reason} · {report.description || report.targetId}</span>
-            <div>
-              <button type="button" onClick={() => updateReport(report._id, "reviewed")}>Đã xem</button>
-              <button type="button" onClick={() => updateReport(report._id, "actioned")}>Đã xử lý</button>
-            </div>
-          </div>
-        ))}
-      </section>
-      <section className="side-card">
-        <h2>Tài khoản</h2>
-        {users.map((user) => (
-          <div className="friend-request-row" key={user._id}>
-            <span>{user.username} · {user.email}{user.isAdmin ? " · Admin" : ""}</span>
-            {!user.isAdmin && <button type="button" onClick={() => updateUserLock(user)}>{user.isLocked ? "Mở khóa" : "Khóa"}</button>}
-          </div>
-        ))}
-      </section>
+      {isLoading || error ? (
+        <div className="async-data-state" role={error ? "alert" : "status"} aria-live={error ? "assertive" : "polite"}>
+          <p className={error ? "feedback-message error" : "async-data-message"}>{error || "Đang tải..."}</p>
+          {error && <button className="async-retry-button" type="button" onClick={() => { void loadData(); }}>Thử lại</button>}
+        </div>
+      ) : (
+        <>
+          <section className="side-card">
+            <h2>Báo cáo đang chờ</h2>
+            {reports.length === 0 ? <p>Không có báo cáo đang chờ.</p> : reports.map((report) => (
+              <div className="friend-request-row" key={report._id}>
+                <span>{report.targetType} · {report.reason} · {report.description || report.targetId}</span>
+                <div>
+                  <button type="button" onClick={() => updateReport(report._id, "reviewed")}>Đã xem</button>
+                  <button type="button" onClick={() => updateReport(report._id, "actioned")}>Đã xử lý</button>
+                </div>
+              </div>
+            ))}
+          </section>
+          <section className="side-card">
+            <h2>Tài khoản</h2>
+            {users.map((user) => (
+              <div className="friend-request-row" key={user._id}>
+                <span>{user.username} · {user.email}{user.isAdmin ? " · Admin" : ""}</span>
+                {!user.isAdmin && <button type="button" onClick={() => updateUserLock(user)}>{user.isLocked ? "Mở khóa" : "Khóa"}</button>}
+              </div>
+            ))}
+          </section>
+        </>
+      )}
     </section>
   );
 }

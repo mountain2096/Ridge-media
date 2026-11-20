@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../lib/api.js";
 import { uploadMedia } from "../lib/uploadMedia.js";
 
@@ -16,6 +16,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
   const [isSaving, setIsSaving] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [blockError, setBlockError] = useState("");
+  const [isLoadingBlockedUsers, setIsLoadingBlockedUsers] = useState(true);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,28 +31,35 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
     if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
   }, [coverPreviewUrl]);
 
+  const loadBlockedUsers = useCallback(async (signal) => {
+    setIsLoadingBlockedUsers(true);
+    setBlockError("");
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/api/user/blocked`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể tải danh sách đã chặn.");
+      }
+      setBlockedUsers(data.blockedUsers);
+    } catch (requestError) {
+      if (requestError.name !== "AbortError") setBlockError(requestError.message);
+    } finally {
+      if (!signal?.aborted) setIsLoadingBlockedUsers(false);
+    }
+  }, []);
+
   useEffect(() => {
     const controller = new AbortController();
-    async function loadBlockedUsers() {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE}/api/user/blocked`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Không thể tải danh sách đã chặn.");
-        }
-        setBlockedUsers(data.blockedUsers);
-      } catch (requestError) {
-        if (requestError.name !== "AbortError") setBlockError(requestError.message);
-      }
-    }
-
-    loadBlockedUsers();
-    return () => controller.abort();
-  }, []);
+    const timer = window.setTimeout(() => { void loadBlockedUsers(controller.signal); }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [loadBlockedUsers]);
 
   async function handleUnblock(userId) {
     setBlockError("");
@@ -258,19 +266,27 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
           <h2>Người dùng đã chặn</h2>
           <p>Quản lý những người bạn đã chặn.</p>
         </header>
-        {blockError && <p className="feedback-message error" role="alert" aria-live="assertive">{blockError}</p>}
-        {blockedUsers.length === 0 && !blockError && <p className="settings-empty">Bạn chưa chặn ai.</p>}
-        <div className="blocked-users-list">
-          {blockedUsers.map((user) => (
-            <div className="blocked-user-row" key={user._id}>
-              <span className="blocked-user-avatar">
-                {user.profilePicture ? <img src={user.profilePicture} alt="" /> : (user.username || "U").charAt(0).toUpperCase()}
-              </span>
-              <strong>{user.username}</strong>
-              <button className="settings-unblock" type="button" onClick={() => handleUnblock(user._id)}>Bỏ chặn</button>
+        {isLoadingBlockedUsers || blockError ? (
+          <div className="async-data-state" role={blockError ? "alert" : "status"} aria-live={blockError ? "assertive" : "polite"}>
+            <p className={blockError ? "feedback-message error" : "async-data-message"}>{blockError || "Đang tải..."}</p>
+            {blockError && <button className="async-retry-button" type="button" onClick={() => { void loadBlockedUsers(); }}>Thử lại</button>}
+          </div>
+        ) : (
+          <>
+            {blockedUsers.length === 0 && <p className="settings-empty">Bạn chưa chặn ai.</p>}
+            <div className="blocked-users-list">
+              {blockedUsers.map((user) => (
+                <div className="blocked-user-row" key={user._id}>
+                  <span className="blocked-user-avatar">
+                    {user.profilePicture ? <img src={user.profilePicture} alt="" /> : (user.username || "U").charAt(0).toUpperCase()}
+                  </span>
+                  <strong>{user.username}</strong>
+                  <button className="settings-unblock" type="button" onClick={() => handleUnblock(user._id)}>Bỏ chặn</button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </section>
     </section>
   );
