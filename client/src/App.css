@@ -1261,7 +1261,7 @@ body {
 
 .home-layout {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) 300px;
+  grid-template-columns: 250px minmax(0, 1fr) 300px;
   grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
   min-height: 100vh;
@@ -1326,7 +1326,7 @@ body {
   grid-column: 1;
   grid-row: 1;
   display: block;
-  width: 300px;
+  width: 250px;
   height: calc(100vh - var(--app-header-height));
   min-width: 0;
   overflow-x: hidden;
@@ -1337,17 +1337,18 @@ body {
   scrollbar-width: thin;
 }
 .home-menu { align-items: stretch; gap: 4px; }
-.menu-item { position: relative; min-height: 52px; gap: 12px; padding: 0 12px; border-radius: 10px; color: var(--news-nav); font-size: 16px; font-weight: 550; text-decoration: none; }
+.menu-item { position: relative; min-height: 44px; gap: 10px; padding: 8px 12px; border-radius: 10px; color: var(--news-nav); font-size: 15px; font-weight: 550; text-decoration: none; }
 .menu-item:hover { background: var(--news-hover); }
 .menu-item.active { background: #e9edff; color: var(--news-accent); font-weight: 600; }
 .menu-item.active svg { color: var(--news-accent); }
 .menu-item.active .sidebar-count { background: var(--news-accent); color: #fff; }
-.menu-item svg { width: 28px; height: 28px; stroke-width: 1.75; }
+.menu-item svg { width: 22px; height: 22px; stroke-width: 1.75; }
+.sidebar-count { min-width: 18px; min-height: 18px; padding: 0 5px; font-size: 11px; }
 .home-content { display: contents; }
 .home-columns { display: grid; grid-column: 2 / 4; grid-row: 1; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: 24px; min-width: 0; margin: 0; padding: calc(var(--app-header-height) + 24px) 0 48px; }
 .home-columns:not(.home-columns-single) { grid-column: 2 / 4; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; width: 100%; max-width: none; margin: 0; padding: calc(var(--app-header-height) + 24px) 0 48px; }
 .home-columns-single { grid-column: 2 / 4; grid-template-columns: minmax(0, 1fr); width: 100%; justify-content: stretch; padding: calc(var(--app-header-height) + 24px) 0 48px; }
-.feed-column { display: flex; flex-direction: column; gap: 16px; width: min(100%, 700px); max-width: 700px; min-width: 0; margin-inline: auto; }
+.feed-column { display: flex; flex-direction: column; gap: 16px; width: min(100%, 680px); max-width: 680px; min-width: 0; margin-inline: auto; }
 .feed-column-single { grid-column: 1 / -1; width: min(100%, 900px); max-width: 900px; margin-inline: auto; }
 .home-columns-single > * { grid-column: 1 / -1; width: min(100%, 900px); max-width: 900px; margin-inline: auto; }
 .right-column { position: sticky; top: 72px; display: flex; width: 300px; max-width: 300px; min-width: 0; padding: 8px 0 0; }
@@ -1380,8 +1381,13 @@ body {
 .create-post-card .create-post-input { flex: 1; min-width: 0; min-height: 84px; padding: 12px 14px; border: 1px solid var(--news-border); border-radius: 14px; background: var(--news-field); color: var(--news-ink); resize: vertical; }
 .create-post-card .create-post-input:focus-visible { outline: 2px solid var(--news-accent); outline-offset: 2px; }
 
+@media (min-width: 901px) {
+  .header-brand-search { display: grid; flex: 1 1 auto; grid-template-columns: 250px minmax(0, 480px); gap: 0; }
+  .news-search { grid-column: 2; width: 100%; max-width: 480px; }
+}
+
 @media (max-width: 1279px) {
-  .home-layout { grid-template-columns: 300px minmax(0, 1fr); }
+  .home-layout { grid-template-columns: 250px minmax(0, 1fr); }
   .home-columns, .home-columns:not(.home-columns-single), .home-columns-single { grid-column: 2 / 3; }
   .home-columns:not(.home-columns-single) { grid-template-columns: minmax(0, 1fr); justify-content: center; }
   .home-columns .right-column { display: none; }
@@ -1391,7 +1397,7 @@ body {
   .home-layout { grid-template-columns: 72px minmax(0, 1fr); }
   .home-sidebar { width: 72px; padding: 12px 8px; }
   .home-menu { align-items: center; }
-  .menu-item { justify-content: center; width: 52px; padding: 0; }
+  .menu-item { justify-content: center; width: 52px; min-height: 52px; padding: 0; }
   .menu-item-label { display: none; }
   .sidebar-count { position: absolute; top: 0; right: -2px; min-width: 17px; min-height: 17px; padding: 0 4px; font-size: 10px; }
   .home-columns, .home-columns:not(.home-columns-single) { padding-right: 20px; padding-left: 20px; }
