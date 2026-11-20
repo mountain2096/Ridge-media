@@ -1818,7 +1818,9 @@
 
   .home-layout .home-columns-single > .public-profile-embedded,
   .home-layout .home-columns-single > .ridge-messages,
-  .home-layout .home-columns-single > .ridge-admin-page {
+  .home-layout .home-columns-single > .ridge-admin-page,
+  .home-layout .home-columns-single > .feed-column-single:has(.ridge-messages),
+  .home-layout .home-columns-single > .feed-column-single:has(.ridge-admin-page) {
     width: min(1120px, calc(100% - var(--news-main-content-inset)));
     max-width: 1120px;
     margin-right: 0;
@@ -1847,7 +1849,9 @@
   .home-layout .home-columns-single > .settings-page { width: min(680px, 100%); max-width: 680px; }
   .home-layout .home-columns-single > .public-profile-embedded,
   .home-layout .home-columns-single > .ridge-messages,
-  .home-layout .home-columns-single > .ridge-admin-page { width: min(1120px, 100%); max-width: 1120px; }
+  .home-layout .home-columns-single > .ridge-admin-page,
+  .home-layout .home-columns-single > .feed-column-single:has(.ridge-messages),
+  .home-layout .home-columns-single > .feed-column-single:has(.ridge-admin-page) { width: min(1120px, 100%); max-width: 1120px; }
 }
 
 .home-layout .comments-list {
