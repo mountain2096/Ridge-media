@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { API_BASE } from "./lib/api.js";
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext, Link } from "react-router-dom";
 import AppLayout from "./AppLayout.jsx";
 import FeedPage from "./pages/FeedPage.jsx";
@@ -47,7 +48,7 @@ function AuthPage() {
 
     try{
       const response = await fetch(
-        `http://localhost:5000${endpoint}`,
+        `${API_BASE}${endpoint}`,
         {
           method: "POST",
           headers:{

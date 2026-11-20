@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { API_BASE } from "./lib/api.js";
 import "./newsfeed.css";
 
 function AppLayout() {
@@ -17,7 +18,7 @@ function AppLayout() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("http://localhost:5000/api/user/me", {
+    fetch(`${API_BASE}/api/user/me`, {
       headers: { Authorization: "Bearer " + localStorage.getItem("token") },
       signal: controller.signal,
     }).then(async (response) => {
@@ -39,8 +40,8 @@ function AppLayout() {
       try {
         const headers = { Authorization: "Bearer " + localStorage.getItem("token") };
         const [messagesResponse, requestsResponse] = await Promise.all([
-          fetch("http://localhost:5000/api/message/conversations", { headers }),
-          fetch("http://localhost:5000/api/friend/requests", { headers }),
+          fetch(`${API_BASE}/api/message/conversations`, { headers }),
+          fetch(`${API_BASE}/api/friend/requests`, { headers }),
         ]);
         const [messages, requests] = await Promise.all([messagesResponse.json(), requestsResponse.json()]);
         if (!mounted || !messagesResponse.ok || !requestsResponse.ok) return;
@@ -67,7 +68,7 @@ function AppLayout() {
     setNotificationOpen(true);
     setNotificationError("");
     try {
-      const response = await fetch("http://localhost:5000/api/notification", {
+      const response = await fetch(`${API_BASE}/api/notification`, {
         headers: { Authorization: "Bearer " + localStorage.getItem("token") },
       });
       const data = await response.json();
@@ -80,7 +81,7 @@ function AppLayout() {
 
   async function markRead(id) {
     try {
-      const response = await fetch("http://localhost:5000/api/notification/" + id + "/read", {
+      const response = await fetch(`${API_BASE}/api/notification/` + id + "/read", {
         method: "PATCH",
         headers: { Authorization: "Bearer " + localStorage.getItem("token") },
       });

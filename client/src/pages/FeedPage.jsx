@@ -4,6 +4,7 @@ import MessagesView from "../components/MessagesView.jsx";
 import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
+import { API_BASE } from "../lib/api.js";
 import "../newsfeed.css";
 function FeedPage({ section = "feed" }){
     const navigate = useNavigate();
@@ -68,7 +69,7 @@ function FeedPage({ section = "feed" }){
         setFriendRequestError("");
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/friend/requests", {
+          const response = await fetch(`${API_BASE}/api/friend/requests`, {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
           });
@@ -95,7 +96,7 @@ function FeedPage({ section = "feed" }){
       async function loadStories() {
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/story", {
+          const response = await fetch(`${API_BASE}/api/story`, {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
           });
@@ -119,7 +120,7 @@ function FeedPage({ section = "feed" }){
       async function loadFriends() {
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/friend", {
+          const response = await fetch(`${API_BASE}/api/friend`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
@@ -142,7 +143,7 @@ function FeedPage({ section = "feed" }){
         try {
           const token = localStorage.getItem("token");
           const response = await fetch(
-            `http://localhost:5000/api/user/search?q=${encodeURIComponent(searchQuery)}`,
+            `${API_BASE}/api/user/search?q=${encodeURIComponent(searchQuery)}`,
             {
               headers: { Authorization: `Bearer ${token}` },
               signal: controller.signal,
@@ -179,7 +180,7 @@ function FeedPage({ section = "feed" }){
         try {
             const token = localStorage.getItem("token");
 
-            const response = await fetch(`http://localhost:5000/api/post?page=${feedPage}&limit=20`, {
+            const response = await fetch(`${API_BASE}/api/post?page=${feedPage}&limit=20`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -245,7 +246,7 @@ function FeedPage({ section = "feed" }){
         ]);
         const token = localStorage.getItem("token");
 
-        const response = await fetch("http://localhost:5000/api/post", {
+        const response = await fetch(`${API_BASE}/api/post`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -287,7 +288,7 @@ function FeedPage({ section = "feed" }){
 
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/post/${postId}`, {
+        const response = await fetch(`${API_BASE}/api/post/${postId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -321,7 +322,7 @@ function FeedPage({ section = "feed" }){
 
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/post/${postId}`, {
+        const response = await fetch(`${API_BASE}/api/post/${postId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -350,7 +351,7 @@ function FeedPage({ section = "feed" }){
       setPostActionError("");
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/post/${postId}/save`, {
+        const response = await fetch(`${API_BASE}/api/post/${postId}/save`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -371,7 +372,7 @@ function FeedPage({ section = "feed" }){
     }
     async function handleSharePost(postId) {
       try {
-        const response = await fetch(`http://localhost:5000/api/post/${postId}/share`, {
+        const response = await fetch(`${API_BASE}/api/post/${postId}/share`, {
           method: "POST",
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
@@ -395,7 +396,7 @@ function FeedPage({ section = "feed" }){
       }
       const description = window.prompt("Mô tả lý do báo cáo (không bắt buộc):") || "";
       try {
-        const response = await fetch("http://localhost:5000/api/report", {
+        const response = await fetch(`${API_BASE}/api/report`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
           body: JSON.stringify({ targetType, targetId, reason, description }),
@@ -416,7 +417,7 @@ function FeedPage({ section = "feed" }){
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:5000/api/friend/request/${userId}`,
+          `${API_BASE}/api/friend/request/${userId}`,
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
@@ -436,7 +437,7 @@ function FeedPage({ section = "feed" }){
       setPeopleError("");
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/user/block/${userId}`, {
+        const response = await fetch(`${API_BASE}/api/user/block/${userId}`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -458,7 +459,7 @@ function FeedPage({ section = "feed" }){
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:5000/api/friend/request/${requestId}/${action}`,
+          `${API_BASE}/api/friend/request/${requestId}/${action}`,
           {
             method: "PUT",
             headers: { Authorization: `Bearer ${token}` },
@@ -488,7 +489,7 @@ function FeedPage({ section = "feed" }){
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:5000/api/message/conversation/${userId}`,
+          `${API_BASE}/api/message/conversation/${userId}`,
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
@@ -506,7 +507,7 @@ function FeedPage({ section = "feed" }){
     async function handleUnfriend(userId) {
       setPeopleError("");
       try {
-        const response = await fetch(`http://localhost:5000/api/friend/${userId}`, {
+        const response = await fetch(`${API_BASE}/api/friend/${userId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
@@ -528,7 +529,7 @@ function FeedPage({ section = "feed" }){
         }
         const uploadedStory = await uploadMedia(storyFile);
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/story", {
+        const response = await fetch(`${API_BASE}/api/story`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -556,7 +557,7 @@ function FeedPage({ section = "feed" }){
       setStoryFeedback("");
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/story/${storyId}`, {
+        const response = await fetch(`${API_BASE}/api/story/${storyId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -577,7 +578,7 @@ function FeedPage({ section = "feed" }){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/post/${postId}/like`,
+          `${API_BASE}/api/post/${postId}/like`,
           {
             method: hasLiked ? "DELETE" : "POST",
             headers: {
@@ -621,7 +622,7 @@ function FeedPage({ section = "feed" }){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/comment/${postId}`,
+          `${API_BASE}/api/comment/${postId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -665,7 +666,7 @@ function FeedPage({ section = "feed" }){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/comment/${postId}`,
+          `${API_BASE}/api/comment/${postId}`,
           {
             method: "POST",
             headers: {
@@ -685,7 +686,7 @@ function FeedPage({ section = "feed" }){
         setCommentContent("");
 
         const commentsResponse = await fetch(
-          `http://localhost:5000/api/comment/${postId}`,
+          `${API_BASE}/api/comment/${postId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -719,7 +720,7 @@ function FeedPage({ section = "feed" }){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/comment/${commentId}`,
+          `${API_BASE}/api/comment/${commentId}`,
           {
             method: "DELETE",
             headers: {
@@ -758,7 +759,7 @@ function FeedPage({ section = "feed" }){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/comment/${commentId}`,
+          `${API_BASE}/api/comment/${commentId}`,
           {
             method: "PUT",
             headers: {

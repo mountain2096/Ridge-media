@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { API_BASE } from "../lib/api.js";
 import "../newsfeed.css";
 import "../profile.css";
 
-const API = "http://localhost:5000/api";
+const API = `${API_BASE}/api`;
 
 function ProfilePage({ profileId, embedded = false }) {
   const { id: routeId } = useParams();

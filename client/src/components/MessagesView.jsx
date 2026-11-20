@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE } from "../lib/api.js";
 
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [conversations, setConversations] = useState([]);
@@ -25,7 +26,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       setError("");
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/message/conversations", {
+        const response = await fetch(`${API_BASE}/api/message/conversations`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });
@@ -70,7 +71,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:5000/api/message/conversation/${activeConversationId}/messages`,
+          `${API_BASE}/api/message/conversation/${activeConversationId}/messages`,
           {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
@@ -87,7 +88,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
         setMessages(orderedMessages);
 
         const readResponse = await fetch(
-          `http://localhost:5000/api/message/conversation/${activeConversationId}/read`,
+          `${API_BASE}/api/message/conversation/${activeConversationId}/read`,
           {
             method: "PATCH",
             headers: { Authorization: `Bearer ${token}` },
@@ -129,7 +130,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/api/message/conversation/${activeConversationId}/messages`,
+        `${API_BASE}/api/message/conversation/${activeConversationId}/messages`,
         {
           method: "POST",
           headers: {

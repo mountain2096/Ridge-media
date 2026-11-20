@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../lib/api.js";
 function ForgotPasswordPage(){
     const [feedback, setFeedback] = useState({type:"", text:""});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,7 +15,7 @@ function ForgotPasswordPage(){
       const email = formData.get("email");
 
       const response = await fetch(
-        `http://localhost:5000/api/auth/forgot-password`,
+        `${API_BASE}/api/auth/forgot-password`,
         {
           method:"POST",
           headers:{

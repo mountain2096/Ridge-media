@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { API_BASE } from "../lib/api.js";
 
 function AdminPanel() {
   const [users, setUsers] = useState([]);
@@ -10,8 +11,8 @@ function AdminPanel() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const [userResponse, reportResponse] = await Promise.all([
-        fetch("http://localhost:5000/api/admin/users?limit=100", { headers }),
-        fetch("http://localhost:5000/api/admin/reports?status=pending", { headers }),
+        fetch(`${API_BASE}/api/admin/users?limit=100`, { headers }),
+        fetch(`${API_BASE}/api/admin/reports?status=pending`, { headers }),
       ]);
       const [userData, reportData] = await Promise.all([userResponse.json(), reportResponse.json()]);
       if (!userResponse.ok) throw new Error(userData.message || "Không thể tải danh sách người dùng.");
@@ -32,7 +33,7 @@ function AdminPanel() {
   async function updateUserLock(user) {
     if (!user.isLocked && !window.confirm(`Khóa tài khoản ${user.username}?`)) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${user._id}/${user.isLocked ? "unlock" : "lock"}`, {
+      const response = await fetch(`${API_BASE}/api/admin/users/${user._id}/${user.isLocked ? "unlock" : "lock"}`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -44,7 +45,7 @@ function AdminPanel() {
 
   async function updateReport(reportId, status) {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/reports/${reportId}`, {
+      const response = await fetch(`${API_BASE}/api/admin/reports/${reportId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status }),

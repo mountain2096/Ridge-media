@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE } from "../lib/api.js";
 import { uploadMedia } from "../lib/uploadMedia.js";
 
 function ProfileSettings({ currentUser, onProfileSaved }) {
@@ -34,7 +35,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
     async function loadBlockedUsers() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/user/blocked", {
+        const response = await fetch(`${API_BASE}/api/user/blocked`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });
@@ -56,7 +57,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
     setBlockError("");
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/user/unblock/${userId}`, {
+      const response = await fetch(`${API_BASE}/api/user/unblock/${userId}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -82,7 +83,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
         coverPictureFile ? uploadMedia(coverPictureFile) : null,
       ]);
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/user/me", {
+      const response = await fetch(`${API_BASE}/api/user/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +124,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
     setPasswordFeedback({ type: "", text: "" });
     setIsChangingPassword(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/change-password", {
+      const response = await fetch(`${API_BASE}/api/auth/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

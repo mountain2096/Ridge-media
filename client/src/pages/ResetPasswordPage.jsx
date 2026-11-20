@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate} from "react-router-dom";
+import { API_BASE } from "../lib/api.js";
 function ResetPasswordPage(){
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,7 +22,7 @@ function ResetPasswordPage(){
         setIsSubmitting(true);
 try{
         const response = await fetch(
-            `http://localhost:5000/api/auth/reset-password/${token}`,
+            `${API_BASE}/api/auth/reset-password/${token}`,
             {
                 method:"POST",
                 headers:{
