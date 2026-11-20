@@ -56,6 +56,9 @@ function FeedPage({ section = "feed" }){
     const [isLoadingFriendRequests, setIsLoadingFriendRequests] = useState(false);
     const [friendRequestError, setFriendRequestError] = useState("");
     const [friends, setFriends] = useState([]);
+    const [friendSearch, setFriendSearch] = useState("");
+    const normalizeFriendName = (name = "") => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d").toLowerCase();
+    const filteredFriends = friends.filter((friend) => normalizeFriendName(friend.username || "").includes(normalizeFriendName(friendSearch)));
     const [shareFeedback, setShareFeedback] = useState("");
     const [reportTarget, setReportTarget] = useState(null);
     const [failedImagePostIds, setFailedImagePostIds] = useState([]);
@@ -914,9 +917,11 @@ function FeedPage({ section = "feed" }){
                     </section>
                     <section className="side-card connections-friends-card">
                       <h2>Bạn bè của bạn</h2>
+                      <label className="friends-search-label" htmlFor="connections-friend-search">Tìm bạn bè</label>
+                      <input id="connections-friend-search" className="friends-search-input" type="search" aria-label="Tìm bạn bè" placeholder="Tìm bạn bè" value={friendSearch} onChange={(event) => setFriendSearch(event.target.value)} />
                       {friends.length === 0 ? <p className="friends-empty">Chưa có bạn bè.</p> : (
-                        <div className="connections-friends-list">
-                          {friends.map((friend) => (
+                        filteredFriends.length > 0 ? <div className="connections-friends-list">
+                          {filteredFriends.map((friend) => (
                             <div className="connection-friend-row" key={friend._id}>
                               <Link className="connection-person-avatar" to={"/profile/" + friend._id} aria-label={`Xem trang cá nhân ${friend.username}`}>
                                 {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
@@ -926,7 +931,7 @@ function FeedPage({ section = "feed" }){
                               <button className="connection-unfriend-button" type="button" onClick={() => handleUnfriend(friend)}>Hủy kết bạn</button>
                             </div>
                           ))}
-                        </div>
+                        </div> : <p className="friends-empty">Không tìm thấy bạn bè nào.</p>
                       )}
                     </section>
                     <section className="side-card">

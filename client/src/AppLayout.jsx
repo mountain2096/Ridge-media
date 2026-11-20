@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "./lib/api.js";
 import { ConfirmProvider } from "./components/ConfirmDialog.jsx";
+import UserSearch from "./components/UserSearch.jsx";
 import "./newsfeed.css";
 
 function AppLayout() {
@@ -96,13 +97,33 @@ function AppLayout() {
 
   const navClass = ({ isActive }) => "menu-item " + (isActive ? "active" : "");
   const outletContext = { currentUser, setCurrentUser, searchQuery, setSearchQuery };
+  function handleLogout() {
+    try {
+      if (currentUser?._id) {
+        localStorage.removeItem(`ridge:recent-searches:${currentUser._id}`);
+      } else {
+        for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+          const key = localStorage.key(index);
+          if (key?.startsWith("ridge:recent-searches:")) localStorage.removeItem(key);
+        }
+      }
+    } catch {
+      // Continue logout even when browser storage is unavailable.
+    }
+    try {
+      localStorage.removeItem("token");
+    } catch {
+      // Continue logout even when browser storage is unavailable.
+    }
+    navigate("/", { replace: true });
+  }
   return (
     <ConfirmProvider>
     <main className="home-layout">
       <header className="home-topbar">
         <div className="header-brand-search">
           <NavLink className="home-brand" to="/feed"><span className="home-brand-icon">R</span><span>Ridge</span></NavLink>
-          <div className="news-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><input type="search" aria-label="Tìm người dùng" placeholder="Tìm người dùng..." value={searchQuery} onFocus={() => location.pathname !== "/friends" && navigate("/friends")} onChange={(event) => { setSearchQuery(event.target.value); if (location.pathname !== "/friends") navigate("/friends"); }} /></div>
+          <UserSearch key={currentUser?._id || "search-loading"} currentUser={currentUser} />
         </div>
         <div className="news-topbar-right">
           <NavLink className="header-icon-link" to="/messages" aria-label="Tin nhắn" title="Tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>{messageCount > 0 && <span className="header-badge">{messageCount > 99 ? "99+" : messageCount}</span>}</NavLink>
@@ -118,7 +139,7 @@ function AppLayout() {
             {profileMenuOpen && <div className="profile-menu">
               {currentUser?._id && <NavLink to={"/profile/" + currentUser._id} onClick={() => setProfileMenuOpen(false)}>Trang cá nhân</NavLink>}
               <NavLink to="/settings" onClick={() => setProfileMenuOpen(false)}>Cài đặt</NavLink>
-              <button type="button" onClick={() => { localStorage.removeItem("token"); navigate("/", { replace: true }); }}>Đăng xuất</button>
+              <button type="button" onClick={handleLogout}>Đăng xuất</button>
             </div>}
           </div>
         </div>
