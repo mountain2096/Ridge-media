@@ -1,4 +1,6 @@
 .public-profile-page {
+  --profile-cover-height: clamp(160px, 20vw, 260px);
+  --profile-avatar-size: 128px;
   min-height: 100vh;
   padding: 0 24px 56px;
   color: var(--news-ink);
@@ -12,31 +14,21 @@
   min-height: 0;
   padding: 0;
   background: transparent;
-  flex: 1 1 900px;
-  width: min(960px, 100%);
-  max-width: 1000px;
-  margin-inline: auto;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0;
 }
 
-.public-profile-embedded > .public-profile-shell,
-.public-profile-embedded > .profile-content-grid,
-.public-profile-embedded > .profile-tab-panel {
+.public-profile-shell,
+.profile-content-grid,
+.profile-tab-panel {
   width: 100%;
-  max-width: 100%;
+  max-width: 1120px;
 }
 
 .public-profile-embedded > .profile-content-grid {
   gap: 24px;
   margin-top: 20px;
-}
-
-.public-profile-embedded > .public-profile-shell {
-  border-radius: 12px;
-}
-
-.public-profile-embedded .public-profile-cover,
-.public-profile-embedded .public-profile-cover img {
-  border-radius: 12px;
 }
 
 .public-profile-page *,
@@ -60,20 +52,19 @@
 .profile-back-link:hover { color: var(--news-accent); }
 
 .public-profile-shell {
-  width: min(1120px, 100%);
-  margin: 0 auto;
-  overflow: visible;
-  border-radius: 0 0 var(--news-radius-card) var(--news-radius-card);
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--news-radius-card);
   background: var(--news-surface);
   box-shadow: 0 8px 28px rgb(15 23 42 / 6%);
 }
 
 .public-profile-cover {
   position: relative;
-  height: clamp(160px, 20vw, 260px);
-  aspect-ratio: 16 / 5;
-  overflow: visible;
-  border-radius: 0 0 8px 8px;
+  width: 100%;
+  height: var(--profile-cover-height);
+  overflow: hidden;
+  border-radius: var(--news-radius-card) var(--news-radius-card) 0 0;
   background:
     radial-gradient(ellipse at 78% 14%, rgb(255 255 255 / 35%), transparent 27%),
     radial-gradient(ellipse at 12% 100%, rgb(28 51 147 / 58%), transparent 43%),
@@ -81,7 +72,7 @@
 }
 .public-profile-cover::after { position: absolute; inset: 0; content: ""; background: linear-gradient(0deg, rgb(15 23 42 / 12%), transparent 45%); pointer-events: none; }
 .public-profile-cover.has-cover { background: #d8deed; }
-.public-profile-cover img { width: 100%; height: 100%; border-radius: 0 0 8px 8px; object-fit: cover; }
+.public-profile-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 .public-profile-summary {
   position: relative;
@@ -96,9 +87,9 @@
   top: -64px;
   left: 32px;
   display: grid;
-  flex: 0 0 128px;
-  width: 128px;
-  height: 128px;
+  flex: 0 0 var(--profile-avatar-size);
+  width: var(--profile-avatar-size);
+  height: var(--profile-avatar-size);
   place-items: center;
   overflow: hidden;
   z-index: 2;
@@ -159,7 +150,7 @@
 .profile-tabs button.active { color: var(--news-accent); }
 .profile-tabs button.active::after { position: absolute; right: 8px; bottom: 0; left: 8px; height: 3px; border-radius: 3px 3px 0 0; background: var(--news-accent); content: ""; }
 
-.profile-content-grid { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); gap: 24px; width: min(1120px, 100%); margin: 22px auto 0; align-items: start; }
+.profile-content-grid { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); gap: 24px; margin: 22px 0 0; align-items: start; }
 .profile-left-column { display: grid; gap: 24px; min-width: 0; }
 .profile-info-card { padding: 18px; border: 1px solid var(--news-border); border-radius: var(--news-radius-card); background: var(--news-surface); box-shadow: 0 5px 20px rgb(15 23 42 / 4%); }
 .profile-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; margin-bottom: 10px; }
@@ -200,7 +191,7 @@
 .profile-visually-hidden, .profile-friend-search-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 .profile-friend-search { width: min(420px, 100%); height: 42px; margin-top: 4px; padding: 0 13px; border: 1px solid var(--news-border); border-radius: 10px; color: var(--news-ink); background: var(--news-field); font: inherit; }
 .profile-friend-search + .profile-friend-grid { margin-top: 14px; }
-.profile-tab-panel { width: min(1120px, 100%); margin: 22px auto 0; padding: 22px; border: 1px solid var(--news-border); border-radius: var(--news-radius-card); background: var(--news-surface); }
+.profile-tab-panel { margin: 22px 0 0; padding: 22px; border: 1px solid var(--news-border); border-radius: var(--news-radius-card); background: var(--news-surface); }
 .profile-tab-panel h2 { margin: 0; font-size: 20px; }
 .profile-tab-panel > h2 { margin-bottom: 10px; }
 .profile-tab-panel p { margin: 0; color: var(--news-muted); }
@@ -239,9 +230,10 @@
 
 @media (max-width: 767px) {
   .public-profile-page { padding: 0 14px 40px; }
-  .public-profile-cover { height: clamp(160px, 20vw, 260px); }
+  .public-profile-page { --profile-avatar-size: 112px; }
+  .public-profile-embedded.public-profile-page { padding: 0; }
   .public-profile-summary { align-items: flex-start; flex-wrap: wrap; gap: 12px 16px; min-height: 142px; padding: 10px 18px 16px; }
-  .public-profile-avatar { top: -56px; left: 18px; flex-basis: 112px; width: 112px; height: 112px; transform: none; font-size: 42px; }
+  .public-profile-avatar { top: calc(var(--profile-avatar-size) / -2); left: 18px; transform: none; font-size: 42px; }
   .public-profile-identity { flex-basis: 100%; padding: 0 0 0 130px; }
   .public-profile-actions { width: 100%; justify-content: flex-start; }
   .profile-content-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 14px; }
@@ -251,11 +243,12 @@
 }
 
 @media (max-width: 480px) {
+  .public-profile-page { --profile-avatar-size: 104px; }
   .public-profile-topbar { min-height: 60px; }
   .profile-brand { font-size: 18px; }
   .profile-back-link { font-size: 12px; }
   .public-profile-summary { gap: 10px; padding-right: 14px; padding-left: 14px; }
-  .public-profile-avatar { top: -52px; left: 14px; flex-basis: 104px; width: 104px; height: 104px; transform: none; border-width: 4px; font-size: 38px; }
+  .public-profile-avatar { top: calc(var(--profile-avatar-size) / -2); left: 14px; transform: none; border-width: 4px; font-size: 38px; }
   .public-profile-identity { flex-basis: 100%; padding-left: 116px; }
   .public-profile-identity h1 { font-size: 25px; }
   .profile-counts { gap: 10px; font-size: 12px; }
