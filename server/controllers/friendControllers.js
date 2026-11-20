@@ -206,7 +206,7 @@ const rejectFriendRequest = async (req, res) =>{
 const getListFriend = async (req, res) =>{
     try{
         const user = await User.findById(req.user._id)
-        .populate("friend", "username profilePicture bio");
+        .populate("friend", "username profilePicture bio lastActiveAt");
 
         if (!user) {
             return res.status(404).json({
@@ -214,9 +214,18 @@ const getListFriend = async (req, res) =>{
             });
         }
 
-        res.status(200).json({
-            friend: user.friend,
-        })
+        const now = Date.now();
+        const friend = user.friend.filter(Boolean).map((item) => {
+            const data = typeof item.toObject === "function" ? item.toObject() : { ...item };
+            const lastActiveAt = data.lastActiveAt ? new Date(data.lastActiveAt).getTime() : NaN;
+            delete data.lastActiveAt;
+            return {
+                ...data,
+                isOnline: Number.isFinite(lastActiveAt) && lastActiveAt <= now && lastActiveAt >= now - 2 * 60_000,
+            };
+        });
+
+        res.status(200).json({ friend });
     } catch (error) {
         if (error.name === "CastError") return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
         return errorResponse(res, error);

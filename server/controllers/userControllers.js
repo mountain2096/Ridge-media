@@ -4,6 +4,24 @@ const FriendRequest = require("../models/FriendRequest");
 const Conversation = require("../models/Conversation")
 const validateMediaUrl = require("../utils/validateMediaUrl");
 
+const heartbeat = async (req, res) => {
+    try {
+        const now = new Date();
+        const lastActiveAt = req.user.lastActiveAt ? new Date(req.user.lastActiveAt) : null;
+        if (lastActiveAt && now.getTime() - lastActiveAt.getTime() < 30_000) {
+            return res.status(204).end();
+        }
+
+        await User.updateOne(
+            { _id: req.user._id },
+            { $set: { lastActiveAt: now } }
+        );
+        return res.status(204).end();
+    } catch (error) {
+        return errorResponse(res, error);
+    }
+};
+
 const searchUsers = async (req, res) => {
     try {
         if (req.query.q !== undefined && typeof req.query.q !== "string") {
@@ -359,6 +377,7 @@ const unblock = async (req, res) => {
 };
 
 module.exports = {
+    heartbeat,
     searchUsers,
     getMe, 
     getBlockedUsers,
