@@ -1636,7 +1636,7 @@
 
 .home-layout .comments-list {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   margin: 8px 20px 0;
   padding: 14px 0 0;
   border-top: 1px solid var(--news-border);
@@ -1684,6 +1684,99 @@
   background: var(--news-bg);
   color: var(--news-ink);
   overflow-wrap: anywhere;
+}
+
+.ridge-comments-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ridge-comment-item {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.ridge-comment-content-row {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.ridge-comment-bubble {
+  min-width: 0;
+  flex: 0 1 auto;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.ridge-comment-bubble .profile-name-link {
+  display: inline-block;
+  max-width: 100%;
+  color: var(--news-ink);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.ridge-comment-bubble .profile-name-link:hover {
+  text-decoration: underline;
+}
+
+.ridge-comment-bubble p {
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.ridge-comment-menu-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.ridge-comment-more {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  border-radius: 9px;
+}
+
+.ridge-comment-more svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.ridge-comment-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  display: flex;
+  min-width: 152px;
+  flex-direction: column;
+}
+
+.ridge-comment-menu button {
+  white-space: nowrap;
+}
+
+.ridge-comment-menu button.danger {
+  color: var(--news-danger);
+}
+
+.ridge-comment-item .comment-edit-form {
+  padding: 9px;
 }
 
 .comment-bubble strong {

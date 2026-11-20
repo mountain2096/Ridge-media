@@ -198,9 +198,7 @@
 .profile-post-card .post-action-button svg { width: 19px; height: 19px; }
 .profile-post-actions { justify-content: flex-start; }
 .profile-comments { padding: 12px 18px 16px; border-top: 1px solid var(--news-border); }
-.profile-comment { display: grid; gap: 2px; width: fit-content; max-width: 100%; margin-bottom: 8px; padding: 9px 12px; border-radius: 12px; background: var(--news-bg); overflow-wrap: anywhere; }
-.profile-comment strong { font-size: 13px; }
-.profile-comment span { white-space: pre-wrap; }
+.profile-comments.ridge-comments-list { gap: 7px; }
 .profile-comment-form { display: flex; gap: 8px; margin-top: 12px; }
 .profile-comment-form input { flex: 1; min-width: 0; min-height: 42px; padding: 0 14px; border: 1px solid var(--news-border); border-radius: 999px; color: var(--news-ink); background: var(--news-field); font: inherit; }
 .profile-comment-form button { min-width: 66px; border: 0; border-radius: 999px; color: #fff; background: var(--news-accent); font: inherit; font-weight: 650; cursor: pointer; }

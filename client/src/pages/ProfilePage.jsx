@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
+import { useConfirm } from "../components/ConfirmDialog.jsx";
+import ReportDialog from "../components/ReportDialog.jsx";
+import Toast from "../components/Toast.jsx";
+import CommentItem from "../components/CommentItem.jsx";
 import "../newsfeed.css";
 import "../profile.css";
 
@@ -11,6 +15,8 @@ function ProfilePage({ profileId, embedded = false }) {
   const id = profileId || routeId;
   const ProfileRoot = embedded ? "div" : "main";
   const navigate = useNavigate();
+  const { currentUser } = useOutletContext();
+  const confirmAction = useConfirm();
   const [profile, setProfile] = useState(null);
   const [relationship, setRelationship] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -25,6 +31,11 @@ function ProfilePage({ profileId, embedded = false }) {
   const [openCommentsFor, setOpenCommentsFor] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentDraft, setCommentDraft] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
+  const [isUpdatingComment, setIsUpdatingComment] = useState(false);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [commentToast, setCommentToast] = useState("");
   const [postActionError, setPostActionError] = useState("");
   const [sharingPostId, setSharingPostId] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -190,11 +201,93 @@ function ProfilePage({ profileId, embedded = false }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể gửi bình luận.");
-      setComments((current) => [...current, { ...data.comment, authorId: { username: "Bạn" } }]);
+      setComments((current) => [...current, {
+        ...data.comment,
+        authorId: { _id: currentUser?._id, username: "Bạn" },
+        isMine: true,
+      }]);
       setCommentDraft("");
     } catch (requestError) {
       setPostActionError(requestError.message);
     }
+  }
+
+  async function handleDeleteComment(commentId) {
+    const confirmed = await confirmAction({
+      title: "Xóa bình luận",
+      message: "Bạn có chắc muốn xóa bình luận này?",
+      confirmLabel: "Xóa bình luận",
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    setPostActionError("");
+    try {
+      const response = await fetch(`${API}/comment/${commentId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể xóa bình luận.");
+      setComments((current) => current.filter((comment) => comment._id !== commentId));
+    } catch (requestError) {
+      setPostActionError(requestError.message);
+    }
+  }
+
+  async function handleUpdateComment(event, commentId) {
+    event.preventDefault();
+    const content = editingCommentContent.trim();
+    if (!content) {
+      setPostActionError("Nội dung bình luận không được để trống.");
+      return;
+    }
+    setIsUpdatingComment(true);
+    setPostActionError("");
+    try {
+      const response = await fetch(`${API}/comment/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ content }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể sửa bình luận.");
+      setComments((current) => current.map((comment) => comment._id === commentId
+        ? { ...comment, content: data.comment.content }
+        : comment));
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+    } catch (requestError) {
+      setPostActionError(requestError.message);
+    } finally {
+      setIsUpdatingComment(false);
+    }
+  }
+
+  function handleReportComment(commentId) {
+    setReportTarget({ targetType: "comment", targetId: commentId });
+  }
+
+  async function submitCommentReport({ reason, description }) {
+    const response = await fetch(`${API}/report`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        targetType: reportTarget.targetType,
+        targetId: reportTarget.targetId,
+        reason,
+        description,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Không thể gửi báo cáo.");
+    setCommentToast(data.message);
   }
 
   async function handleShare(postId) {
@@ -382,8 +475,23 @@ function ProfilePage({ profileId, embedded = false }) {
                         <button className="post-action-button" type="button" disabled={sharingPostId === post._id} onClick={() => handleShare(post._id)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>{sharingPostId === post._id ? "Đang chia sẻ" : "Chia sẻ"}</span></button>
                       </div>
                     </div>
-                    {openCommentsFor === post._id && <div className="profile-comments">
-                      {comments.map((comment) => <div className="profile-comment" key={comment._id}><strong>{comment.authorId?.username || "Người dùng"}</strong><span>{comment.content}</span></div>)}
+                    {openCommentsFor === post._id && <div className="profile-comments ridge-comments-list">
+                      {comments.map((comment) => <CommentItem
+                        key={comment._id}
+                        comment={comment}
+                        currentUserId={currentUser?._id}
+                        postOwnerId={post.authorId?._id || profile._id}
+                        isAdmin={currentUser?.isAdmin}
+                        isEditing={editingCommentId === comment._id}
+                        editingContent={editingCommentContent}
+                        isUpdating={isUpdatingComment}
+                        onEdit={(item) => { setEditingCommentId(item._id); setEditingCommentContent(item.content); }}
+                        onEditingChange={setEditingCommentContent}
+                        onCancelEdit={() => { setEditingCommentId(null); setEditingCommentContent(""); }}
+                        onUpdate={handleUpdateComment}
+                        onDelete={() => handleDeleteComment(comment._id)}
+                        onReport={() => handleReportComment(comment._id)}
+                      />)}
                       <form className="profile-comment-form" onSubmit={(event) => handleCommentSubmit(event, post._id)}><input aria-label="Viết bình luận" placeholder="Viết bình luận..." value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} maxLength="500" /><button type="submit" disabled={!commentDraft.trim()}>Gửi</button></form>
                     </div>}
                   </article>;
@@ -395,6 +503,14 @@ function ProfilePage({ profileId, embedded = false }) {
           </section>
         </section>
       )}
+      <ReportDialog
+        key={reportTarget?.targetId || "closed"}
+        open={Boolean(reportTarget)}
+        targetType={reportTarget?.targetType}
+        onClose={() => setReportTarget(null)}
+        onSubmit={submitCommentReport}
+      />
+      <Toast message={commentToast} onDismiss={() => setCommentToast("")} />
     </ProfileRoot>
   );
 }

@@ -8,6 +8,7 @@ import { API_BASE } from "../lib/api.js";
 import { useConfirm } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
+import CommentItem from "../components/CommentItem.jsx";
 import "../newsfeed.css";
 function FeedPage({ section = "feed" }){
     const confirmAction = useConfirm();
@@ -1290,82 +1291,28 @@ function FeedPage({ section = "feed" }){
             {!isLoadingComments &&
               !commentError &&
               comments.map((comment) => (
-                <div className="comment-item" key={comment._id}>
-                  <Link className="comment-avatar" to={`/profile/${comment.authorId?._id}`} aria-label={`Xem trang cá nhân ${comment.authorId?.username || "người dùng"}`}>
-                    {comment.authorId?.profilePicture ? (
-                      <img src={comment.authorId.profilePicture} alt="" />
-                    ) : (comment.authorId?.username || "U").charAt(0).toUpperCase()}
-                  </Link>
-                  <div className="comment-main">
-                    {editingCommentId === comment._id ? (
-                      <form
-                        className="comment-edit-form"
-                        onSubmit={(event) => handleUpdateComment(event, comment._id)}
-                      >
-                        <input
-                          aria-label="Sửa nội dung bình luận"
-                          value={editingCommentContent}
-                          onChange={(event) => setEditingCommentContent(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Escape") {
-                              setEditingCommentId(null);
-                              setEditingCommentContent("");
-                            }
-                          }}
-                          maxLength="500"
-                        />
-                        <div className="comment-edit-actions">
-                          <button type="submit" disabled={isUpdatingComment}>
-                            {isUpdatingComment ? "Đang lưu..." : "Lưu"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingCommentId(null);
-                              setEditingCommentContent("");
-                            }}
-                          >
-                            Hủy
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
-                        <div className="comment-bubble">
-                          <Link className="profile-name-link" to={`/profile/${comment.authorId?._id}`}>{comment.authorId?.username || "Người dùng"}</Link>
-                          <p>{comment.content}</p>
-                        </div>
-                        <div className="comment-controls">
-                          {comment.isMine ? (
-                            <>
-                              <button
-                                className="comment-icon-button"
-                                type="button"
-                                aria-label="Sửa bình luận"
-                                onClick={() => {
-                                  setEditingCommentId(comment._id);
-                                  setEditingCommentContent(comment.content);
-                                }}
-                              >
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" /></svg>
-                              </button>
-                              <button
-                                className="comment-icon-button comment-delete-button"
-                                type="button"
-                                aria-label="Xóa bình luận"
-                                onClick={() => handleDeleteComment(comment._id)}
-                              >
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>
-                              </button>
-                            </>
-                          ) : (
-                            <button className="comment-report-button" type="button" onClick={() => handleReport("comment", comment._id)}>Báo cáo</button>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
+                <CommentItem
+                  key={comment._id}
+                  comment={comment}
+                  currentUserId={currentUser?._id}
+                  postOwnerId={post.authorId?._id}
+                  isAdmin={currentUser?.isAdmin}
+                  isEditing={editingCommentId === comment._id}
+                  editingContent={editingCommentContent}
+                  isUpdating={isUpdatingComment}
+                  onEdit={(item) => {
+                    setEditingCommentId(item._id);
+                    setEditingCommentContent(item.content);
+                  }}
+                  onEditingChange={setEditingCommentContent}
+                  onCancelEdit={() => {
+                    setEditingCommentId(null);
+                    setEditingCommentContent("");
+                  }}
+                  onUpdate={handleUpdateComment}
+                  onDelete={() => handleDeleteComment(comment._id)}
+                  onReport={() => handleReport("comment", comment._id)}
+                />
               ))}
           </div>
           <form
