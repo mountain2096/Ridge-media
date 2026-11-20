@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require("node:path");
-require('dotenv').config();
+const isMainModule = require.main === module;
+if (isMainModule) require('dotenv').config();
 
 const connectDB = require("./config/db");
 
@@ -19,7 +20,41 @@ const adminRoutes = require("./routes/admin");
 
 const app = express();
 
-app.use(cors());
+const isAllowedOrigin = (origin) => {
+    if (!origin) return true;
+
+    let parsedOrigin;
+    try {
+        parsedOrigin = new URL(origin);
+    } catch {
+        return false;
+    }
+    if (parsedOrigin.origin !== origin) return false;
+
+    const allowedOrigins = [];
+    const clientUrl = process.env.CLIENT_URL?.trim();
+    if (clientUrl) {
+        try {
+            allowedOrigins.push(new URL(clientUrl).origin);
+        } catch {
+            // Ignore invalid configuration rather than allowing an arbitrary origin.
+        }
+    }
+
+    const isDevelopment = process.env.NODE_ENV !== "production";
+    if (isDevelopment && parsedOrigin.protocol === "http:" &&
+        ["localhost", "127.0.0.1"].includes(parsedOrigin.hostname)) {
+        return true;
+    }
+
+    return allowedOrigins.includes(origin);
+};
+
+app.use(cors({
+    origin(origin, callback) {
+        callback(null, isAllowedOrigin(origin));
+    },
+}));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -46,4 +81,9 @@ const startServer = async () => {
         console.log(`Server running on port ${PORT}`);
     })
 }
-startServer();
+
+if (isMainModule) {
+    startServer();
+}
+
+module.exports = app;
