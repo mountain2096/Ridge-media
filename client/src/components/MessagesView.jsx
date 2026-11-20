@@ -1,16 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
+import "../messages.css";
+
+function formatMessageTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(date);
+}
 
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
+  const [showChatPane, setShowChatPane] = useState(Boolean(initialConversationId));
   const [messages, setMessages] = useState([]);
   const [messageContent, setMessageContent] = useState("");
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const messageListRef = useRef(null);
 
   const activeConversation = useMemo(
     () => conversations.find((item) => item._id === activeConversationId),
@@ -19,6 +29,12 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const otherParticipant = activeConversation?.participants?.find(
     (participant) => participant._id !== currentUser?._id
   );
+
+  useEffect(() => {
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+    }
+  }, [messages, isLoadingMessages, activeConversationId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -163,56 +179,54 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       setMessages([]);
     }
     setActiveConversationId(conversationId);
+    setShowChatPane(true);
   }
 
   return (
-    <section className="messages-view" aria-label="Tin nhắn">
-      <aside className="conversation-list">
-        <h1>Tin nhắn</h1>
-        {isLoadingConversations && <p>Đang tải hội thoại...</p>}
-        {!isLoadingConversations && conversations.length === 0 && (
-          <p className="empty-conversations">Bạn chưa có hội thoại nào. Hãy kết bạn để bắt đầu nhắn tin.</p>
-        )}
-        {conversations.map((conversation) => {
-          const participant = conversation.participants?.find(
-            (person) => person._id !== currentUser?._id
-          );
-          return (
-            <div
-              className={`conversation-item ${activeConversationId === conversation._id ? "active" : ""}`}
-              key={conversation._id}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleSelectConversation(conversation._id)}
-              onKeyDown={(event) => {
-                if (event.target !== event.currentTarget) return;
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  handleSelectConversation(conversation._id);
-                }
-              }}
-            >
-              <Link className="person-avatar" to={`/profile/${participant?._id}`} aria-label={`Xem trang cá nhân ${participant?.username || "người dùng"}`} onClick={(event) => event.stopPropagation()}>
-                {participant?.profilePicture ? (
-                  <img src={participant.profilePicture} alt="" />
-                ) : (participant?.username?.charAt(0).toUpperCase() || "?")}
-              </Link>
-              <span className="conversation-summary">
-                <Link to={`/profile/${participant?._id}`} onClick={(event) => event.stopPropagation()}>{participant?.username || "Người dùng"}</Link>
-                <span>{conversation.lastMessage?.content || "Chưa có tin nhắn"}</span>
-              </span>
-              {conversation.unreadCount > 0 && (
-                <span className="unread-count">{conversation.unreadCount}</span>
-              )}
-            </div>
-          );
-        })}
+    <section className={`messages-view ridge-messages ${showChatPane ? "show-chat" : ""}`} aria-label="Tin nhắn">
+      <aside className="conversation-list ridge-conversation-list">
+        <header className="ridge-list-header"><h1>Tin nhắn</h1></header>
+        <div className="ridge-conversation-scroll">
+          {isLoadingConversations && <p className="ridge-list-state">Đang tải hội thoại...</p>}
+          {!isLoadingConversations && conversations.length === 0 && (
+            <p className="empty-conversations">Bạn chưa có hội thoại nào. Hãy kết bạn để bắt đầu nhắn tin.</p>
+          )}
+          {conversations.map((conversation) => {
+            const participant = conversation.participants?.find(
+              (person) => person._id !== currentUser?._id
+            );
+            const lastMessageText = conversation.lastMessage?.content || "Chưa có tin nhắn";
+            const conversationTime = formatMessageTime(conversation.lastMessage?.createdAt || conversation.updatedAt);
+            return (
+              <div className="ridge-conversation-row" key={conversation._id}>
+                <button
+                  className={`conversation-item ridge-conversation-item ${activeConversationId === conversation._id ? "active" : ""}`}
+                  type="button"
+                  aria-current={activeConversationId === conversation._id ? "true" : undefined}
+                  onClick={() => handleSelectConversation(conversation._id)}
+                >
+                  <span className="person-avatar ridge-avatar" aria-hidden="true">
+                    {participant?.profilePicture ? <img src={participant.profilePicture} alt="" /> : (participant?.username?.charAt(0).toUpperCase() || "?")}
+                  </span>
+                  <span className="conversation-summary ridge-conversation-summary">
+                    <span className="ridge-conversation-top"><span className="ridge-conversation-name">{participant?.username || "Người dùng"}</span>{conversationTime && <time className="ridge-conversation-time">{conversationTime}</time>}</span>
+                    <span className="ridge-conversation-bottom"><span className="ridge-conversation-preview">{lastMessageText}</span>{conversation.unreadCount > 0 && <span className="unread-count ridge-unread-count" aria-label={`${conversation.unreadCount} tin nhắn chưa đọc`}>{conversation.unreadCount}</span>}</span>
+                  </span>
+                </button>
+                <Link className="ridge-profile-link" to={`/profile/${participant?._id}`} aria-label={`Xem trang cá nhân ${participant?.username || "người dùng"}`}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>
+                </Link>
+              </div>
+            );
+          })}
+        </div>
       </aside>
 
-      <section className="conversation-panel">
+      <section className="conversation-panel ridge-conversation-panel">
         {activeConversation ? (
           <>
-            <header className="conversation-header">
+            <header className="conversation-header ridge-conversation-header">
+              <button className="ridge-back-button" type="button" onClick={() => setShowChatPane(false)}>Quay lại</button>
               <Link className="person-avatar" to={`/profile/${otherParticipant?._id}`} aria-label={`Xem trang cá nhân ${otherParticipant?.username || "người dùng"}`}>
                 {otherParticipant?.profilePicture ? (
                   <img src={otherParticipant.profilePicture} alt="" />
@@ -220,37 +234,40 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               </Link>
               <Link to={`/profile/${otherParticipant?._id}`}>{otherParticipant?.username || "Người dùng"}</Link>
             </header>
-            <div className="message-list" aria-live="polite">
-              {isLoadingMessages && <p>Đang tải tin nhắn...</p>}
+            <div className="message-list ridge-message-list" aria-live="polite" ref={messageListRef}>
+              {isLoadingMessages && <p className="ridge-message-state">Đang tải tin nhắn...</p>}
               {!isLoadingMessages && messages.length === 0 && (
                 <p className="empty-messages">Hãy gửi lời chào đầu tiên.</p>
               )}
               {messages.map((message) => {
                 const isMine = message.senderId?._id === currentUser?._id;
                 return (
-                  <div className={`message-bubble ${isMine ? "mine" : "theirs"}`} key={message._id}>
+                  <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}`} key={message._id}>
                     {message.content}
+                    <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
                   </div>
                 );
               })}
             </div>
-            <form className="message-compose" onSubmit={handleSendMessage}>
+            <form className="message-compose ridge-message-compose" onSubmit={handleSendMessage}>
+              <label className="ridge-visually-hidden" htmlFor="message-content">Nội dung tin nhắn</label>
               <input
+                id="message-content"
                 value={messageContent}
                 onChange={(event) => setMessageContent(event.target.value)}
                 placeholder="Viết tin nhắn..."
                 maxLength="2000"
-                aria-label="Nội dung tin nhắn"
               />
-              <button type="submit" disabled={isSending || !messageContent.trim()}>
-                {isSending ? "Đang gửi..." : "Gửi"}
+              <button type="submit" aria-label="Gửi" disabled={isSending || !messageContent.trim()}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>
+                <span className="ridge-visually-hidden">{isSending ? "Đang gửi..." : "Gửi"}</span>
               </button>
             </form>
           </>
         ) : (
           <div className="empty-messages">Chọn một hội thoại để xem tin nhắn.</div>
         )}
-        {error && <p className="feedback-message error messages-error">{error}</p>}
+        {error && <p className="feedback-message error messages-error ridge-messages-error" role="alert">{error}</p>}
       </section>
     </section>
   );
