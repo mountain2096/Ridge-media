@@ -77,7 +77,12 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
     await connectDB();
-    app.listen(PORT, () =>{
+    // Loaded here so tests that import `app` do not need socket.io installed.
+    const http = require("node:http");
+    const { initSocket } = require("./socket");
+    const httpServer = http.createServer(app);
+    initSocket(httpServer, { isAllowedOrigin });
+    httpServer.listen(PORT, () =>{
         console.log(`Server running on port ${PORT}`);
     })
 }

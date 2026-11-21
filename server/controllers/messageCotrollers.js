@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Message = require("../models/Message");
 const Notification = require("../models/Notification");
 const errorResponse = require("../utils/errorResponse");
+const { emitToUser } = require("../utils/realtime");
 
 const idString = (value) => (value?._id || value).toString();
 
@@ -168,6 +169,15 @@ const sendMessage = async (req, res) => {
             }
         }
 
+        // Realtime push: the receiver sees the message instantly, and the
+        // sender's other open tabs stay in sync (clients de-duplicate by _id).
+        const realtimePayload = {
+            conversationId: conversation._id.toString(),
+            message: newMessage.toObject(),
+        };
+        if (receiverId) emitToUser(receiverId, "message:new", realtimePayload);
+        emitToUser(req.user._id, "message:new", realtimePayload);
+
         res.status(201).json({
             message: "Gửi tin nhắn thành công!",
             newMessage,
@@ -305,6 +315,7 @@ const markMessageIsRead = async (req, res) =>{
 
         if (await rejectIfBlocked(conversation, req, res)) return;
 
+        const readAt = new Date();
         const result = await Message.updateMany(
             {
                 conversationId,
@@ -312,9 +323,17 @@ const markMessageIsRead = async (req, res) =>{
                 isRead: false,
             },
             {
-                $set: {isRead: true}
+                $set: {isRead: true, readAt}
             }
         )
+        if (Number(result.modifiedCount) > 0) {
+            // Tell the other participant their messages were seen.
+            emitToUser(getOtherParticipant(conversation, req.user._id), "message:read", {
+                conversationId: conversation._id.toString(),
+                readerId: req.user._id.toString(),
+                readAt: readAt.toISOString(),
+            });
+        }
         return res.status(200).json({
             message:"Đã đọc",
             ModifiedCount: result.modifiedCount,
