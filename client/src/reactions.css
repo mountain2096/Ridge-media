@@ -5,7 +5,7 @@
   border-radius: 999px; background: var(--news-surface, #fff); box-shadow: 0 8px 24px rgb(15 23 42 / 16%);
 }
 .ridge-react-picker button {
-  width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; background: transparent;
+  width: 38px; height: 38px; min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: transparent;
   font-size: 24px; line-height: 1; cursor: pointer; transition: transform 120ms ease;
 }
 .ridge-react-picker button:hover, .ridge-react-picker button:focus-visible { transform: scale(1.3) translateY(-3px); background: var(--news-hover, #eef0f7); outline: none; }
@@ -25,23 +25,28 @@
 .ridge-msg-bubble-wrap { position: relative; display: flex; min-width: 0; flex: 0 1 auto; flex-direction: column; }
 .ridge-msg-bubble-wrap.has-reactions { margin-bottom: 12px; }
 .ridge-messages .ridge-msg-bubble-wrap .ridge-message-bubble { max-width: 100%; }
-.ridge-msg-badge {
-  position: absolute; bottom: -12px; display: inline-flex; align-items: center; gap: 3px; padding: 0 6px;
-  border: 1px solid var(--news-border, #e6e8ef); border-radius: 999px; background: var(--news-surface, #fff);
-  box-shadow: 0 1px 3px rgb(15 23 42 / 18%); color: var(--news-ink, #0f172a); font-size: 13px; line-height: 20px; cursor: pointer;
+/* The app has a global button style (padding, minimum size) that made the
+   badge a tall oval, so the size properties below are forced. */
+.ridge-messages button.ridge-msg-badge {
+  position: absolute; bottom: -11px; display: inline-flex; align-items: center; gap: 3px;
+  box-sizing: border-box; width: auto !important; min-width: 0 !important; height: 22px !important; min-height: 0 !important;
+  margin: 0; padding: 0 6px !important; border: 1px solid var(--news-border, #e6e8ef); border-radius: 999px;
+  background: var(--news-surface, #fff); box-shadow: 0 1px 3px rgb(15 23 42 / 20%);
+  color: var(--news-ink, #0f172a); font-size: 13px; line-height: 1; cursor: pointer;
 }
-.ridge-msg-badge.mine { border-color: var(--news-accent, #2f4be0); }
-.ridge-msg-badge-count { color: var(--news-muted, #5b6478); font-size: 12px; font-weight: 600; }
-.ridge-message-row.theirs .ridge-msg-badge { right: 8px; }
-.ridge-message-row.mine .ridge-msg-badge { left: 8px; }
+.ridge-messages button.ridge-msg-badge.mine { border-color: var(--news-accent, #2f4be0); }
+.ridge-msg-badge .ridge-msg-badge-count { color: var(--news-muted, #5b6478); font-size: 12px; font-weight: 600; }
+.ridge-message-row.theirs button.ridge-msg-badge { right: 8px; }
+.ridge-message-row.mine button.ridge-msg-badge { left: 8px; }
 .ridge-msg-actions { display: flex; flex: 0 0 auto; align-items: center; opacity: 0; transition: opacity 120ms ease; }
 .ridge-message-row:hover .ridge-msg-actions, .ridge-msg-actions:focus-within { opacity: 1; }
 @media (hover: none) { .ridge-msg-actions { opacity: 1; } }
-.ridge-msg-actions .ridge-react-compact .ridge-react-main {
-  display: grid; width: 30px; height: 30px; min-height: 30px; place-items: center; padding: 0; border-radius: 50%;
-  color: var(--news-muted, #5b6478); font-size: 16px;
+.ridge-messages .ridge-msg-actions button.ridge-react-main {
+  display: grid; box-sizing: border-box; width: 30px !important; min-width: 0 !important; height: 30px !important; min-height: 0 !important;
+  place-items: center; margin: 0; padding: 0 !important; border: 0; border-radius: 50%; background: transparent;
+  color: var(--news-muted, #5b6478); font-size: 16px; line-height: 1;
 }
-.ridge-msg-actions .ridge-react-compact .ridge-react-main:hover { background: var(--news-hover, #eef0f7); }
+.ridge-messages .ridge-msg-actions button.ridge-react-main:hover { background: var(--news-hover, #eef0f7); }
 .ridge-msg-actions .ridge-react-main svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
 .ridge-message-row.mine .ridge-react-picker { left: auto; right: 0; }
 @media (prefers-reduced-motion: reduce) { .ridge-react-picker button { transition: none; } .ridge-react-picker button:hover { transform: none; } .ridge-msg-actions { transition: none; } }
