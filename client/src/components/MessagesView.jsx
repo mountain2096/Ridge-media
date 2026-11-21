@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
+import { getSocket } from "../lib/socket.js";
 import "../messages.css";
 
 function formatMessageTime(value) {
@@ -32,8 +33,14 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [isLoadingFriends, setIsLoadingFriends] = useState(true);
   const [friendError, setFriendError] = useState("");
   const [friendSearch, setFriendSearch] = useState("");
+  const [typingConversationId, setTypingConversationId] = useState(null);
+  const [syncTick, setSyncTick] = useState(0);
   const messageListRef = useRef(null);
   const handledUserRequestRef = useRef("");
+  const activeConversationIdRef = useRef(null);
+  const conversationsRef = useRef([]);
+  const incomingTypingTimerRef = useRef(0);
+  const ownTypingRef = useRef({ active: false, lastSentAt: 0, timer: 0 });
 
   const filteredConversations = useMemo(() => conversations.filter((conversation) => {
     const participant = conversation.participants?.find((person) => person._id !== currentUser?._id);
@@ -50,6 +57,13 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const otherParticipant = activeConversation?.participants?.find(
     (participant) => participant._id !== currentUser?._id
   );
+  const isOtherTyping = Boolean(activeConversationId) && typingConversationId === activeConversationId;
+  const lastOwnMessageId = useMemo(() => {
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      if (messages[index].senderId?._id === currentUser?._id) return messages[index]._id;
+    }
+    return null;
+  }, [messages, currentUser?._id]);
 
   const loadFriends = useCallback(async () => {
     setIsLoadingFriends(true);
@@ -120,41 +134,151 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     if (messageListRef.current) {
       messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
     }
-  }, [messages, isLoadingMessages, activeConversationId]);
+  }, [messages, isLoadingMessages, activeConversationId, isOtherTyping]);
+
+  useEffect(() => {
+    activeConversationIdRef.current = activeConversationId;
+  }, [activeConversationId]);
+
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
+  const loadConversations = useCallback(async (signal) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/api/message/conversations`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể tải danh sách hội thoại.");
+      }
+      setError("");
+      setConversations(data.conversations);
+      if (initialConversationId && !activeConversationIdRef.current && data.conversations.some((item) => item._id === initialConversationId)) {
+        setActiveConversationId(initialConversationId);
+      }
+    } catch (requestError) {
+      if (requestError.name !== "AbortError") setError(requestError.message);
+    } finally {
+      setIsLoadingConversations(false);
+    }
+  }, [initialConversationId]);
+
+  const markConversationRead = useCallback(async (conversationId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/api/message/conversation/${conversationId}/read`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return;
+      setConversations((items) => items.map((item) =>
+        item._id === conversationId ? { ...item, unreadCount: 0 } : item
+      ));
+      window.dispatchEvent(new Event("ridge:counts-changed"));
+    } catch {
+      // The next sync or incoming message retries.
+    }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    async function loadConversations() {
-      setError("");
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE}/api/message/conversations`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Không thể tải danh sách hội thoại.");
-        }
-        setError("");
-        setConversations(data.conversations);
-        if (initialConversationId && data.conversations.some((item) => item._id === initialConversationId)) {
-          setActiveConversationId(initialConversationId);
-        }
-      } catch (requestError) {
-        if (requestError.name !== "AbortError") setError(requestError.message);
-      } finally {
-        setIsLoadingConversations(false);
-      }
-    }
-
-    loadConversations();
-    const intervalId = window.setInterval(loadConversations, 10000);
+    const initialLoadTimer = window.setTimeout(() => {
+      void loadConversations(controller.signal);
+    }, 0);
+    // New data arrives over the socket; poll only while it is disconnected.
+    const intervalId = window.setInterval(() => {
+      if (!getSocket().connected) void loadConversations(controller.signal);
+    }, 10000);
     return () => {
+      window.clearTimeout(initialLoadTimer);
       controller.abort();
       window.clearInterval(intervalId);
     };
-  }, [reloadKey, initialConversationId]);
+  }, [reloadKey, loadConversations, syncTick]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    const myId = currentUser?._id;
+
+    function handleNewMessage({ conversationId, message } = {}) {
+      if (!conversationId || !message?._id) return;
+      const isMine = message.senderId?._id === myId;
+      const isActive = conversationId === activeConversationIdRef.current;
+      const isVisible = document.visibilityState === "visible";
+
+      if (isActive) {
+        setMessages((items) => items.some((item) => item._id === message._id) ? items : [...items, message]);
+        if (!isMine) {
+          setTypingConversationId((current) => current === conversationId ? null : current);
+          if (isVisible) void markConversationRead(conversationId);
+        }
+      }
+
+      if (!conversationsRef.current.some((item) => item._id === conversationId)) {
+        void loadConversations();
+        return;
+      }
+      setConversations((items) => items.map((item) => {
+        if (item._id !== conversationId) return item;
+        const countsAsUnread = !isMine && !(isActive && isVisible);
+        return {
+          ...item,
+          lastMessage: message,
+          updatedAt: message.createdAt,
+          unreadCount: countsAsUnread ? (item.unreadCount || 0) + 1 : item.unreadCount || 0,
+        };
+      }).sort((left, right) => new Date(right.updatedAt) - new Date(left.updatedAt)));
+    }
+
+    function handleMessageRead({ conversationId, readAt } = {}) {
+      if (!conversationId || conversationId !== activeConversationIdRef.current) return;
+      setMessages((items) => items.map((item) =>
+        item.senderId?._id === myId && !item.isRead ? { ...item, isRead: true, readAt } : item
+      ));
+    }
+
+    function handleTyping({ conversationId, userId, isTyping } = {}) {
+      if (!conversationId || userId === myId) return;
+      window.clearTimeout(incomingTypingTimerRef.current);
+      if (!isTyping) {
+        setTypingConversationId((current) => current === conversationId ? null : current);
+        return;
+      }
+      setTypingConversationId(conversationId);
+      // Safety net in case the "stop" event is lost.
+      incomingTypingTimerRef.current = window.setTimeout(() => setTypingConversationId(null), 5000);
+    }
+
+    // After a dropped connection, reload anything that may have been missed.
+    let hasConnected = socket.connected;
+    function handleConnect() {
+      if (hasConnected) setSyncTick((tick) => tick + 1);
+      hasConnected = true;
+    }
+
+    function handleVisibility() {
+      const activeId = activeConversationIdRef.current;
+      if (document.visibilityState === "visible" && activeId) void markConversationRead(activeId);
+    }
+
+    socket.on("message:new", handleNewMessage);
+    socket.on("message:read", handleMessageRead);
+    socket.on("typing", handleTyping);
+    socket.on("connect", handleConnect);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.clearTimeout(incomingTypingTimerRef.current);
+      socket.off("message:new", handleNewMessage);
+      socket.off("message:read", handleMessageRead);
+      socket.off("typing", handleTyping);
+      socket.off("connect", handleConnect);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [currentUser?._id, loadConversations, markConversationRead]);
 
   useEffect(() => {
     if (!activeConversationId) {
@@ -187,7 +311,15 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
         const orderedMessages = [...data.message].sort(
           (left, right) => new Date(left.createdAt) - new Date(right.createdAt)
         );
-        setMessages(orderedMessages);
+        setMessages((current) => {
+          // Keep messages the socket delivered while this request was in flight.
+          const fetchedIds = new Set(orderedMessages.map((item) => item._id));
+          const newestFetched = orderedMessages.length
+            ? new Date(orderedMessages[orderedMessages.length - 1].createdAt)
+            : 0;
+          const extras = current.filter((item) => !fetchedIds.has(item._id) && new Date(item.createdAt) > newestFetched);
+          return extras.length ? [...orderedMessages, ...extras] : orderedMessages;
+        });
 
         const readResponse = await fetch(
           `${API_BASE}/api/message/conversation/${activeConversationId}/read`,
@@ -201,6 +333,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
           setConversations((items) => items.map((item) =>
             item._id === activeConversationId ? { ...item, unreadCount: 0 } : item
           ));
+          window.dispatchEvent(new Event("ridge:counts-changed"));
         }
       } catch (requestError) {
         if (requestError.name !== "AbortError") {
@@ -215,12 +348,41 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     }
 
     loadMessages();
-    const intervalId = window.setInterval(loadMessages, 5000);
+    // New messages arrive over the socket; poll only while it is disconnected.
+    const intervalId = window.setInterval(() => {
+      if (!getSocket().connected) loadMessages();
+    }, 5000);
     return () => {
       controller.abort();
       window.clearInterval(intervalId);
     };
-  }, [activeConversationId]);
+  }, [activeConversationId, syncTick]);
+
+  const stopTyping = useCallback((conversationId = activeConversationIdRef.current) => {
+    const state = ownTypingRef.current;
+    window.clearTimeout(state.timer);
+    if (state.active && conversationId) getSocket().emit("typing:stop", { conversationId });
+    state.active = false;
+  }, []);
+
+  function handleMessageInput(event) {
+    const value = event.target.value;
+    setMessageContent(value);
+    if (!activeConversationId) return;
+    if (!value.trim()) {
+      stopTyping(activeConversationId);
+      return;
+    }
+    const state = ownTypingRef.current;
+    const now = Date.now();
+    if (!state.active || now - state.lastSentAt > 2500) {
+      getSocket().emit("typing:start", { conversationId: activeConversationId });
+      state.active = true;
+      state.lastSentAt = now;
+    }
+    window.clearTimeout(state.timer);
+    state.timer = window.setTimeout(() => stopTyping(activeConversationId), 2000);
+  }
 
   async function handleSendMessage(event) {
     event.preventDefault();
@@ -246,8 +408,10 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       if (!response.ok) {
         throw new Error(data.message || "Không thể gửi tin nhắn.");
       }
-      setMessages((items) => [...items, data.newMessage]);
+      // The socket may deliver this message before the HTTP response does.
+      setMessages((items) => items.some((item) => item._id === data.newMessage._id) ? items : [...items, data.newMessage]);
       setMessageContent("");
+      stopTyping(activeConversationId);
       setConversations((items) => items.map((item) =>
         item._id === activeConversationId
           ? { ...item, lastMessage: data.newMessage, updatedAt: data.newMessage.createdAt }
@@ -262,6 +426,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
 
   function handleSelectConversation(conversationId) {
     if (conversationId !== activeConversationId) {
+      stopTyping(activeConversationId);
       setMessages([]);
     }
     setActiveConversationId(conversationId);
@@ -356,19 +521,31 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               {messages.map((message) => {
                 const isMine = message.senderId?._id === currentUser?._id;
                 return (
-                  <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}`} key={message._id}>
-                    {message.content}
-                    <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
-                  </div>
+                  <Fragment key={message._id}>
+                    <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}`}>
+                      {message.content}
+                      <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
+                    </div>
+                    {message._id === lastOwnMessageId && (
+                      <span className="ridge-message-status">{message.isRead ? "Đã xem" : "Đã gửi"}</span>
+                    )}
+                  </Fragment>
                 );
               })}
+              {isOtherTyping && (
+                <div className="ridge-typing" role="status">
+                  <span className="ridge-typing-dots" aria-hidden="true"><span /><span /><span /></span>
+                  <span>{otherParticipant?.username || "Người dùng"} đang nhập...</span>
+                </div>
+              )}
             </div>
             <form className="message-compose ridge-message-compose" onSubmit={handleSendMessage}>
               <label className="ridge-visually-hidden" htmlFor="message-content">Nội dung tin nhắn</label>
               <input
                 id="message-content"
                 value={messageContent}
-                onChange={(event) => setMessageContent(event.target.value)}
+                onChange={handleMessageInput}
+                onBlur={() => stopTyping(activeConversationId)}
                 placeholder="Viết tin nhắn..."
                 maxLength="2000"
               />

@@ -3,7 +3,22 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "./lib/api.js";
 import { ConfirmProvider } from "./components/ConfirmDialog.jsx";
 import UserSearch from "./components/UserSearch.jsx";
+import Toast from "./components/Toast.jsx";
+import { connectSocket, disconnectSocket, getSocket } from "./lib/socket.js";
 import "./newsfeed.css";
+
+const NOTIFICATION_TEXT = {
+  like: "đã thích bài viết của bạn",
+  comment: "đã bình luận bài viết của bạn",
+  friend_request: "đã gửi lời mời kết bạn",
+  friend_accept: "đã chấp nhận lời mời kết bạn",
+  message: "đã gửi tin nhắn cho bạn",
+  share: "đã chia sẻ bài viết của bạn",
+};
+
+function notificationText(type) {
+  return NOTIFICATION_TEXT[type] || "có cập nhật mới";
+}
 
 function AppLayout() {
   const navigate = useNavigate();
@@ -16,7 +31,11 @@ function AppLayout() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationError, setNotificationError] = useState("");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [toast, setToast] = useState("");
   const stopHeartbeatRef = useRef(() => {});
+  const refreshCountsRef = useRef(() => {});
+  const currentUserIdRef = useRef("");
+  const pathnameRef = useRef(location.pathname);
   const isFeed = location.pathname === "/feed";
 
   useEffect(() => {
@@ -82,6 +101,14 @@ function AppLayout() {
   }, []);
 
   useEffect(() => {
+    currentUserIdRef.current = currentUser?._id || "";
+  }, [currentUser?._id]);
+
+  useEffect(() => {
+    pathnameRef.current = location.pathname;
+  }, [location.pathname]);
+
+  useEffect(() => {
     let mounted = true;
     let busy = false;
     async function refreshCounts() {
@@ -103,13 +130,76 @@ function AppLayout() {
         busy = false;
       }
     }
+    refreshCountsRef.current = refreshCounts;
     refreshCounts();
-    const interval = window.setInterval(refreshCounts, 10000);
+    // Realtime events keep the badges fresh; poll slowly only as a fallback
+    // while the socket connection is down.
+    const interval = window.setInterval(() => {
+      if (!getSocket().connected) refreshCounts();
+    }, 30000);
     window.addEventListener("focus", refreshCounts);
     return () => {
       mounted = false;
+      refreshCountsRef.current = () => {};
       window.clearInterval(interval);
       window.removeEventListener("focus", refreshCounts);
+    };
+  }, []);
+
+  useEffect(() => {
+    const socket = connectSocket();
+    let refreshTimer = 0;
+    const scheduleRefresh = () => {
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => refreshCountsRef.current(), 250);
+    };
+
+    function handleNotification({ notification } = {}) {
+      if (!notification?._id) return;
+      setNotifications((items) => items.some((item) => item._id === notification._id) ? items : [notification, ...items]);
+      setToast(`${notification.senderId?.username || "Người dùng"} ${notificationText(notification.type)}`);
+      if (notification.type === "friend_request" || notification.type === "friend_accept") scheduleRefresh();
+    }
+
+    function handleNewMessage({ message } = {}) {
+      scheduleRefresh();
+      const senderId = message?.senderId?._id;
+      if (!senderId || senderId === currentUserIdRef.current) return;
+      if (pathnameRef.current.startsWith("/messages")) return;
+      const preview = String(message.content || "").slice(0, 80);
+      setToast(`${message.senderId?.username || "Người dùng"}: ${preview}`);
+    }
+
+    // Resync after a dropped connection so nothing sent meanwhile is missed.
+    let hasConnected = socket.connected;
+    function handleConnect() {
+      if (hasConnected) scheduleRefresh();
+      hasConnected = true;
+    }
+
+    socket.on("notification:new", handleNotification);
+    socket.on("message:new", handleNewMessage);
+    socket.on("connect", handleConnect);
+    window.addEventListener("ridge:counts-changed", scheduleRefresh);
+
+    // Load existing notifications once so the bell shows unread items before it is opened.
+    const controller = new AbortController();
+    fetch(`${API_BASE}/api/notification`, {
+      headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+      signal: controller.signal,
+    }).then(async (response) => {
+      const data = await response.json();
+      if (response.ok) setNotifications(data.notifications || []);
+    }).catch(() => {});
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(refreshTimer);
+      window.removeEventListener("ridge:counts-changed", scheduleRefresh);
+      socket.off("notification:new", handleNotification);
+      socket.off("message:new", handleNewMessage);
+      socket.off("connect", handleConnect);
+      disconnectSocket();
     };
   }, []);
 
@@ -147,6 +237,7 @@ function AppLayout() {
   const outletContext = { currentUser, setCurrentUser, searchQuery, setSearchQuery };
   function handleLogout() {
     stopHeartbeatRef.current();
+    disconnectSocket();
     try {
       if (currentUser?._id) {
         localStorage.removeItem(`ridge:recent-searches:${currentUser._id}`);
@@ -178,7 +269,7 @@ function AppLayout() {
           <NavLink className="header-icon-link" to="/messages" aria-label="Tin nhắn" title="Tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>{messageCount > 0 && <span className="header-badge">{messageCount > 99 ? "99+" : messageCount}</span>}</NavLink>
           <div className="notification-wrap">
             <button className="header-icon-link notification-button" type="button" aria-label="Thông báo" aria-expanded={notificationOpen} onClick={toggleNotifications}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{notifications.some((item) => !item.isRead) && <span className="notification-dot" />}</button>
-            {notificationOpen && <div className="notification-panel"><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.length && <p>Chưa có thông báo nào.</p>}{notifications.map((item) => <button className={"notification-item " + (item.isRead ? "read" : "unread")} key={item._id} type="button" onClick={() => markRead(item._id)}><strong>{item.senderId?.username || "Người dùng"}</strong>{" "}{item.type === "like" ? "đã thích bài viết của bạn" : item.type === "comment" ? "đã bình luận bài viết của bạn" : item.type === "friend_request" ? "đã gửi lời mời kết bạn" : item.type === "friend_accept" ? "đã chấp nhận lời mời kết bạn" : item.type === "message" ? "đã gửi tin nhắn cho bạn" : item.type === "share" ? "đã chia sẻ bài viết của bạn" : "có cập nhật mới"}</button>)}</div>}
+            {notificationOpen && <div className="notification-panel"><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.length && <p>Chưa có thông báo nào.</p>}{notifications.map((item) => <button className={"notification-item " + (item.isRead ? "read" : "unread")} key={item._id} type="button" onClick={() => markRead(item._id)}><strong>{item.senderId?.username || "Người dùng"}</strong>{" "}{notificationText(item.type)}</button>)}</div>}
           </div>
           <div className="profile-menu-wrap">
             <button className="profile-menu-trigger" type="button" aria-label="Mở menu tài khoản" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>
@@ -207,6 +298,7 @@ function AppLayout() {
       <section className="home-content">
         <div className={"home-columns " + (isFeed ? "" : "home-columns-single")}><Outlet context={outletContext} /></div>
       </section>
+      <Toast message={toast} onDismiss={() => setToast("")} />
     </main>
     </ConfirmProvider>
   );
