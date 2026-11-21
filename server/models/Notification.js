@@ -41,6 +41,11 @@ const notificationSchema = new mongoose.Schema(
             ref:"Comment",
             default:null
         },
+        reaction:{
+            type: String,
+            enum: ["like", "love", "haha", "wow", "sad", "angry", null],
+            default: null
+        },
         isRead:{
             type: Boolean,
             default: false

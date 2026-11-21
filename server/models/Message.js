@@ -30,6 +30,14 @@ const messageSchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
+
+        reactions: [
+            {
+                _id: false,
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+                reaction: { type: String, enum: ["like", "love", "haha", "wow", "sad", "angry"], required: true },
+            },
+        ],
     },
     {
         timestamps: true,

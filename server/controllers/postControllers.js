@@ -298,7 +298,7 @@ const unlikePost = async (req, res) => {
     try {
             const post = await Post.findOneAndUpdate(
             { _id: req.params.id, status: "active" },
-            { $pull: { likes: req.user._id } },
+            { $pull: { likes: req.user._id, reactions: { userId: req.user._id } } },
             { new: true }
         );
 

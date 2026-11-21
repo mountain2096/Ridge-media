@@ -8,6 +8,7 @@ const {
 
 } = require("../controllers/commentControllers");
 
+const { reactToComment } = require("../controllers/reactionControllers");
 const protect = require("../middlewares/protect");
 
 const router = express.Router();
@@ -15,6 +16,8 @@ const router = express.Router();
 
 router.post("/:postId", protect, createComment);
 router.get("/:postId", protect, getCommentByPost);
+router.put("/:id/reaction", protect, reactToComment);
+router.delete("/:id/reaction", protect, reactToComment);
 router.put("/:id", protect, updateComment)
 router.delete("/:id", protect, deleteComment)
 

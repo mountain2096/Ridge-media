@@ -19,6 +19,13 @@ const commentSchema = new mongoose.Schema(
             required: true
         },
         status: { type: String, enum: ["active", "deleted"], default: "active" },
+        reactions: [
+            {
+                _id: false,
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+                reaction: { type: String, enum: ["like", "love", "haha", "wow", "sad", "angry"], required: true },
+            },
+        ],
     },
     {
         timestamps:true,

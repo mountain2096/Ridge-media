@@ -29,7 +29,14 @@ const postSchema = new mongoose.Schema(
                 type: mongoose.Schema.Types.ObjectId,
                 ref:"User"
             }
-        ]
+        ],
+        reactions: [
+            {
+                _id: false,
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+                reaction: { type: String, enum: ["like", "love", "haha", "wow", "sad", "angry"], required: true },
+            },
+        ],
     },
     {
         timestamps: true
