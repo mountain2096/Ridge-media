@@ -341,23 +341,69 @@ function buildDemoData({ now = Date.now(), newId }) {
 
     // ---- notifications ----
     const notifications = [];
-    const addNotification = ({ to, from, type, hoursAgo, isRead, postId = null, commentId = null, friendRequestId = null }) => {
+    const addNotification = ({ to, from, type, hoursAgo, isRead, postId = null, commentId = null, friendRequestId = null, reaction = null }) => {
         const createdAt = at(hoursAgo);
         notifications.push({
-            _id: newId(), recipientId: id(to), senderId: id(from), type, postId, commentId, friendRequestId,
+            _id: newId(), recipientId: id(to), senderId: id(from), type, postId, commentId, friendRequestId, reaction,
             isRead, createdAt, updatedAt: createdAt,
         });
     };
     addNotification({ to: "minh_anh", from: "bao_chau", type: "friend_request", hoursAgo: 10, isRead: false, friendRequestId: fr1._id });
     addNotification({ to: "minh_anh", from: "khanh_vy", type: "friend_request", hoursAgo: 7, isRead: false, friendRequestId: fr2._id });
     addNotification({ to: "minh_anh", from: "thu_trang", type: "message", hoursAgo: 0.8, isRead: false });
-    addNotification({ to: "minh_anh", from: "hoang_nam", type: "like", hoursAgo: 35, isRead: true, postId: a1._id });
+    addNotification({ to: "minh_anh", from: "hoang_nam", type: "like", reaction: "love", hoursAgo: 35, isRead: true, postId: a1._id });
     addNotification({ to: "minh_anh", from: "hoang_nam", type: "comment", hoursAgo: 34, isRead: true, postId: a1._id, commentId: cm1._id });
     addNotification({ to: "minh_anh", from: "thu_trang", type: "comment", hoursAgo: 33, isRead: false, postId: a1._id, commentId: cm2._id });
     addNotification({ to: "minh_anh", from: "viet_dung", type: "comment", hoursAgo: 32, isRead: false, postId: a1._id, commentId: c1._id });
     addNotification({ to: "hoang_nam", from: "viet_dung", type: "friend_request", hoursAgo: 5, isRead: false, friendRequestId: fr3._id });
-    addNotification({ to: "hoang_nam", from: "minh_anh", type: "like", hoursAgo: 18, isRead: true, postId: a2._id });
+    addNotification({ to: "hoang_nam", from: "minh_anh", type: "like", reaction: "wow", hoursAgo: 18, isRead: true, postId: a2._id });
     addNotification({ to: "hoang_nam", from: "minh_anh", type: "message", hoursAgo: 3.2, isRead: true });
+
+    // ---- reactions and saved posts ----
+    // Added last on purpose: nothing above (reports, scores, charts) changes.
+    // `likes` keeps listing everybody who reacted, like the real app does.
+    const REACTION_CYCLE = ["like", "like", "love", "like", "haha", "love", "wow", "like", "sad", "angry"];
+    let cycle = 0;
+    const nextReaction = () => REACTION_CYCLE[cycle++ % REACTION_CYCLE.length];
+
+    posts.forEach((post) => {
+        post.reactions = post.likes.map((userId) => ({ userId, reaction: nextReaction() }));
+    });
+    // The live-demo posts show a mix of kinds.
+    a1.reactions = [
+        { userId: id("hoang_nam"), reaction: "love" },
+        { userId: id("thu_trang"), reaction: "haha" },
+        { userId: id("quoc_bao"), reaction: "wow" },
+    ];
+    a2.reactions = [{ userId: id("minh_anh"), reaction: "wow" }];
+
+    const reactorsFor = (authorId, createdAt, count, offset) => {
+        const eligible = users.filter((candidate) =>
+            candidate._id !== authorId && !candidate.isLocked && candidate.createdAt <= createdAt);
+        const chosen = [];
+        for (let k = 0; k < eligible.length && chosen.length < count; k += 1) {
+            const candidate = eligible[(offset + k * 3) % eligible.length];
+            if (!chosen.includes(candidate)) chosen.push(candidate);
+        }
+        return chosen;
+    };
+    comments.forEach((comment, index) => {
+        comment.reactions = [];
+        if (comment.status !== "active" || index % 2 !== 0) return;
+        comment.reactions = reactorsFor(comment.authorId, comment.createdAt, 1 + (index % 3), index)
+            .map((candidate) => ({ userId: candidate._id, reaction: nextReaction() }));
+    });
+
+    const conversationById = new Map(conversations.map((conversation) => [conversation._id, conversation]));
+    messages.forEach((message, index) => {
+        message.reactions = [];
+        if (index % 4 !== 1) return;
+        const other = conversationById.get(message.conversationId).participants.find((userId) => userId !== message.senderId);
+        message.reactions = [{ userId: other, reaction: nextReaction() }];
+    });
+
+    // The presenter already saved two posts (the "Lưu bài viết" feature exists since the first version).
+    user.minh_anh.savedPosts = [a2._id, a3._id];
 
     return { users, friendRequests, posts, comments, reports, conversations, messages, notifications };
 }

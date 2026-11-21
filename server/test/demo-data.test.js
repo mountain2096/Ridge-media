@@ -150,3 +150,39 @@ test("the demo reports produce the planned priority queue", async () => {
         User.find = original.user;
     }
 });
+
+test("demo data has reactions of all six kinds on posts, comments and messages, and some saved posts", () => {
+    const { data } = build();
+    const kinds = new Set(["like", "love", "haha", "wow", "sad", "angry"]);
+    const userIds = new Set(data.users.map((user) => user._id));
+    const seen = { posts: new Set(), comments: new Set(), messages: new Set() };
+
+    const check = (name, items) => {
+        for (const item of items) {
+            const reactors = (item.reactions || []).map((entry) => entry.userId);
+            assert.equal(new Set(reactors).size, reactors.length, `${name}: one reaction per user`);
+            for (const entry of item.reactions || []) {
+                assert.ok(kinds.has(entry.reaction), `${name}: unknown reaction ${entry.reaction}`);
+                assert.ok(userIds.has(entry.userId));
+                assert.notEqual(entry.userId, item.authorId || item.senderId, `${name}: nobody reacts to their own item`);
+                seen[name].add(entry.reaction);
+            }
+        }
+    };
+    check("posts", data.posts);
+    check("comments", data.comments);
+    check("messages", data.messages);
+
+    // For posts, `likes` lists exactly the people who reacted.
+    for (const post of data.posts) {
+        assert.deepEqual([...post.likes].sort(), post.reactions.map((entry) => entry.userId).sort());
+    }
+    assert.deepEqual([...seen.posts].sort(), [...kinds].sort());
+    assert.ok(seen.comments.size >= 3, "comments show several kinds");
+    assert.ok(seen.messages.size >= 2, "messages show several kinds");
+
+    const presenter = data.users.find((user) => user.username === "minh_anh");
+    const activePostIds = new Set(data.posts.filter((post) => post.status === "active").map((post) => post._id));
+    assert.ok(presenter.savedPosts.length >= 2);
+    assert.ok(presenter.savedPosts.every((postId) => activePostIds.has(postId)));
+});
