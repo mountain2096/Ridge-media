@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "./lib/api.js";
 import { ConfirmProvider } from "./components/ConfirmDialog.jsx";
 import UserSearch from "./components/UserSearch.jsx";
-import Toast from "./components/Toast.jsx";
+import LiveToast from "./components/LiveToast.jsx";
 import { connectSocket, disconnectSocket, getSocket } from "./lib/socket.js";
 import "./newsfeed.css";
 
@@ -31,7 +31,7 @@ function AppLayout() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationError, setNotificationError] = useState("");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [toast, setToast] = useState("");
+  const [liveToast, setLiveToast] = useState(null);
   const stopHeartbeatRef = useRef(() => {});
   const refreshCountsRef = useRef(() => {});
   const currentUserIdRef = useRef("");
@@ -157,17 +157,27 @@ function AppLayout() {
     function handleNotification({ notification } = {}) {
       if (!notification?._id) return;
       setNotifications((items) => items.some((item) => item._id === notification._id) ? items : [notification, ...items]);
-      setToast(`${notification.senderId?.username || "Người dùng"} ${notificationText(notification.type)}`);
+      setLiveToast({
+        kind: "notification",
+        title: notification.senderId?.username || "Người dùng",
+        body: notificationText(notification.type),
+        avatar: notification.senderId?.profilePicture || "",
+      });
       if (notification.type === "friend_request" || notification.type === "friend_accept") scheduleRefresh();
     }
 
-    function handleNewMessage({ message } = {}) {
+    function handleNewMessage({ conversationId, message } = {}) {
       scheduleRefresh();
       const senderId = message?.senderId?._id;
       if (!senderId || senderId === currentUserIdRef.current) return;
       if (pathnameRef.current.startsWith("/messages")) return;
-      const preview = String(message.content || "").slice(0, 80);
-      setToast(`${message.senderId?.username || "Người dùng"}: ${preview}`);
+      setLiveToast({
+        kind: "message",
+        title: message.senderId?.username || "Người dùng",
+        body: String(message.content || "").slice(0, 80),
+        avatar: message.senderId?.profilePicture || "",
+        conversationId,
+      });
     }
 
     // Resync after a dropped connection so nothing sent meanwhile is missed.
@@ -230,6 +240,15 @@ function AppLayout() {
       setNotifications((items) => items.map((item) => item._id === id ? { ...item, isRead: true } : item));
     } catch (error) {
       setNotificationError(error.message);
+    }
+  }
+
+  function openLiveToast(toast) {
+    setLiveToast(null);
+    if (toast.kind === "message" && toast.conversationId) {
+      navigate("/messages", { state: { openConversationId: toast.conversationId } });
+    } else {
+      setNotificationOpen(true);
     }
   }
 
@@ -298,7 +317,7 @@ function AppLayout() {
       <section className="home-content">
         <div className={"home-columns " + (isFeed ? "" : "home-columns-single")}><Outlet context={outletContext} /></div>
       </section>
-      <Toast message={toast} onDismiss={() => setToast("")} />
+      <LiveToast toast={liveToast} onOpen={openLiveToast} onDismiss={() => setLiveToast(null)} />
     </main>
     </ConfirmProvider>
   );

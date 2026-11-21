@@ -250,7 +250,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       }
       setTypingConversationId(conversationId);
       // Safety net in case the "stop" event is lost.
-      incomingTypingTimerRef.current = window.setTimeout(() => setTypingConversationId(null), 5000);
+      incomingTypingTimerRef.current = window.setTimeout(() => setTypingConversationId(null), 7000);
     }
 
     // After a dropped connection, reload anything that may have been missed.
@@ -381,7 +381,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       state.lastSentAt = now;
     }
     window.clearTimeout(state.timer);
-    state.timer = window.setTimeout(() => stopTyping(activeConversationId), 2000);
+    state.timer = window.setTimeout(() => stopTyping(activeConversationId), 4000);
   }
 
   async function handleSendMessage(event) {
@@ -545,7 +545,6 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                 id="message-content"
                 value={messageContent}
                 onChange={handleMessageInput}
-                onBlur={() => stopTyping(activeConversationId)}
                 placeholder="Viết tin nhắn..."
                 maxLength="2000"
               />
