@@ -5,6 +5,7 @@ import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import { API_BASE } from "../lib/api.js";
+import { sendReaction } from "../lib/reactions.js";
 import { useConfirm } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
@@ -661,6 +662,31 @@ function FeedPage({ section = "feed" }){
         setLikeError(requestError.message);
       }
     }
+    async function handleReactPost(post, type) {
+      setLikeError("");
+      try {
+        const data = await sendReaction(`/api/post/${post._id}/reaction`, type);
+        setPosts((currentPosts) => currentPosts.map((item) =>
+          item._id === post._id ? { ...item, reactions: data.reactions, likes: data.likes, isLiked: Boolean(type) } : item
+        ));
+        setLikedPostIds((currentIds) => type
+          ? (currentIds.includes(post._id) ? currentIds : [...currentIds, post._id])
+          : currentIds.filter((id) => id !== post._id));
+      } catch (requestError) {
+        setLikeError(requestError.message);
+      }
+    }
+    async function handleReactComment(comment, type) {
+      setCommentError("");
+      try {
+        const data = await sendReaction(`/api/comment/${comment._id}/reaction`, type);
+        setComments((currentComments) => currentComments.map((item) =>
+          item._id === comment._id ? { ...item, reactions: data.reactions } : item
+        ));
+      } catch (requestError) {
+        setCommentError(requestError.message);
+      }
+    }
     async function handleToggleComments(postId) {
       if (openCommentsFor === postId) {
         commentsRequestId.current += 1;
@@ -1153,6 +1179,8 @@ function FeedPage({ section = "feed" }){
   editingCommentContent={editingCommentContent}
   isUpdatingComment={isUpdatingComment}
   onLike={(item) => handleLike(item._id, Boolean(item.isLiked ?? likedPostIds.includes(item._id)))}
+  onReact={handleReactPost}
+  onReactComment={handleReactComment}
   onToggleComments={(item) => handleToggleComments(item._id)}
   onShare={(item) => handleSharePost(item._id)}
   onToggleSaved={(item, saved) => handleToggleSavedPost(item._id, saved)}

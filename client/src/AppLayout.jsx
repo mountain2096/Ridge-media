@@ -16,7 +16,19 @@ const NOTIFICATION_TEXT = {
   share: "đã chia sẻ bài viết của bạn",
 };
 
-function notificationText(type) {
+const REACTION_NOTIFICATION_TEXT = {
+  like: "đã thích",
+  love: "đã yêu thích",
+  haha: "đã thả Haha cho",
+  wow: "đã thả Wow cho",
+  sad: "đã thả cảm xúc Buồn cho",
+  angry: "đã thả cảm xúc Phẫn nộ cho",
+};
+
+function notificationText(type, reaction, commentId) {
+  if (type === "like" && reaction && REACTION_NOTIFICATION_TEXT[reaction]) {
+    return `${REACTION_NOTIFICATION_TEXT[reaction]} ${commentId ? "bình luận" : "bài viết"} của bạn`;
+  }
   return NOTIFICATION_TEXT[type] || "có cập nhật mới";
 }
 
@@ -160,7 +172,7 @@ function AppLayout() {
       setLiveToast({
         kind: "notification",
         title: notification.senderId?.username || "Người dùng",
-        body: notificationText(notification.type),
+        body: notificationText(notification.type, notification.reaction, notification.commentId),
         avatar: notification.senderId?.profilePicture || "",
       });
       if (notification.type === "friend_request" || notification.type === "friend_accept") scheduleRefresh();
@@ -288,7 +300,7 @@ function AppLayout() {
           <NavLink className="header-icon-link" to="/messages" aria-label="Tin nhắn" title="Tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>{messageCount > 0 && <span className="header-badge">{messageCount > 99 ? "99+" : messageCount}</span>}</NavLink>
           <div className="notification-wrap">
             <button className="header-icon-link notification-button" type="button" aria-label="Thông báo" aria-expanded={notificationOpen} onClick={toggleNotifications}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{notifications.some((item) => !item.isRead) && <span className="notification-dot" />}</button>
-            {notificationOpen && <div className="notification-panel"><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.length && <p>Chưa có thông báo nào.</p>}{notifications.map((item) => <button className={"notification-item " + (item.isRead ? "read" : "unread")} key={item._id} type="button" onClick={() => markRead(item._id)}><strong>{item.senderId?.username || "Người dùng"}</strong>{" "}{notificationText(item.type)}</button>)}</div>}
+            {notificationOpen && <div className="notification-panel"><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.length && <p>Chưa có thông báo nào.</p>}{notifications.map((item) => <button className={"notification-item " + (item.isRead ? "read" : "unread")} key={item._id} type="button" onClick={() => markRead(item._id)}><strong>{item.senderId?.username || "Người dùng"}</strong>{" "}{notificationText(item.type, item.reaction, item.commentId)}</button>)}</div>}
           </div>
           <div className="profile-menu-wrap">
             <button className="profile-menu-trigger" type="button" aria-label="Mở menu tài khoản" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>

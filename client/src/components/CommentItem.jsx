@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import ReactionButton from "./ReactionButton.jsx";
+import { summarizeReactions } from "../lib/reactions.js";
 
 function CommentItem({
   comment,
@@ -15,6 +17,7 @@ function CommentItem({
   onUpdate,
   onDelete,
   onReport,
+  onReact,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -25,6 +28,7 @@ function CommentItem({
   const canDelete = Boolean(isAuthor || (currentUserId && postOwnerId && String(postOwnerId) === String(currentUserId)) || isAdmin);
   const canReport = !isAuthor;
   const hasActions = canEdit || canDelete || canReport;
+  const reactionSummary = summarizeReactions(comment.reactions, currentUserId);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -116,6 +120,17 @@ function CommentItem({
                   </div>
                 )}
               </div>
+            )}
+          </div>
+        )}
+        {!isEditing && onReact && (
+          <div className="ridge-comment-reactions">
+            <ReactionButton compact mine={reactionSummary.mine} onReact={onReact} />
+            {reactionSummary.total > 0 && (
+              <span className="ridge-react-summary" aria-label={`${reactionSummary.total} lượt thả cảm xúc`}>
+                <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>
+                <span>{reactionSummary.total}</span>
+              </span>
             )}
           </div>
         )}

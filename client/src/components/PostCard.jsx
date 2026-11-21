@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import CommentItem from "./CommentItem.jsx";
+import ReactionButton from "./ReactionButton.jsx";
+import { mergeLegacyLikes, summarizeReactions } from "../lib/reactions.js";
 
 function PostCard({
   post, currentUser, isLiked, failedImagePost = false, editingPostId, editingPostContent, isSavingPost,
   postActionError, commentsOpen, comments = [], isLoadingComments = false, commentError = "",
   commentContent = "", isSendingComment = false, editingCommentId, editingCommentContent,
-  isUpdatingComment = false, isSharing = false, onLike, onToggleComments, onShare, onToggleSaved,
+  isUpdatingComment = false, isSharing = false, onLike, onToggleComments, onShare, onToggleSaved, onReact, onReactComment,
   onStartEdit, onEditingPostContentChange, onUpdatePost, onCancelEditPost, onDeletePost, onReportPost,
   onCommentChange, onCreateComment, onCommentEdit, onCommentEditingChange,
   onCancelCommentEdit, onUpdateComment, onDeleteComment, onReportComment, onImageError,
@@ -30,6 +32,8 @@ function PostCard({
   const originalDate = originalPost?.createdAt ? new Date(originalPost.createdAt).toLocaleDateString("vi-VN", { day: "numeric", month: "short" }) : "";
   const visibilityLabel = post.privacy === "private" ? "Chỉ mình tôi" : post.privacy === "friends" ? "Bạn bè" : "Mọi người";
   const ownsPost = Boolean(post.isMine);
+  const reactionSummary = summarizeReactions(mergeLegacyLikes(post.reactions, post.likes), currentUser?._id);
+  const myReaction = currentUser?._id ? reactionSummary.mine : (isLiked ? "like" : null);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -105,12 +109,21 @@ function PostCard({
       </>}
 
       <div className="post-stats">
-        <p className="post-likes">{post.likes?.length ?? 0} lượt thích</p>
+        {onReact ? (
+          <p className="post-likes ridge-react-summary" aria-label={`${reactionSummary.total} lượt thả cảm xúc`}>
+            {reactionSummary.total > 0 && <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>}
+            <span>{reactionSummary.total} lượt thích</span>
+          </p>
+        ) : <p className="post-likes">{post.likes?.length ?? 0} lượt thích</p>}
         <button className="post-comment-count" type="button" onClick={() => onToggleComments?.(post)}>{post.commentsCount ?? 0} bình luận</button>
       </div>
       <div className="post-actions">
         <div className="post-action-group">
-          <button className={`post-action-button ${isLiked ? "liked" : ""}`} type="button" aria-label={isLiked ? "Bỏ thích" : "Thích"} aria-pressed={Boolean(isLiked)} onClick={() => onLike?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg><span>{isLiked ? "Đã thích" : "Thích"}</span></button>
+          {onReact ? <ReactionButton
+            mine={myReaction}
+            onReact={(type) => onReact(post, type)}
+            idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg>}
+          /> : <button className={`post-action-button ${isLiked ? "liked" : ""}`} type="button" aria-label={isLiked ? "Bỏ thích" : "Thích"} aria-pressed={Boolean(isLiked)} onClick={() => onLike?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg><span>{isLiked ? "Đã thích" : "Thích"}</span></button>}
           <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => onToggleComments?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận</span></button>
           <button className="post-action-button" type="button" disabled={isSharing} onClick={() => onShare?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>{isSharing ? "Đang chia sẻ" : "Chia sẻ"}</span></button>
         </div>
@@ -127,6 +140,7 @@ function PostCard({
             isEditing={editingCommentId === comment._id} editingContent={editingCommentContent} isUpdating={isUpdatingComment}
             onEdit={onCommentEdit} onEditingChange={onCommentEditingChange} onCancelEdit={onCancelCommentEdit}
             onUpdate={onUpdateComment} onDelete={() => onDeleteComment?.(comment)} onReport={() => onReportComment?.(comment)}
+            onReact={onReactComment ? (type) => onReactComment(comment, type) : undefined}
           />)}
         </div>
         <form className="comment-form profile-comment-form" onSubmit={(event) => onCreateComment?.(event, post)}>

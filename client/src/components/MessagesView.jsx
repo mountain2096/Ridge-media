@@ -2,6 +2,8 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { Link, useLocation } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
 import { getSocket } from "../lib/socket.js";
+import ReactionButton from "./ReactionButton.jsx";
+import { sendReaction, summarizeReactions } from "../lib/reactions.js";
 import "../messages.css";
 
 function formatMessageTime(value) {
@@ -241,6 +243,11 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       ));
     }
 
+    function handleMessageReaction({ conversationId, messageId, reactions } = {}) {
+      if (!conversationId || !messageId || conversationId !== activeConversationIdRef.current) return;
+      setMessages((items) => items.map((item) => item._id === messageId ? { ...item, reactions } : item));
+    }
+
     function handleTyping({ conversationId, userId, isTyping } = {}) {
       if (!conversationId || userId === myId) return;
       window.clearTimeout(incomingTypingTimerRef.current);
@@ -267,6 +274,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
 
     socket.on("message:new", handleNewMessage);
     socket.on("message:read", handleMessageRead);
+    socket.on("message:reaction", handleMessageReaction);
     socket.on("typing", handleTyping);
     socket.on("connect", handleConnect);
     document.addEventListener("visibilitychange", handleVisibility);
@@ -274,6 +282,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       window.clearTimeout(incomingTypingTimerRef.current);
       socket.off("message:new", handleNewMessage);
       socket.off("message:read", handleMessageRead);
+      socket.off("message:reaction", handleMessageReaction);
       socket.off("typing", handleTyping);
       socket.off("connect", handleConnect);
       document.removeEventListener("visibilitychange", handleVisibility);
@@ -382,6 +391,17 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     }
     window.clearTimeout(state.timer);
     state.timer = window.setTimeout(() => stopTyping(activeConversationId), 4000);
+  }
+
+  async function handleReactMessage(message, type) {
+    const conversationId = activeConversationIdRef.current;
+    if (!conversationId) return;
+    try {
+      const data = await sendReaction(`/api/message/conversation/${conversationId}/messages/${message._id}/reaction`, type);
+      setMessages((items) => items.map((item) => item._id === message._id ? { ...item, reactions: data.reactions } : item));
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   }
 
   async function handleSendMessage(event) {
@@ -520,11 +540,25 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               )}
               {messages.map((message) => {
                 const isMine = message.senderId?._id === currentUser?._id;
+                const reactionSummary = summarizeReactions(message.reactions, currentUser?._id);
                 return (
                   <Fragment key={message._id}>
-                    <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}`}>
-                      {message.content}
-                      <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
+                    <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
+                      <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}`}>
+                        {message.content}
+                        <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
+                      </div>
+                      <div className="ridge-msg-reactions">
+                        {reactionSummary.top.map((item) => (
+                          <button
+                            key={item.type} type="button"
+                            className={`ridge-msg-chip ${reactionSummary.mine === item.type ? "mine" : ""}`}
+                            aria-label={`${item.label}: ${reactionSummary.counts[item.type]}. Bấm để ${reactionSummary.mine === item.type ? "bỏ" : "thả"} cảm xúc này.`}
+                            onClick={() => void handleReactMessage(message, reactionSummary.mine === item.type ? null : item.type)}
+                          ><span aria-hidden="true">{item.emoji}</span>{reactionSummary.counts[item.type] > 1 ? reactionSummary.counts[item.type] : ""}</button>
+                        ))}
+                        <ReactionButton compact mine={reactionSummary.mine} idleLabel="😊" onReact={(type) => void handleReactMessage(message, type)} />
+                      </div>
                     </div>
                     {message._id === lastOwnMessageId && (
                       <span className="ridge-message-status">{message.isRead ? "Đã xem" : "Đã gửi"}</span>
