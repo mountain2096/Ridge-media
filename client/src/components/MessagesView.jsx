@@ -544,20 +544,32 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                 return (
                   <Fragment key={message._id}>
                     <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
-                      <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}`}>
-                        {message.content}
-                        <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
-                      </div>
-                      <div className="ridge-msg-reactions">
-                        {reactionSummary.top.map((item) => (
+                      <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
+                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}`}>
+                          {message.content}
+                          <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
+                        </div>
+                        {reactionSummary.total > 0 && (
                           <button
-                            key={item.type} type="button"
-                            className={`ridge-msg-chip ${reactionSummary.mine === item.type ? "mine" : ""}`}
-                            aria-label={`${item.label}: ${reactionSummary.counts[item.type]}. Bấm để ${reactionSummary.mine === item.type ? "bỏ" : "thả"} cảm xúc này.`}
-                            onClick={() => void handleReactMessage(message, reactionSummary.mine === item.type ? null : item.type)}
-                          ><span aria-hidden="true">{item.emoji}</span>{reactionSummary.counts[item.type] > 1 ? reactionSummary.counts[item.type] : ""}</button>
-                        ))}
-                        <ReactionButton compact mine={reactionSummary.mine} idleLabel="😊" onReact={(type) => void handleReactMessage(message, type)} />
+                            type="button"
+                            className={`ridge-msg-badge ${reactionSummary.mine ? "mine" : ""}`}
+                            aria-label={`${reactionSummary.total} cảm xúc. Bấm để ${reactionSummary.mine ? "bỏ cảm xúc của bạn" : "thả cùng cảm xúc"}.`}
+                            onClick={() => void handleReactMessage(message, reactionSummary.mine ? null : reactionSummary.top[0].type)}
+                          >
+                            <span aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>
+                            {reactionSummary.total > 1 && <span className="ridge-msg-badge-count">{reactionSummary.total}</span>}
+                          </button>
+                        )}
+                      </div>
+                      <div className="ridge-msg-actions">
+                        <ReactionButton
+                          compact
+                          iconOnly
+                          mine={reactionSummary.mine}
+                          idleLabel="Thả cảm xúc"
+                          idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>}
+                          onReact={(type) => void handleReactMessage(message, type)}
+                        />
                       </div>
                     </div>
                     {message._id === lastOwnMessageId && (
