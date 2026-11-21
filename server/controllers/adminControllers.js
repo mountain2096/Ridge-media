@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const Report = require("../models/Report");
+const Post = require("../models/Post");
 const errorResponse = require("../utils/errorResponse");
+const { STATS_TIMEZONE, parseRangeDays, buildDayKeys, rangeStart, fillSeries } = require("../utils/adminStats");
 
 const listUsers = async (req, res) => {
     try {
@@ -78,4 +80,44 @@ const updateReport = async (req, res) => {
     }
 };
 
-module.exports = { listUsers, lockUser: setUserLock(true), unlockUser: setUserLock(false), listReports, updateReport };
+const getStats = async (req, res) => {
+    try {
+        const days = parseRangeDays(req.query.days);
+        if (!days) return res.status(400).json({ message: "Khoảng thống kê không hợp lệ!" });
+
+        const now = new Date();
+        const since = rangeStart(days, now);
+        const keys = buildDayKeys(days, now);
+        const perDay = (Model, match = {}) => Model.aggregate([
+            { $match: { createdAt: { $gte: since }, ...match } },
+            { $group: {
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: STATS_TIMEZONE } },
+                count: { $sum: 1 },
+            } },
+        ]);
+
+        const [userRows, postRows, reportRows, users, lockedUsers, activePosts, pendingReports] = await Promise.all([
+            perDay(User),
+            perDay(Post, { status: { $ne: "deleted" } }),
+            perDay(Report),
+            User.countDocuments({}),
+            User.countDocuments({ isLocked: true }),
+            Post.countDocuments({ status: "active" }),
+            Report.countDocuments({ status: "pending" }),
+        ]);
+
+        return res.status(200).json({
+            range: { days, from: keys[0], to: keys[keys.length - 1], timezone: "Asia/Ho_Chi_Minh" },
+            totals: { users, lockedUsers, activePosts, pendingReports },
+            series: {
+                users: fillSeries(keys, userRows),
+                posts: fillSeries(keys, postRows),
+                reports: fillSeries(keys, reportRows),
+            },
+        });
+    } catch (error) {
+        return errorResponse(res, error);
+    }
+};
+
+module.exports = { listUsers, lockUser: setUserLock(true), unlockUser: setUserLock(false), listReports, updateReport, getStats };
