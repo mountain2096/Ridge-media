@@ -3,6 +3,19 @@ import { Link } from "react-router-dom";
 import ReactionButton from "./ReactionButton.jsx";
 import { summarizeReactions } from "../lib/reactions.js";
 
+// Turns "@username" into a profile link when that user is in `mentions`.
+function renderContent(content, mentions = []) {
+  if (!mentions.length) return content;
+  const byName = new Map(mentions.map((user) => [user.username, user]));
+  return String(content).split(/(@[\p{L}\p{N}_.]{2,30})/u).map((part, index) => {
+    if (!part.startsWith("@")) return part;
+    const name = part.slice(1).replace(/\.+$/, "");
+    const user = byName.get(name);
+    if (!user) return part;
+    return <span key={index}><Link className="ridge-mention" to={`/profile/${user._id}`}>@{name}</Link>{part.slice(1 + name.length)}</span>;
+  });
+}
+
 function CommentItem({
   comment,
   currentUserId,
@@ -18,6 +31,8 @@ function CommentItem({
   onDelete,
   onReport,
   onReact,
+  onReply,
+  isReply = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -72,7 +87,7 @@ function CommentItem({
   }
 
   return (
-    <div className="comment-item ridge-comment-item">
+    <div className={`comment-item ridge-comment-item ${isReply ? "is-reply" : ""}`}>
       <Link className="comment-avatar" to={`/profile/${comment.authorId?._id}`} aria-label={`Xem trang cá nhân ${comment.authorId?.username || "người dùng"}`}>
         {comment.authorId?.profilePicture ? <img src={comment.authorId.profilePicture} alt="" /> : (comment.authorId?.username || "U").charAt(0).toUpperCase()}
       </Link>
@@ -97,7 +112,7 @@ function CommentItem({
           <div className="ridge-comment-content-row">
             <div className="comment-bubble ridge-comment-bubble">
               <Link className="profile-name-link" to={`/profile/${comment.authorId?._id}`}>{comment.authorId?.username || "Người dùng"}</Link>
-              <p>{comment.content}</p>
+              <p>{renderContent(comment.content, comment.mentions)}</p>
             </div>
             {hasActions && (
               <div className="post-menu-wrap ridge-comment-menu-wrap">
@@ -123,10 +138,11 @@ function CommentItem({
             )}
           </div>
         )}
-        {!isEditing && onReact && (
+        {!isEditing && (onReact || onReply) && (
           <div className="ridge-comment-reactions">
-            <ReactionButton compact mine={reactionSummary.mine} onReact={onReact} />
-            {reactionSummary.total > 0 && (
+            {onReact && <ReactionButton compact mine={reactionSummary.mine} onReact={onReact} />}
+            {onReply && <button className="ridge-reply-button" type="button" onClick={() => onReply(comment)}>Trả lời</button>}
+            {onReact && reactionSummary.total > 0 && (
               <span className="ridge-react-summary" aria-label={`${reactionSummary.total} lượt thả cảm xúc`}>
                 <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>
                 <span>{reactionSummary.total}</span>

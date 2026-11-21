@@ -46,6 +46,7 @@ function FeedPage({ section = "feed" }){
     const [likeError, setLikeError] = useState("");
     const [openCommentsFor, setOpenCommentsFor] = useState(null);
     const [comments, setComments] = useState([]);
+    const [replyTo, setReplyTo] = useState(null); // { rootId, username } while answering a comment
     const commentsRequestId = useRef(0);
     const handledPostHash = useRef("");
     const [isLoadingComments, setIsLoadingComments] = useState(false);
@@ -688,6 +689,7 @@ function FeedPage({ section = "feed" }){
       }
     }
     async function handleToggleComments(postId) {
+      setReplyTo(null);
       if (openCommentsFor === postId) {
         commentsRequestId.current += 1;
         setOpenCommentsFor(null);
@@ -756,7 +758,7 @@ function FeedPage({ section = "feed" }){
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ content }),
+            body: JSON.stringify(replyTo ? { content, parentId: replyTo.rootId } : { content }),
           }
         );
 
@@ -771,6 +773,7 @@ function FeedPage({ section = "feed" }){
           : post));
 
         setCommentContent("");
+        setReplyTo(null);
 
         const commentsResponse = await fetch(
           `${API_BASE}/api/comment/${postId}`,
@@ -827,11 +830,14 @@ function FeedPage({ section = "feed" }){
           throw new Error(data.message || "Không thể xóa bình luận.");
         }
 
+        // Deleting a comment also deletes its replies (the server says how many went).
+        const removedCount = Number(data.removed) || 1;
         setComments((currentComments) =>
-          currentComments.filter((comment) => comment._id !== commentId)
+          currentComments.filter((comment) => comment._id !== commentId && String(comment.parentId || "") !== String(commentId))
         );
+        setReplyTo((current) => current && current.rootId === commentId ? null : current);
         setPosts((currentPosts) => currentPosts.map((post) => post._id === postId
-          ? { ...post, commentsCount: Math.max(0, (post.commentsCount || 0) - 1) }
+          ? { ...post, commentsCount: Math.max(0, (post.commentsCount || 0) - removedCount) }
           : post));
       } catch (requestError) {
         setCommentError(requestError.message);
@@ -1181,6 +1187,13 @@ function FeedPage({ section = "feed" }){
   onLike={(item) => handleLike(item._id, Boolean(item.isLiked ?? likedPostIds.includes(item._id)))}
   onReact={handleReactPost}
   onReactComment={handleReactComment}
+  replyTo={openCommentsFor === post._id ? replyTo : null}
+  mentionCandidates={friends}
+  onReplyComment={(item) => {
+    setReplyTo({ rootId: item.parentId || item._id, username: item.authorId?.username || "người dùng" });
+    setCommentContent(item.authorId?.username ? `@${item.authorId.username} ` : "");
+  }}
+  onCancelReply={() => { setReplyTo(null); setCommentContent(""); }}
   onToggleComments={(item) => handleToggleComments(item._id)}
   onShare={(item) => handleSharePost(item._id)}
   onToggleSaved={(item, saved) => handleToggleSavedPost(item._id, saved)}

@@ -23,12 +23,12 @@
 .ridge-messages .ridge-message-row.mine { align-self: flex-end; flex-direction: row-reverse; }
 .ridge-messages .ridge-message-row.theirs { align-self: flex-start; flex-direction: row; }
 .ridge-msg-bubble-wrap { position: relative; display: flex; min-width: 0; flex: 0 1 auto; flex-direction: column; }
-.ridge-msg-bubble-wrap.has-reactions { margin-bottom: 12px; }
+.ridge-msg-bubble-wrap.has-reactions { margin-bottom: 17px; }
 .ridge-messages .ridge-msg-bubble-wrap .ridge-message-bubble { max-width: 100%; }
 /* The app has a global button style (padding, minimum size) that made the
    badge a tall oval, so the size properties below are forced. */
 .ridge-messages button.ridge-msg-badge {
-  position: absolute; bottom: -11px; display: inline-flex; align-items: center; gap: 3px;
+  position: absolute; bottom: -17px; display: inline-flex; align-items: center; gap: 3px;
   box-sizing: border-box; width: auto !important; min-width: 0 !important; height: 22px !important; min-height: 0 !important;
   margin: 0; padding: 0 6px !important; border: 1px solid var(--news-border, #e6e8ef); border-radius: 999px;
   background: var(--news-surface, #fff); box-shadow: 0 1px 3px rgb(15 23 42 / 20%);

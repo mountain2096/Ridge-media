@@ -14,6 +14,8 @@ const NOTIFICATION_TEXT = {
   friend_accept: "đã chấp nhận lời mời kết bạn",
   message: "đã gửi tin nhắn cho bạn",
   share: "đã chia sẻ bài viết của bạn",
+  reply: "đã trả lời bình luận của bạn",
+  mention: "đã nhắc đến bạn trong một bình luận",
 };
 
 const REACTION_NOTIFICATION_TEXT = {

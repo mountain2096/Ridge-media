@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import CommentItem from "./CommentItem.jsx";
 import ReactionButton from "./ReactionButton.jsx";
+import MentionInput from "./MentionInput.jsx";
+import "../comments.css";
 import { mergeLegacyLikes, summarizeReactions } from "../lib/reactions.js";
 
 function PostCard({
@@ -9,6 +11,7 @@ function PostCard({
   postActionError, commentsOpen, comments = [], isLoadingComments = false, commentError = "",
   commentContent = "", isSendingComment = false, editingCommentId, editingCommentContent,
   isUpdatingComment = false, isSharing = false, onLike, onToggleComments, onShare, onToggleSaved, onReact, onReactComment,
+  replyTo = null, mentionCandidates = [], onReplyComment, onCancelReply,
   onStartEdit, onEditingPostContentChange, onUpdatePost, onCancelEditPost, onDeletePost, onReportPost,
   onCommentChange, onCreateComment, onCommentEdit, onCommentEditingChange,
   onCancelCommentEdit, onUpdateComment, onDeleteComment, onReportComment, onImageError,
@@ -16,6 +19,7 @@ function PostCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const commentsRef = useRef(null);
+  const commentInputRef = useRef(null);
   const isShare = Boolean(post.originalPostId || post.originalUnavailable);
   const originalPost = post.originalPostId && typeof post.originalPostId === "object" ? post.originalPostId : null;
   const visiblePost = isShare ? originalPost : post;
@@ -50,6 +54,35 @@ function PostCard({
   useEffect(() => {
     if (commentsOpen) commentsRef.current?.querySelector("input")?.focus();
   }, [commentsOpen]);
+
+  // Clicking "Trả lời" focuses the comment box.
+  useEffect(() => {
+    if (replyTo && commentsOpen) commentInputRef.current?.focus();
+  }, [replyTo, commentsOpen]);
+
+  // People who can be @mentioned: contacts, the post author and everyone in this thread.
+  const mentionPeople = (() => {
+    const people = new Map();
+    [post.authorId, ...comments.map((item) => item.authorId), ...mentionCandidates].forEach((person) => {
+      if (person?._id && person.username && String(person._id) !== String(currentUser?._id)) people.set(String(person._id), person);
+    });
+    return [...people.values()];
+  })();
+
+  // Two levels: top-level comments and their replies (a reply whose parent is gone is shown as top-level).
+  const commentIds = new Set(comments.map((item) => String(item._id)));
+  const isReplyItem = (item) => Boolean(item.parentId) && commentIds.has(String(item.parentId));
+  const topLevelComments = comments.filter((item) => !isReplyItem(item));
+  const repliesOf = (parent) => comments.filter((item) => isReplyItem(item) && String(item.parentId) === String(parent._id));
+  const renderComment = (comment, isReply = false) => <CommentItem
+    key={comment._id} comment={comment} currentUserId={currentUser?._id} postOwnerId={authorId} isAdmin={currentUser?.isAdmin}
+    isReply={isReply}
+    isEditing={editingCommentId === comment._id} editingContent={editingCommentContent} isUpdating={isUpdatingComment}
+    onEdit={onCommentEdit} onEditingChange={onCommentEditingChange} onCancelEdit={onCancelCommentEdit}
+    onUpdate={onUpdateComment} onDelete={() => onDeleteComment?.(comment)} onReport={() => onReportComment?.(comment)}
+    onReact={onReactComment ? (type) => onReactComment(comment, type) : undefined}
+    onReply={onReplyComment}
+  />;
 
   return (
     <article className="post-card card" id={`post-${post._id}`}>
@@ -135,16 +168,28 @@ function PostCard({
           {isLoadingComments && <p>Đang tải bình luận...</p>}
           {!isLoadingComments && commentError && <p className="feedback-message error" role="alert">{commentError}</p>}
           {!isLoadingComments && !commentError && comments.length === 0 && <p>Chưa có bình luận nào.</p>}
-          {!isLoadingComments && !commentError && comments.map((comment) => <CommentItem
-            key={comment._id} comment={comment} currentUserId={currentUser?._id} postOwnerId={authorId} isAdmin={currentUser?.isAdmin}
-            isEditing={editingCommentId === comment._id} editingContent={editingCommentContent} isUpdating={isUpdatingComment}
-            onEdit={onCommentEdit} onEditingChange={onCommentEditingChange} onCancelEdit={onCancelCommentEdit}
-            onUpdate={onUpdateComment} onDelete={() => onDeleteComment?.(comment)} onReport={() => onReportComment?.(comment)}
-            onReact={onReactComment ? (type) => onReactComment(comment, type) : undefined}
-          />)}
+          {!isLoadingComments && !commentError && topLevelComments.map((comment) => {
+            const replies = repliesOf(comment);
+            return <Fragment key={comment._id}>
+              {renderComment(comment)}
+              {replies.length > 0 && <div className="ridge-replies">{replies.map((reply) => renderComment(reply, true))}</div>}
+            </Fragment>;
+          })}
         </div>
+        {replyTo && <div className="ridge-reply-bar" role="status">
+          <span>Đang trả lời <strong>{replyTo.username}</strong></span>
+          <button type="button" aria-label="Hủy trả lời" onClick={() => onCancelReply?.()}>×</button>
+        </div>}
         <form className="comment-form profile-comment-form" onSubmit={(event) => onCreateComment?.(event, post)}>
-          <input type="text" placeholder="Viết bình luận..." aria-label="Viết bình luận" maxLength="500" value={commentContent} onChange={(event) => onCommentChange?.(event.target.value)} />
+          <MentionInput
+            inputRef={commentInputRef}
+            candidates={mentionPeople}
+            placeholder={replyTo ? `Trả lời ${replyTo.username}...` : "Viết bình luận... (gõ @ để nhắc tên)"}
+            aria-label="Viết bình luận"
+            maxLength="500"
+            value={commentContent}
+            onChange={(text) => onCommentChange?.(text)}
+          />
           <button type="submit" disabled={isSendingComment}>{isSendingComment ? "Đang gửi..." : "Gửi"}</button>
         </form>
       </div>}
