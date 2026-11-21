@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../lib/api.js";
 import { useConfirm } from "./ConfirmDialog.jsx";
+import AdminStats from "./AdminStats.jsx";
 import "../admin.css";
 
 function AdminPanel() {
@@ -9,6 +10,7 @@ function AdminPanel() {
   const [reports, setReports] = useState([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [tab, setTab] = useState("stats");
   const token = localStorage.getItem("token");
 
   const loadData = useCallback(async () => {
@@ -72,7 +74,11 @@ function AdminPanel() {
   return (
     <section className="connections-page ridge-admin-page">
       <h1 className="section-title ridge-admin-title">Quản trị</h1>
-      {isLoading || error ? (
+      <div className="ridge-admin-tabs" role="group" aria-label="Khu vực quản trị">
+        <button className={`ridge-admin-tab${tab === "stats" ? " is-selected" : ""}`} type="button" aria-pressed={tab === "stats"} onClick={() => setTab("stats")}>Thống kê</button>
+        <button className={`ridge-admin-tab${tab === "manage" ? " is-selected" : ""}`} type="button" aria-pressed={tab === "manage"} onClick={() => setTab("manage")}>Quản lý</button>
+      </div>
+      {tab === "stats" ? <AdminStats token={token} /> : isLoading || error ? (
         <div className="async-data-state" role={error ? "alert" : "status"} aria-live={error ? "assertive" : "polite"}>
           <p className={error ? "feedback-message error" : "async-data-message"}>{error || "Đang tải..."}</p>
           {error && <button className="async-retry-button" type="button" onClick={() => { void loadData(); }}>Thử lại</button>}

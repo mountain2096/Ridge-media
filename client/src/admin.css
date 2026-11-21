@@ -330,3 +330,225 @@
     padding: 13px;
   }
 }
+
+/* ---- Admin statistics ---- */
+.ridge-admin-page {
+  --stats-users: #2a78d6;
+  --stats-posts: #eb6834;
+  --stats-reports: #1baf7a;
+}
+
+.ridge-admin-tabs,
+.ridge-stats-ranges {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 12px;
+  background: var(--news-surface, #fff);
+}
+
+.ridge-admin-tab,
+.ridge-stats-range {
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--news-muted, #5b6478);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ridge-admin-tab:hover,
+.ridge-stats-range:hover {
+  background: var(--news-hover, #eef0f7);
+}
+
+.ridge-admin-tab.is-selected,
+.ridge-stats-range.is-selected {
+  background: var(--news-accent, #2f4be0);
+  color: #fff;
+}
+
+.ridge-stats,
+.ridge-stats-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ridge-stats-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ridge-stats-body.is-refreshing {
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.ridge-stats-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ridge-stats-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: var(--news-radius-card, 16px);
+  background: var(--news-surface, #fff);
+}
+
+.ridge-stats-tile-value {
+  color: var(--news-ink, #0f172a);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ridge-stats-tile-label {
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+}
+
+.ridge-stats-note {
+  margin: 0;
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+}
+
+.ridge-stats-chart-header {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ridge-stats-chart-total {
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ridge-stats-chart {
+  position: relative;
+  padding: 8px 12px 12px;
+}
+
+.ridge-stats-chart.is-users { --stats-color: var(--stats-users); }
+.ridge-stats-chart.is-posts { --stats-color: var(--stats-posts); }
+.ridge-stats-chart.is-reports { --stats-color: var(--stats-reports); }
+
+.ridge-stats-chart svg {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.ridge-stats-grid {
+  stroke: var(--news-border, #e6e8ef);
+  stroke-width: 1;
+}
+
+.ridge-stats-axis-text,
+.ridge-stats-peak-text {
+  fill: var(--news-muted, #5b6478);
+  font-size: 12px;
+}
+
+.ridge-stats-peak-text {
+  fill: var(--news-ink, #0f172a);
+  font-weight: 700;
+}
+
+.ridge-stats-bar {
+  fill: var(--stats-color);
+}
+
+.ridge-stats-bar.is-active {
+  fill-opacity: 0.75;
+}
+
+.ridge-stats-hit {
+  fill: transparent;
+  outline: none;
+}
+
+.ridge-stats-hit:focus-visible {
+  stroke: var(--news-accent, #2f4be0);
+  stroke-width: 2;
+}
+
+.ridge-stats-tooltip {
+  position: absolute;
+  top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 10px;
+  background: var(--news-surface, #fff);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 12%);
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.ridge-stats-tooltip strong {
+  color: var(--news-ink, #0f172a);
+  font-size: 14px;
+}
+
+.ridge-stats-tooltip span {
+  color: var(--news-muted, #5b6478);
+  font-size: 12px;
+}
+
+.ridge-stats-table-wrap {
+  overflow-x: auto;
+}
+
+.ridge-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ridge-stats-table th,
+.ridge-stats-table td {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--news-border, #e6e8ef);
+  color: var(--news-ink, #0f172a);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ridge-stats-table th:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+
+.ridge-stats-table thead th {
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .ridge-stats-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
