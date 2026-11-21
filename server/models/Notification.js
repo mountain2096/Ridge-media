@@ -22,6 +22,8 @@ const notificationSchema = new mongoose.Schema(
                 "comment",
                 "message",
                 "share",
+                "reply",
+                "mention",
                 "system"
             ],
             required: true

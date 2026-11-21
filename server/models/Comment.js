@@ -19,6 +19,9 @@ const commentSchema = new mongoose.Schema(
             required: true
         },
         status: { type: String, enum: ["active", "deleted"], default: "active" },
+        // Replies are one level deep: parentId always points to a top-level comment.
+        parentId: { type: mongoose.Schema.Types.ObjectId, ref: "Comment", default: null },
+        mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
         reactions: [
             {
                 _id: false,
