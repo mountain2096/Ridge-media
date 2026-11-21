@@ -359,6 +359,28 @@ function buildDemoData({ now = Date.now(), newId }) {
     addNotification({ to: "hoang_nam", from: "minh_anh", type: "like", reaction: "wow", hoursAgo: 18, isRead: true, postId: a2._id });
     addNotification({ to: "hoang_nam", from: "minh_anh", type: "message", hoursAgo: 3.2, isRead: true });
 
+    // ---- replies and @mentions ----
+    // Replies are one level deep and always point to a top-level comment.
+    const addReply = ({ author, post, parent, content, hoursAgo, mention }) => {
+        const reply = addComment({ author, post, content, hoursAgo });
+        reply.parentId = parent._id;
+        reply.mentions = mention ? [id(mention)] : [];
+        return reply;
+    };
+    const r1 = addReply({ author: "minh_anh", post: a1, parent: cm1, mention: "hoang_nam", hoursAgo: 30,
+        content: "@hoang_nam cảm ơn bạn nhé, cuối tuần mình gửi bản demo cho bạn xem." });
+    addReply({ author: "hoang_nam", post: a1, parent: cm1, mention: "minh_anh", hoursAgo: 28,
+        content: "@minh_anh nhớ cho mình xem thử phần thả cảm xúc nha!" });
+    const m1c = addComment({ author: "minh_anh", post: a2, hoursAgo: 12,
+        content: "@hoang_nam thử thả cảm xúc ở tin nhắn nữa nhé, hiện ngay giữa hai cửa sổ." });
+    m1c.mentions = [id("hoang_nam")];
+    addNotification({ to: "hoang_nam", from: "minh_anh", type: "reply", hoursAgo: 30, isRead: true, postId: a1._id, commentId: r1._id });
+    addNotification({ to: "hoang_nam", from: "minh_anh", type: "mention", hoursAgo: 12, isRead: false, postId: a2._id, commentId: m1c._id });
+    comments.forEach((comment) => {
+        if (comment.parentId === undefined) comment.parentId = null;
+        if (comment.mentions === undefined) comment.mentions = [];
+    });
+
     // ---- reactions and saved posts ----
     // Added last on purpose: nothing above (reports, scores, charts) changes.
     // `likes` keeps listing everybody who reacted, like the real app does.

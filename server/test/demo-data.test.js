@@ -186,3 +186,30 @@ test("demo data has reactions of all six kinds on posts, comments and messages, 
     assert.ok(presenter.savedPosts.length >= 2);
     assert.ok(presenter.savedPosts.every((postId) => activePostIds.has(postId)));
 });
+
+test("demo data has replies and mentions that follow the rules", () => {
+    const { data } = build();
+    const userIds = new Set(data.users.map((user) => user._id));
+    const commentById = new Map(data.comments.map((comment) => [comment._id, comment]));
+    const replies = data.comments.filter((comment) => comment.parentId);
+
+    assert.ok(replies.length >= 2, "there are replies to show");
+    for (const reply of replies) {
+        const parent = commentById.get(reply.parentId);
+        assert.ok(parent, "reply points to an existing comment");
+        assert.equal(parent.parentId, null, "replies are one level deep");
+        assert.equal(parent.postId, reply.postId, "reply is on the same post as its parent");
+        assert.ok(parent.createdAt <= reply.createdAt, "reply is newer than its parent");
+    }
+    const mentioning = data.comments.filter((comment) => comment.mentions.length);
+    assert.ok(mentioning.length >= 2, "there are comments with @mentions");
+    for (const comment of mentioning) {
+        for (const userId of comment.mentions) {
+            assert.ok(userIds.has(userId));
+            const username = data.users.find((user) => user._id === userId).username;
+            assert.ok(comment.content.includes(`@${username}`), "the mention appears in the text");
+        }
+    }
+    const kinds = new Set(data.notifications.map((item) => item.type));
+    assert.ok(kinds.has("reply") && kinds.has("mention"));
+});
