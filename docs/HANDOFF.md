@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 6 (branch `feat/jwt-revocation`).
+> Last updated: 2026-11-22, after Round 7 (branch `fix/client-401-signout`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-Branch chain (each branch created from the previous one): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → `test/reaction-list-coverage` → **`feat/jwt-revocation`** (current). Branch `docs/agents-branch-sync` was created from `feat/edited-post-label`; the test branch was created from that branch; this feature branch was created from the test branch. Create each new feature branch from the nearest preceding branch. Push normally; never use `--force`. No PR has been verified.
+Branch chain (each branch created from the previous one): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → `test/reaction-list-coverage` → `feat/jwt-revocation` → **`fix/client-401-signout`** (current). Branch `docs/agents-branch-sync` was created from `feat/edited-post-label`; the test branch was created from that branch; this feature branch was created from the test branch. `fix/client-401-signout` was created from `feat/jwt-revocation`. Create each new feature branch from the nearest preceding branch. Push normally; never use `--force`. No PR has been verified.
 
 ## 3. Features verified in code
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
@@ -21,6 +21,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 6: `node --test` passed 107 tests; client lint and build passed. The logout flow was not verified in a browser or against live MongoDB.
 - The PUT response merge fix passed client lint and build; code review confirmed it preserves the author, menu, and shared-post data, and applies the edited label on the feed and profile page.
 - `node --test` was not rerun after the client-only fix.
+- Round 7: client lint and build passed. The project owner manually confirmed in two tabs that logging out in one tab makes the other tab's token invalid. The new automatic sign-out on 401 has not yet been verified in a browser.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test, choose features, and run `git push` themselves.
@@ -30,6 +31,8 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Codex prompt rules: name the files to change; use `git add <specific file>`, never `git add .`; do not push or delete files (move only); run focused tests while iterating and the full checks at the end; report in about 12 lines or fewer.
 
 ## 6. Known limitations
+Only `AppLayout`'s profile load and heartbeat handle 401 responses. Other fetch calls still show errors until the next heartbeat, at most 60 seconds later or when the tab regains focus.
+
 General: realtime currently runs in a single process (a Redis adapter is needed to scale); read receipts apply only to two-person conversations; logout invalidates all of the user's devices; `changePassword` does not yet revoke tokens; no guest profile page; posts edited before this change have no edited label because they lack `editedAt`; like notifications are not grouped; comment replies are limited to two levels; stickers are not uploaded or animated; `FeedPage.jsx` is still about 1,250 lines.
 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
@@ -46,6 +49,7 @@ Completed in the previous round: reaction lists work for both comments and posts
 | 4 | Retained reaction lists while loading more; saved `editedAt` when content/media actually changes and showed the post label; preserved author/shared-post data when merging edit responses on the feed and profile page | 98 tests; lint/build passed; merge fix reviewed in code | `1d957c2`, `1325b25`, `9212f66`, `aec963e`, `d3cc2e2`, `055d78d` |
 | 5 | Updated AGENTS.md for the current branch; added reaction-list tests (legacy likes, limit clamping, empty/out-of-range pages) | 102 tests passing; docs and test changes only | `861f922`, `9cf576d`, `020960d` |
 | 6 | Added JWT token-version revocation on logout and password reset; added client logout call and backend coverage | 107 tests passing; lint/build passed; logout not verified in a browser or against live MongoDB | `f638a91`, `c531925`, `7eef642` |
+| 7 | Sign out locally when profile load or heartbeat receives 401 | Client lint and build passed; automatic sign-out not verified in a browser | `a3a98c9` |
 
 ## 8. Possible next work (project owner chooses)
 Infinite scroll instead of the "Tải thêm bài viết" button; guest profile page; split up `FeedPage.jsx`.
