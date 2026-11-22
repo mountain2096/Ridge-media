@@ -53,7 +53,7 @@ Completed in the previous round: reaction lists work for both comments and posts
 | 6 | Added JWT token-version revocation on logout and password reset; added client logout call and backend coverage | 107 tests passing; lint/build passed; logout not verified in a browser or against live MongoDB | `f638a91`, `c531925`, `7eef642` |
 | 7 | Sign out locally when profile load or heartbeat receives 401 | Client lint and build passed; automatic sign-out not verified in a browser | `a3a98c9` |
 | 8 | Add public read-only guest profile and post endpoints with locked-author filtering and reaction counts | 112 tests passed; client untouched; not verified against live MongoDB | `476ef96`, `92afb9a` |
-| 9 | Add read-only guest feed and profile UI with token-based routing | Client lint and build passed; guest UI not verified in a browser or against a live MongoDB | `7e18cd3`, `ad31135`, `adff8b4`, `f732ad6` |
+| 9 | Add read-only guest feed and profile UI with token-based routing | Client lint and build passed; guest UI not verified in a browser or against a live MongoDB | `7e18cd3`, `ad31135`, `adff8b4`, `f732ad6`, `a961d3a` |
 
 ## 8. Possible next work (project owner chooses)
 Infinite scroll instead of the "Tải thêm bài viết" button; split up `FeedPage.jsx`.
