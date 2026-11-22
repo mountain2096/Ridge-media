@@ -14,6 +14,7 @@ import PostCard from "../components/PostCard.jsx";
 import ContactsPanel from "../components/feed/ContactsPanel.jsx";
 import FriendsView from "../components/feed/FriendsView.jsx";
 import ConnectionsView from "../components/feed/ConnectionsView.jsx";
+import StoryStrip from "../components/feed/StoryStrip.jsx";
 import StoryComposer from "../components/StoryComposer.jsx";
 import StoryViewer from "../components/StoryViewer.jsx";
 import "../newsfeed.css";
@@ -570,6 +571,15 @@ function FeedPage({ section = "feed" }){
         setPeopleError(requestError.message);
       }
     }
+    function handleOpenStory(group) {
+      setActiveStoryGroup(group);
+      setActiveStoryIndex(0);
+    }
+    function handleAddStory() {
+      setStoryFeedback("");
+      setStoryFile(null);
+      setIsStoryComposerOpen(true);
+    }
     async function handleCreateStory(event) {
       event.preventDefault();
       const form = event.currentTarget;
@@ -935,48 +945,7 @@ function FeedPage({ section = "feed" }){
                   </h1>
                 )}
                 {activeSection === "feed" && <>
-                <div className="stories-card card">
-                  {storyFeedback && <p className="feedback-message error">{storyFeedback}</p>}
-                  <div className="story-list">
-                    <div className="story-item story-item-self">
-                      <span className="story-avatar-wrap">
-                        <button className="story-avatar-button" type="button" aria-label={myStoryGroup ? "Xem story của bạn" : "Ảnh đại diện của bạn"} onClick={() => { if (myStoryGroup) { setActiveStoryGroup(myStoryGroup); setActiveStoryIndex(0); } }}>
-                          <span className={`story-ring ${myStoryGroup ? "" : "story-ring-add"}`}>
-                            <span className="story-avatar story-self">
-                              {currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
-                            </span>
-                          </span>
-                        </button>
-                        <button className="story-add-button" type="button" aria-label="Thêm story" onClick={() => { setStoryFeedback(""); setStoryFile(null); setIsStoryComposerOpen(true); }}>
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-                        </button>
-                      </span>
-                      <span className="story-name">Tin của bạn</span>
-                    </div>
-                    {storyGroups
-                      .filter((group) => group.author._id !== currentUser?._id)
-                      .map((group) => (
-                        <button
-                          className="story-item story-item-friend"
-                          key={group.author._id}
-                          type="button"
-                          onClick={() => {
-                            setActiveStoryGroup(group);
-                            setActiveStoryIndex(0);
-                          }}
-                        >
-                          <span className="story-ring">
-                            <span className="story-avatar story-blue">
-                              {group.author.profilePicture ? (
-                                <img src={group.author.profilePicture} alt="" />
-                              ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
-                            </span>
-                          </span>
-                          <span className="story-name">{group.author.username}</span>
-                        </button>
-                      ))}
-                  </div>
-                </div>
+                <StoryStrip currentUser={currentUser} myStoryGroup={myStoryGroup} storyGroups={storyGroups} storyFeedback={storyFeedback} onOpenStory={handleOpenStory} onAddStory={handleAddStory} />
 
                 <form className="create-post-card card" onSubmit={handleCreatePost}>
                   <h2>Tạo bài viết</h2>
