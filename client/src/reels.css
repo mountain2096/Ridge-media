@@ -4,9 +4,11 @@
   top: var(--reels-top, 56px);
   right: 0;
   bottom: 0;
-  left: 250px;
+  left: var(--reels-left, 250px);
   background: #090a0d;
 }
+
+.home-columns-single > .reels-page { width: auto; max-width: none; margin: 0; }
 
 .reels-container {
   width: 100%;
@@ -123,7 +125,6 @@
 .reel-item button:focus-visible, .reel-author a:focus-visible, .reel-state button:focus-visible, .reel-page-error button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
 @media (max-width: 900px) {
-  .reels-page { left: 0; }
   .reel-comments-panel { top: auto; right: 0; bottom: 0; left: 0; width: 100%; height: 70dvh; border-radius: 16px 16px 0 0; }
 }
 

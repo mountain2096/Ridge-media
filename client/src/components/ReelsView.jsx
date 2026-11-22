@@ -70,7 +70,8 @@ function ReelsView() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể tải Reels.");
       if (!Array.isArray(data.posts)) throw new Error("Không thể tải Reels.");
-      setPosts((current) => nextPage === 1 ? data.posts : [...current, ...data.posts.filter((post) => !current.some((item) => item._id === post._id))]);
+      const playablePosts = data.posts.filter((post) => !post.originalUnavailable && (typeof post.video === "string" ? post.video : post.video?.url || post.video?.src));
+      setPosts((current) => nextPage === 1 ? playablePosts : [...current, ...playablePosts.filter((post) => !current.some((item) => item._id === post._id))]);
       setPage(nextPage);
       setPages(data.pagination?.pages || 1);
     } catch (requestError) {
@@ -262,9 +263,12 @@ function ReelsView() {
     const header = document.querySelector(".home-topbar");
     const sidebar = document.querySelector(".home-sidebar");
     const updateOffset = () => {
-      const narrow = window.matchMedia("(max-width: 900px)").matches;
-      const offset = narrow ? sidebar?.getBoundingClientRect().bottom : header?.getBoundingClientRect().bottom;
-      document.documentElement.style.setProperty("--reels-top", `${Math.max(0, offset || 0)}px`);
+      const sidebarBounds = sidebar?.getBoundingClientRect();
+      const topBar = sidebarBounds && sidebarBounds.width >= window.innerWidth - 2;
+      const top = topBar ? sidebarBounds.bottom : header?.getBoundingClientRect().bottom;
+      const left = topBar ? 0 : sidebarBounds?.right || 250;
+      document.documentElement.style.setProperty("--reels-top", `${Math.max(0, top || 0)}px`);
+      document.documentElement.style.setProperty("--reels-left", `${left}px`);
     };
     updateOffset();
     const observer = new ResizeObserver(updateOffset);
@@ -275,6 +279,7 @@ function ReelsView() {
       observer.disconnect();
       window.removeEventListener("resize", updateOffset);
       document.documentElement.style.removeProperty("--reels-top");
+      document.documentElement.style.removeProperty("--reels-left");
     };
   }, []);
 
