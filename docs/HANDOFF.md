@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 17 (branch `feat/infinite-scroll`).
+> Last updated: 2026-11-22, after Round 18 (branch `feat/reels-api`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,10 +10,11 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). New branches are created from main. Current branch: `feat/infinite-scroll`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). New branches are created from main. Current branch: `feat/reels-api`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
+GET `/api/posts` supports the optional `media=video` filter.
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
@@ -33,6 +34,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 15: client lint and build passed; `node --test` passed all 114 tests. Friends, connections, and feed right-column UI were not verified in a browser.
 - Round 16: `node --test` passed all 114 tests; client lint and build passed. Story strip and post composer were not verified in a browser.
 - Round 17: `node --test` passed all 114 tests; client lint and build passed. Infinite scroll was not verified in a browser.
+- Round 18: `node --test` passed 116 tests; client not touched; media filter not verified against live MongoDB.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -40,12 +42,14 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - **Codex CLI (Ponytail plugin, Full level)**: code, lint, build, and test.
 - One-feature workflow: open `codex` → `/new` → select "Use current Git worktree" → paste the prompt (Codex creates the branch) → Codex makes a small commit and pushes its feature branch with `git push -u origin <branch>` → project owner manually tests → Claude reviews the pushed diff → update the handoff.
 - Codex prompt rules: name the files to change; use `git add <specific file>`, never `git add .`; push the branch normally at the end; never force-push or delete files (move only); run focused tests while iterating and the full checks at the end; report in about 12 lines or fewer.
+- Playwright screenshots, traces and other temporary output must be saved under $env:TEMP, never inside the repository.
 
 ## 6. Known limitations
 Only `AppLayout`'s profile load and heartbeat handle 401 responses. Other fetch calls still show errors until the next heartbeat, at most 60 seconds later or when the tab regains focus.
 
 General: realtime currently runs in a single process (a Redis adapter is needed to scale); read receipts apply only to two-person conversations; logout invalidates all of the user's devices; Socket.IO checks `tokenVersion` only at the handshake (`server/socket.js`), so a socket already open on another device stays connected after logout, password change, or password reset until it reconnects; guests will not see stories, comments, or reaction lists by design; the public feed endpoint was removed; the guest login gate is a client-side nudge only and can be bypassed by calling `/api/public/*` directly; guest views duplicate some `PostCard` markup, so UI changes there may need mirroring in `GuestPostCard`; a stale guest token routes through `AppLayout` and signs the user out to the login screen; posts edited before this change have no edited label because they lack `editedAt`; like notifications are not grouped; comment replies are limited to two levels; stickers are not uploaded or animated; `FeedPage.jsx` is 1,048 lines.
 Infinite scroll uses IntersectionObserver; if a page request fails the feed shows the error and hides the posts, as before.
+The `/reels` view still filters posts client-side until Round 19.
 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
@@ -70,9 +74,10 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 15 | Extracted FriendPresence, ContactsPanel, FriendsView, and ConnectionsView from FeedPage | 114 tests passed; client lint/build passed; friends, connections, and feed right column not verified in a browser | `3e1de62`, `a740a45`, `8dfc6a7`, `a7ce940`, `7302c67` |
 | 16 | Re-indented extracted views; extracted and wired StoryStrip and PostComposer | 114 tests passed; client lint/build passed; story strip and composer not verified in a browser | `be2a44b`, `d35083f`, `b5b58e6`, `35ec3cc`, `9ee0488` |
 | 17 | Load more feed posts on scroll with an IntersectionObserver sentinel and button fallback | 114 tests passed; client lint/build passed; not verified in a browser | `956ca21`, `25e5a83` |
+| 18 | Add the server-side `media=video` filter to GET `/api/posts`; document temporary Playwright output location | 116 tests passed; client not touched; media filter not verified against live MongoDB | `f41ffa8`, `bd9087b`, `f2fa663`, `1a557cc` |
 
 ## 8. Possible next work (project owner chooses)
-Split `FeedPage.jsx` in stages (Round 15: presentational views, done; Round 16: story strip and composer (done); Round 17+: hooks); server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes.
+Split `FeedPage.jsx` in stages (Round 15: presentational views, done; Round 16: story strip and composer (done); Round 19+: hooks); Reels view (Round 19); server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
