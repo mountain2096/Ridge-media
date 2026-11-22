@@ -35,7 +35,7 @@ Run commands from the repository root unless noted.
 3. Create the root `.env` using `.env.example` as a template and configure the values for your machine. `.env` is ignored by Git and is not tracked; a new machine must create its own `.env` from `.env.example`.
 4. Start both apps in one terminal with `npm run dev:all`, then open `http://localhost:5173`.
 
-You can also use two terminals: `npm run dev` from the root starts the API; `npm run dev:client` from the root starts Vite. `npm start` starts the API without nodemon. The backend defaults to port 5000; Vite defaults to 5173 and may select another free port if 5173 is occupied. The client currently calls `http://localhost:5000` directly, so ensure the API is reachable there.
+You can also use two terminals: `npm run dev` from the root starts the API; `npm run dev:client` from the root starts Vite. `npm start` starts the API without nodemon. The backend defaults to port 5000; Vite defaults to 5173 and may select another free port if 5173 is occupied. The client reads the API URL from `VITE_API_URL` via `client/src/lib/api.js` (default `http://localhost:5000`).
 
 Useful checks:
 
@@ -50,7 +50,7 @@ The names in `.env.example` are `PORT`, `MONGO_URI`, `JWT_SECRET`, `EMAIL_USER`,
 
 ## Work rules
 
-- Work on a task branch; for this workstream the current branch is `feat/ui-redesign`.
+- Work on a task branch; for this workstream the current branch is `feat/realtime-messaging`.
 - Keep changes focused and make small commits with descriptive messages.
 - Run client lint and build before committing UI/client changes. Run the relevant backend tests when changing server behavior.
 - Never commit `.env`, API keys, passwords, or tokens. Do not run `git push --force`.
@@ -65,7 +65,7 @@ Use `docs/design/newsfeed-reference.html` as the visual reference for the news f
 
 `docs/AUDIT.md` describes 22 audited use cases. At the time of that document, most API flows were implemented; several are explicitly partial, including JWT logout revocation, public guest profiles/search, edited-post labels, grouped like notifications, and some direct media URL validation. Read the audit table for the detailed status; verify current handlers before changing them.
 
-The current branch is `feat/ui-redesign`, tracking `origin/feat/ui-redesign`. The prior work session targeted an existing PR from `feat/ui-redesign` to `fix/audit-roadmap`; its PR number and URL were not verified in this session (`gh` was unavailable). Check the PR in GitHub before assuming its metadata or remote synchronization.
+The current workstream branch is `feat/realtime-messaging`, tracking `origin/feat/realtime-messaging`.
 
 Recent committed UI work (verified from `git log`):
 
@@ -79,7 +79,7 @@ Recent committed UI work (verified from `git log`):
 
 The latest work added an authenticated `AppLayout`, a profile page with profile/post data, profile links from feed and messages, profile-related CSS, and server query/response changes supporting profile posts and relationships. The auth/layout routes were reorganized in `App.jsx`. During browser verification a blank-screen redirect loop was reproduced: an index route inside the protected pathless route redirected `/` to `/feed`, and unauthenticated `RequireAuth` redirected it back to `/`. That protected index route was removed; unauthenticated `/` now renders the auth screen and `AuthRoute` sends an authenticated visit to `/feed`.
 
-Verification at the time of this guide: `npm run lint --prefix client` passed; `npm run build --prefix client` passed; `node --test` passed all 16 backend tests. Browser verification with Edge DevTools confirmed that `/` renders the auth form after the redirect fix. API/database startup was not validated successfully (see environment note below).
+Verification at the time of this guide: `npm run lint --prefix client` passed; `npm run build --prefix client` passed; `node --test` passed all 92 backend tests. Browser verification with Edge DevTools confirmed that `/` renders the auth form after the redirect fix. API/database startup was not validated successfully (see environment note below).
 
 The visual features called out in the previous task—post menu, liked heart, comments, and profile settings—are already present in committed UI work. `docs/design/newsfeed-reference.html` was untracked at inspection and is intended to be included with this guide. Recheck `git status` and the final commit after this snapshot.
 
@@ -90,5 +90,13 @@ Known environment issue from the last local run: starting the API attempted to c
 1. Check `git status`, review each diff, and confirm the intended scope before staging. Never stage `.env`.
 2. Run `npm run lint --prefix client` and `npm run build --prefix client`; when server files changed, also run `node --test` and report any environment-dependent failures.
 3. Start API and client, verify the browser renders `/` and authenticated routes, and confirm the API can reach the configured MongoDB. A health response alone does not verify database-backed flows.
-4. Commit the reviewed work in small, descriptive commits and push normally to `feat/ui-redesign`; do not force-push. Verify the existing PR reflects the pushed branch.
+4. Commit the reviewed work in small, descriptive commits and push normally to `feat/realtime-messaging`; do not force-push. Verify the existing PR reflects the pushed branch.
 5. Revisit the partial items in `docs/AUDIT.md` only when they are in the requested scope.
+
+## Working efficiently (for agents)
+
+- On Windows PowerShell, `npm` may be blocked by execution policy; use `npm.cmd` instead (e.g. `npm.cmd run lint --prefix client`).
+- Only read and edit files needed for the task; do not scan the whole repo.
+- While iterating, run only the relevant test file (`node --test server/test/<file>.test.js`). Run the full `node --test`, and client lint/build, once at the end. Skip client lint/build if only the backend changed.
+- Keep final replies short: files changed, test counts, anything that needs my decision.
+- docs/STATUS.md is an older snapshot (2026-11-20, branch `feat/ui-redesign`, 16 tests); verify current status against code and `git log`.
