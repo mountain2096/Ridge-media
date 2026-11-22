@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 18 (branch `feat/reels-api`).
+> Last updated: 2026-11-22, after Round 19 (branch `fix/nav-responsive`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). New branches are created from main. Current branch: `feat/reels-api`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). New branches are created from main. Round 19 branches from `main`. Current branch: `fix/nav-responsive`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -35,6 +35,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 16: `node --test` passed all 114 tests; client lint and build passed. Story strip and post composer were not verified in a browser.
 - Round 17: `node --test` passed all 114 tests; client lint and build passed. Infinite scroll was not verified in a browser.
 - Round 18: `node --test` passed 116 tests; client not touched; media filter not verified against live MongoDB.
+- Round 19: fixed sidebar rail labels and added titles to sidebar links; corrected narrow top bar search sizing and wrapped friends-list actions below names. Client lint/build passed. Playwright used mocked API responses on `/feed`, `/friends`, and `/messages` at 820x1100, 600x900, and 390x844; a sample friend confirmed both connection actions wrap below the full name at 390px. Screenshots are under `%TEMP%` as `nav-responsive-<route>-<width>x<height>.png`, plus `nav-responsive-friends-sample-390x844.png`.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -77,7 +78,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 18 | Add the server-side `media=video` filter to GET `/api/posts`; document temporary Playwright output location | 116 tests passed; client not touched; media filter not verified against live MongoDB | `f41ffa8`, `bd9087b`, `f2fa663`, `1a557cc` |
 
 ## 8. Possible next work (project owner chooses)
-Split `FeedPage.jsx` in stages (Round 15: presentational views, done; Round 16: story strip and composer (done); Round 19+: hooks); Reels view (Round 19); server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes.
+Split `FeedPage.jsx` in stages (Round 15: presentational views, done; Round 16: story strip and composer (done); future: hooks); Reels view; server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Responsive feed, friends, and messages layouts were checked at the requested viewports in Round 19.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.

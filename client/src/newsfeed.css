@@ -1648,12 +1648,9 @@
     padding: 12px;
   }
 
-  .news-search {
-    flex-basis: 100%;
-  }
-
   .news-topbar-right {
-    width: 100%;
+    flex: 0 0 auto;
+    width: auto;
     justify-content: flex-end;
   }
 
@@ -1667,16 +1664,23 @@
   }
 
   .friend-row {
+    flex-wrap: wrap;
     gap: 8px;
   }
+
+  .friend-row .friend-name { flex: 1 1 calc(100% - 56px); }
+  .friend-row > .btn-outline { flex: 0 0 calc(100% - 52px); margin-left: 52px; }
 
   .connection-friend-row {
     gap: 7px;
   }
 
-  .connection-friend-row .connection-person-name {
-    flex-basis: calc(100% - 56px);
+  .connections-page .connection-friend-row .connection-person-name {
+    flex: 0 0 calc(100% - 56px);
   }
+
+  .connection-friend-row > button { flex-shrink: 0; }
+  .connection-friend-row > button:first-of-type { margin-left: 48px; }
 
   .btn-outline {
     padding: 0 12px;
