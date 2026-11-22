@@ -317,7 +317,7 @@ function ReelsView() {
 
   return (
     <section className="reels-page" aria-label="Reels">
-      <div className="reels-container" ref={containerRef} tabIndex={0} onKeyDown={handleKeyDown} aria-label="Danh sách Reels">
+      <div className="reels-container" data-lenis-prevent ref={containerRef} tabIndex={0} onKeyDown={handleKeyDown} aria-label="Danh sách Reels">
         {loading && posts.length === 0 && <p className="reel-state">Đang tải Reels...</p>}
         {error && posts.length === 0 && <div className="reel-state"><p>{error || "Không thể tải Reels."}</p><button type="button" onClick={() => loadPage(failedPage)}>Thử lại</button></div>}
         {!loading && !error && posts.length === 0 && <p className="reel-state">Chưa có Reels nào. Hãy đăng một bài viết kèm video để bài xuất hiện tại đây.</p>}

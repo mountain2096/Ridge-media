@@ -593,12 +593,12 @@ function ProfilePage({ profileId, embedded = false }) {
       </div>}
 
       {activeTab === "about" ? (
-        <section className="profile-tab-panel profile-about-panel">
+        <section key={activeTab} className="profile-tab-panel profile-about-panel profile-tab-motion">
           <header className="profile-panel-heading"><h2>Giới thiệu</h2>{aboutMenu}</header>
           {bioContent}
         </section>
       ) : activeTab === "friends" ? (
-        <section className="profile-tab-panel profile-about-panel">
+        <section key={activeTab} className="profile-tab-panel profile-about-panel profile-tab-motion">
           <h2>Bạn bè</h2>
           <label className="profile-friend-search-label" htmlFor="profile-friend-search">Tìm bạn bè</label>
           <input id="profile-friend-search" className="profile-friend-search" type="search" placeholder="Tìm bạn bè" value={friendSearch} onChange={(event) => setFriendSearch(event.target.value)} />
@@ -610,8 +610,8 @@ function ProfilePage({ profileId, embedded = false }) {
           </div> : <p>Không tìm thấy bạn bè nào.</p>}
         </section>
       ) : (
-        <section className="profile-content-grid">
-          <aside className="profile-left-column">
+        <section key={activeTab} className="profile-content-grid profile-tab-motion">
+          <aside className="profile-left-column" data-lenis-prevent>
             <section className="profile-info-card">
               <header className="profile-panel-heading"><h2>Giới thiệu</h2>{aboutMenu}</header>
               {bioContent}

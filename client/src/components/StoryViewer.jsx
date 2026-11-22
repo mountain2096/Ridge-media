@@ -90,7 +90,7 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
   const authorName = activeGroup.author?.username || "Người dùng";
   const content = (
     <div className="story-viewer-backdrop" onPointerDown={() => setPaused(true)} onPointerUp={() => setPaused(false)} onPointerCancel={() => setPaused(false)}>
-      <section className="story-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="story-viewer-title" ref={dialogRef} tabIndex={-1}>
+      <section className="story-viewer-dialog" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="story-viewer-title" ref={dialogRef} tabIndex={-1}>
         <div className="story-progress-list" aria-label="Tiến trình story">
           {activeGroup.items.map((item, index) => <span className="story-progress-track" key={item._id}>
             <span

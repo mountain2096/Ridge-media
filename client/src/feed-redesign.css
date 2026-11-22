@@ -261,3 +261,28 @@ body:has(.home-layout) { background: var(--news-bg); }
 .notification-comment-highlight { border-radius: 12px; outline: 2px solid var(--news-accent); outline-offset: 3px; animation: notification-comment-flash 2s ease-out; }
 @keyframes notification-comment-flash { from { background: #E6EBFF; } to { background: transparent; } }
 @media (prefers-reduced-motion: reduce) { .notification-comment-highlight { animation: none; background: #E6EBFF; } }
+/* Shared interaction and route motion; reduced-motion users keep static controls and pages. */
+button,
+a[class*="button"],
+.header-icon-link,
+.profile-menu-trigger,
+.home-layout .home-menu a {
+  transition: transform 180ms cubic-bezier(.2, .8, .2, 1), filter 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+button:hover:not(:disabled),
+a[class*="button"]:hover,
+.header-icon-link:hover,
+.profile-menu-trigger:hover,
+.home-layout .home-menu a:hover { filter: brightness(.97); }
+button:active:not(:disabled):not(.ridge-video-center):not(.story-add-button):not(.story-tap-zone),
+a[class*="button"]:active,
+.header-icon-link:active,
+.profile-menu-trigger:active,
+.home-layout .home-menu a:active { transform: scale(.96); }
+.route-motion, .profile-tab-motion { animation: ridge-content-enter 250ms ease-out; }
+@keyframes ridge-content-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  button, a[class*="button"], .header-icon-link, .profile-menu-trigger,
+  .home-layout .home-menu a { transition: none; }
+  .route-motion, .profile-tab-motion { animation: none; }
+}

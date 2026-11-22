@@ -504,7 +504,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
           </header>
           <label className="ridge-visually-hidden" htmlFor="message-friend-search">Tìm bạn bè</label>
           <input id="message-friend-search" className="ridge-list-search" type="search" aria-label="Tìm bạn bè" placeholder="Tìm bạn bè" value={friendSearch} onChange={(event) => setFriendSearch(event.target.value)} />
-          <div className="ridge-conversation-scroll ridge-friend-picker-list">
+          <div className="ridge-conversation-scroll ridge-friend-picker-list" data-lenis-prevent>
             {isLoadingFriends && <p className="ridge-list-state" role="status">Đang tải bạn bè...</p>}
             {friendError && <p className="ridge-list-error" role="alert">{friendError}</p>}
             {conversationActionError && <p className="ridge-list-error" role="alert">{conversationActionError}</p>}
@@ -523,7 +523,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
           </header>
           <label className="ridge-visually-hidden" htmlFor="message-conversation-search">Tìm kiếm trên Tin nhắn</label>
           <input id="message-conversation-search" className="ridge-list-search" type="search" aria-label="Tìm kiếm trên Tin nhắn" placeholder="Tìm kiếm trên Tin nhắn" value={conversationSearch} onChange={(event) => setConversationSearch(event.target.value)} />
-          <div className="ridge-conversation-scroll">
+          <div className="ridge-conversation-scroll" data-lenis-prevent>
             {isLoadingConversations && <p className="ridge-list-state">Đang tải hội thoại...</p>}
             {conversationActionError && !showChatPane && <p className="ridge-list-error" role="alert">{conversationActionError}</p>}
             {!isLoadingConversations && conversations.length === 0 && !conversationSearch.trim() && (
@@ -574,7 +574,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               </Link>
               <Link to={`/profile/${otherParticipant?._id}`}>{otherParticipant?.username || "Người dùng"}</Link>
             </header>
-            <div className="message-list ridge-message-list" aria-live="polite" ref={messageListRef}>
+            <div className="message-list ridge-message-list" data-lenis-prevent aria-live="polite" ref={messageListRef}>
               {isLoadingMessages && <p className="ridge-message-state">Đang tải tin nhắn...</p>}
               {!isLoadingMessages && messages.length === 0 && (
                 <p className="empty-messages">Hãy gửi lời chào đầu tiên.</p>

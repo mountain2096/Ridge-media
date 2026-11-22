@@ -14,6 +14,7 @@ import '@fontsource/be-vietnam-pro/latin-500.css'
 import '@fontsource/be-vietnam-pro/latin-600.css'
 import '@fontsource/be-vietnam-pro/latin-700.css'
 import './feed-redesign.css'
+import 'lenis/dist/lenis.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

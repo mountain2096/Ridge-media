@@ -49,7 +49,7 @@ export default function ShareDialog({ post, onShare, onClose }) {
   }
 
   return <div className="ridge-share-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose(); }}>
-    <section className="ridge-share-dialog" role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" ref={dialogRef} tabIndex="-1">
+    <section className="ridge-share-dialog" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" ref={dialogRef} tabIndex="-1">
       <header><h2 id="share-dialog-title">Chia sẻ bài viết</h2><button type="button" aria-label="Đóng" onClick={onClose}>×</button></header>
       <div className="ridge-share-preview"><strong>{original.authorId?.username || "Người dùng"}</strong><p>{(original.content || "").split("\n")[0]}</p>{original.image ? <img src={original.image} alt="" /> : original.video ? <span aria-label="Video">▶ Video</span> : null}</div>
       <div className="ridge-share-feed-block"><textarea aria-label="Viết gì đó về bài viết này..." placeholder="Viết gì đó về bài viết này..." maxLength={500} value={caption} onChange={(event) => setCaption(event.target.value)} /><small>{caption.length}/500</small><button className="ridge-share-option" type="button" disabled={busy} onClick={() => void shareToFeed()}>{busy ? "Đang chia sẻ..." : "Chia sẻ lên bảng tin"}</button></div>

@@ -5,6 +5,7 @@ import { ConfirmProvider } from "./components/ConfirmDialog.jsx";
 import UserSearch from "./components/UserSearch.jsx";
 import LiveToast from "./components/LiveToast.jsx";
 import { reactionInfo } from "./lib/reactions.js";
+import Lenis from "lenis";
 import { connectSocket, disconnectSocket, getSocket } from "./lib/socket.js";
 import "./newsfeed.css";
 
@@ -90,6 +91,11 @@ function signOutLocal(stopHeartbeat, userId, navigate) {
 function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const lenis = new Lenis({ autoRaf: true, prevent: (node) => node.closest('[data-lenis-prevent], [role="dialog"], .ridge-dialog-backdrop, .ridge-share-backdrop, .story-viewer-backdrop') !== null || ["auto", "scroll"].includes(getComputedStyle(node).overflowY) });
+    return () => lenis.destroy();
+  }, []);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [messageCount, setMessageCount] = useState(0);
@@ -398,7 +404,7 @@ function AppLayout() {
         </nav>
       </aside>
       <section className="home-content">
-        <div className={"home-columns " + (isFeed ? "" : "home-columns-single")}><Outlet context={outletContext} /></div>
+        <div className={"home-columns " + (isFeed ? "" : "home-columns-single")}><div className="route-motion" key={location.pathname}><Outlet context={outletContext} /></div></div>
       </section>
       <LiveToast toast={liveToast} onOpen={openLiveToast} onDismiss={() => setLiveToast(null)} />
     </main>
