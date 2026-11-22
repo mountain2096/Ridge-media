@@ -63,6 +63,8 @@ Use `docs/design/newsfeed-reference.html` as the visual reference for the news f
 
 ## Work completed and current state
 
+Latest handoff (branch chain, per-feature log, known limits, workflow): docs/HANDOFF.md. Update it after every finished feature.
+
 `docs/AUDIT.md` describes 22 audited use cases. At the time of that document, most API flows were implemented; several are explicitly partial, including JWT logout revocation, public guest profiles/search, edited-post labels, grouped like notifications, and some direct media URL validation. Read the audit table for the detailed status; verify current handlers before changing them.
 
 The current workstream branch is `feat/realtime-messaging`, tracking `origin/feat/realtime-messaging`.
