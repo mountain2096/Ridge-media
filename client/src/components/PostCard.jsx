@@ -144,10 +144,10 @@ function PostCard({
       </>}
 
       <div className="post-stats">
-        {reactionSummary.total > 0 && <button className="post-likes ridge-react-summary" type="button" aria-label={`${reactionSummary.total} lượt thả cảm xúc`} onClick={() => setReactionsOpen(true)}>
+        {reactionSummary.total > 0 ? <button className="post-likes ridge-react-summary" type="button" aria-label={`${reactionSummary.total} lượt thả cảm xúc`} onClick={() => setReactionsOpen(true)}>
           <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>
           <span>{reactionSummary.total} lượt thích</span>
-        </button>}
+        </button> : <span className="post-reaction-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 5.3-8.8 10.1-8.8 10.1S3.2 14 3.2 8.7A4.2 4.2 0 0 1 12 6.8a4.2 4.2 0 0 1 8.8 1.9Z" /></svg>Hãy là người đầu tiên thả cảm xúc</span>}
         <button className="post-comment-count" type="button" onClick={() => onToggleComments?.(post)}>{post.commentsCount ?? 0} bình luận</button>
       </div>
       <div className="post-actions">
