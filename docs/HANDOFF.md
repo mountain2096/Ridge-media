@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 11 (branch `fix/guest-profile-only`).
+> Last updated: 2026-11-22, after Round 12 (branch `fix/require-auth-context`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-Branch chain (each branch created from the previous one): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → `test/reaction-list-coverage` → `feat/jwt-revocation` → `fix/client-401-signout` → `feat/guest-public-api` → `feat/guest-ui` → `fix/guest-routes-layout` → **`fix/guest-profile-only`** (current). Branch `docs/agents-branch-sync` was created from `feat/edited-post-label`; the test branch was created from that branch; the `feat/guest-public-api` branch was created from `fix/client-401-signout`; `feat/guest-ui` was created from that branch; `fix/guest-routes-layout` was created from `feat/guest-ui`; this branch was created from `fix/guest-routes-layout`. Create each new feature branch from the nearest preceding branch. Push normally; never use `--force`. No PR has been verified.
+Branch chain (each branch created from the previous one): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → `test/reaction-list-coverage` → `feat/jwt-revocation` → `fix/client-401-signout` → `feat/guest-public-api` → `feat/guest-ui` → `fix/guest-routes-layout` → `fix/guest-profile-only` → **`fix/require-auth-context`** (current). Branch `docs/agents-branch-sync` was created from `feat/edited-post-label`; the test branch was created from that branch; the `feat/guest-public-api` branch was created from `fix/client-401-signout`; `feat/guest-ui` was created from that branch; `fix/guest-routes-layout` was created from `feat/guest-ui`; `fix/guest-profile-only` was created from `fix/guest-routes-layout`; this branch was created from `fix/guest-profile-only`. Create each new feature branch from the nearest preceding branch. Push normally; never use `--force`. No PR has been verified.
 
 ## 3. Features verified in code
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
@@ -26,6 +26,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 9: client lint and build passed; guest UI was not verified in a browser or against a live MongoDB instance.
 - Round 10: client lint and build passed; route behavior was verified by reading the route tree only, not in a browser.
 - Round 11: `node --test` passed 113 tests; client lint and build passed. Guest route and login-gate behavior was not verified in a browser or against a live MongoDB instance.
+- Round 12: client lint and build passed. Forwarded AppLayout outlet context through RequireAuth; not yet verified in a browser.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -57,6 +58,7 @@ Completed in the previous round: reaction lists work for both comments and posts
 | 8 | Add public read-only guest profile and post endpoints with locked-author filtering and reaction counts | 112 tests passed; client untouched; not verified against live MongoDB | `476ef96`, `92afb9a` |
 | 9 | Add read-only guest feed and profile UI with token-based routing | Client lint and build passed; guest UI not verified in a browser or against a live MongoDB | `7e18cd3`, `ad31135`, `adff8b4`, `f732ad6`, `a961d3a` |
 | 11 | Restrict guest access to profiles, remove public feed endpoint, and add blocking login gate after 8 seconds | 113 tests; lint/build passed; not verified in a browser or against live MongoDB | `2a4195a`, `bbf10f5` |
+| 12 | Forward AppLayout outlet context through RequireAuth | Client lint and build passed; not verified in a browser | `df41f56` |
 
 ## 8. Possible next work (project owner chooses)
 Infinite scroll instead of the "Tải thêm bài viết" button; split up `FeedPage.jsx`.
@@ -66,4 +68,5 @@ Infinite scroll instead of the "Tải thêm bài viết" button; split up `FeedP
 - Do not run seed scripts or migrations against a real database: the seed script should only run against a database whose name contains `demo`.
 - Backup outside the repo: `C:\Ridge_backup\2026-11-22` (old patch file, `_share/`); do not bring it back into the repo.
 - Do not commit `.env`, keys, passwords, or tokens.
+- Any component rendering `<Outlet />` between AppLayout and a page must forward the context: `<Outlet context={useOutletContext()} />`.
 - Docs language: this file and AGENTS.md are in English; write Codex prompts in English.
