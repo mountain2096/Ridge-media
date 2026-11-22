@@ -4,6 +4,7 @@ import CommentItem from "./CommentItem.jsx";
 import ReactionButton from "./ReactionButton.jsx";
 import MentionInput from "./MentionInput.jsx";
 import ReactionListDialog from "./ReactionListDialog.jsx";
+import ShareDialog from "./ShareDialog.jsx";
 import RidgeVideo from "./RidgeVideo.jsx";
 import "../comments.css";
 import { mergeLegacyLikes, summarizeReactions } from "../lib/reactions.js";
@@ -12,7 +13,7 @@ function PostCard({
   post, currentUser, isLiked, failedImagePost = false, editingPostId, editingPostContent, isSavingPost,
   postActionError, commentsOpen, comments = [], isLoadingComments = false, commentError = "",
   commentContent = "", isSendingComment = false, editingCommentId, editingCommentContent,
-  isUpdatingComment = false, isSharing = false, onLike, onToggleComments, onShare, onToggleSaved, onReact, onReactComment,
+  isUpdatingComment = false, onLike, onToggleComments, onShare, onToggleSaved, onReact, onReactComment,
   replyTo = null, mentionCandidates = [], onReplyComment, onCancelReply,
   onStartEdit, onEditingPostContentChange, onUpdatePost, onCancelEditPost, onDeletePost, onReportPost,
   onCommentChange, onCreateComment, onCommentEdit, onCommentEditingChange,
@@ -21,6 +22,7 @@ function PostCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionPopped, setReactionPopped] = useState(false);
   const [reactionsOpen, setReactionsOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const commentsRef = useRef(null);
@@ -156,12 +158,13 @@ function PostCard({
             idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2 3l-.7 3H19a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 18 20H7z" /></svg>}
           /> : <button className={`post-action-button ${isLiked ? "liked" : ""}`} type="button" aria-label={isLiked ? "Bỏ thích" : "Thích"} aria-pressed={Boolean(isLiked)} onClick={() => onLike?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg><span>{isLiked ? "Đã thích" : "Thích"}{reactionSummary.total > 0 ? ` ${reactionSummary.total}` : ""}</span></button>}
           <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => onToggleComments?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận{post.commentsCount > 0 ? ` ${post.commentsCount}` : ""}</span></button>
-          <button className="post-action-button" type="button" disabled={isSharing} onClick={() => onShare?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>{isSharing ? "Đang chia sẻ" : "Chia sẻ"}</span></button>
+          <button className="post-action-button" type="button" onClick={() => setShareOpen(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>Chia sẻ</span></button>
         </div>
         {reactionSummary.total > 0 && <button className="post-reaction-chip" type="button" aria-label="Xem ai đã thả cảm xúc" onClick={() => setReactionsOpen(true)}><span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => <span key={item.type}>{item.emoji}</span>)}</span></button>}
       </div>
 
       {reactionsOpen && <ReactionListDialog path={`/api/post/${post._id}/reactions`} onClose={() => setReactionsOpen(false)} />}
+      {shareOpen && <ShareDialog post={post} onShare={onShare} onClose={() => setShareOpen(false)} />}
       {commentsOpen && <div className="post-comments profile-comments ridge-comments-list" ref={commentsRef}>
         <div className="comments-list">
           {isLoadingComments && <p>Đang tải bình luận...</p>}
