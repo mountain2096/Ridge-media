@@ -4,6 +4,7 @@ const Message = require("../models/Message");
 const Notification = require("../models/Notification");
 const errorResponse = require("../utils/errorResponse");
 const { emitToUser } = require("../utils/realtime");
+const { isStickerId, STICKER_PREVIEW } = require("../utils/stickers");
 
 const idString = (value) => (value?._id || value).toString();
 
@@ -104,10 +105,17 @@ const createOrGetConversation = async (req, res) => {
 };
 const sendMessage = async (req, res) => {
     try {
-        const { content } = req.body;
+        const { content, stickerId } = req.body;
         const { conversationId } = req.params;
+        const isSticker = stickerId !== undefined && stickerId !== null;
 
-        if (typeof content !== "string" || !content.trim()) {
+        if (isSticker) {
+            if (!isStickerId(stickerId)) {
+                return res.status(400).json({
+                    message: "Nhãn dán không hợp lệ!",
+                });
+            }
+        } else if (typeof content !== "string" || !content.trim()) {
             return res.status(400).json({
                 message: "Nội dung tin nhắn không được để trống!",
             });
@@ -142,7 +150,9 @@ const sendMessage = async (req, res) => {
         const newMessage = await Message.create({
             conversationId: conversation._id,
             senderId: req.user._id,
-            content: content.trim(),
+            ...(isSticker
+                ? { type: "sticker", stickerId, content: STICKER_PREVIEW }
+                : { content: content.trim() }),
         });
 
         conversation.lastMessage = newMessage._id;
