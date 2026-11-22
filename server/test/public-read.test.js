@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Comment = require("../models/Comment");
-const { getPublicUser, getPublicFeed, getPublicUserPosts } = require("../controllers/publicControllers");
+const { getPublicUser, getPublicUserPosts } = require("../controllers/publicControllers");
 
 function response() {
     return { statusCode: 200, body: null, status(code) { this.statusCode = code; return this; }, json(body) { this.body = body; return this; } };
@@ -47,7 +47,7 @@ test("public profile hides locked or missing users and rejects invalid ids", asy
     } finally { User.findById = original; }
 });
 
-test("guest feed and user posts use public visibility and redact reaction identities", async () => {
+test("guest user posts use public visibility and redact reaction identities", async () => {
     const originals = [Post.find, Post.countDocuments, User.distinct, Comment.aggregate, User.findById];
     let filter;
     const post = {
@@ -61,42 +61,42 @@ test("guest feed and user posts use public visibility and redact reaction identi
     Comment.aggregate = async () => [];
     User.findById = () => query({ _id: id, isLocked: false });
     try {
-        for (const [index, run] of [
-            (res) => getPublicFeed({ query: {} }, res),
-            (res) => getPublicUserPosts({ params: { id }, query: {} }, res),
-        ].entries()) {
-            const res = response();
-            await run(res);
-            assert.equal(res.statusCode, 200);
-            assert.equal(filter.privacy, "public");
-            assert.equal(filter.status, "active");
-            assert.deepEqual(filter.authorId.$nin, ["locked"]);
-            assert.equal(filter.authorId.$eq, index === 1 ? id : undefined);
-            assert.equal(res.body.posts[0].likes, undefined);
-            assert.equal(res.body.posts[0].reactions, undefined);
-            assert.deepEqual(res.body.posts[0].reactionCounts, { like: 1, love: 1, haha: 0, wow: 0, sad: 0, angry: 0 });
-            assert.equal(res.body.posts[0].reactionTotal, 2);
-            assert.equal(res.body.posts[0].isLiked, false);
-            assert.equal(res.body.posts[0].originalUnavailable, false);
-        }
+        const res = response();
+        await getPublicUserPosts({ params: { id }, query: {} }, res);
+        assert.equal(res.statusCode, 200);
+        assert.equal(filter.privacy, "public");
+        assert.equal(filter.status, "active");
+        assert.deepEqual(filter.authorId.$nin, ["locked"]);
+        assert.equal(filter.authorId.$eq, id);
+        assert.equal(res.body.posts[0].likes, undefined);
+        assert.equal(res.body.posts[0].reactions, undefined);
+        assert.deepEqual(res.body.posts[0].reactionCounts, { like: 1, love: 1, haha: 0, wow: 0, sad: 0, angry: 0 });
+        assert.equal(res.body.posts[0].reactionTotal, 2);
+        assert.equal(res.body.posts[0].isLiked, false);
+        assert.equal(res.body.posts[0].originalUnavailable, false);
     } finally {
         [Post.find, Post.countDocuments, User.distinct, Comment.aggregate, User.findById] = originals;
     }
 });
 
-test("guest posts blank content when a shared original is unavailable and validate pagination", async () => {
-    const originals = [Post.find, Post.countDocuments, User.distinct, Comment.aggregate];
+test("guest user posts blank unavailable shared content and validate pagination", async () => {
+    const originals = [Post.find, Post.countDocuments, User.distinct, Comment.aggregate, User.findById];
     const post = { _id: id, authorId: {}, originalPostId: null, content: "body", image: "image", video: "video", toObject() { return { ...this }; }, populated() { return id; } };
     Post.find = () => postQuery([post]); Post.countDocuments = async () => 1; User.distinct = async () => []; Comment.aggregate = async () => [];
+    User.findById = () => query({ _id: id, isLocked: false });
     try {
-        const res = response(); await getPublicFeed({ query: {} }, res);
+        const res = response(); await getPublicUserPosts({ params: { id }, query: {} }, res);
         assert.equal(res.body.posts[0].originalUnavailable, true);
         assert.equal(res.body.posts[0].content, ""); assert.equal(res.body.posts[0].image, ""); assert.equal(res.body.posts[0].video, "");
         for (const queryParams of [{ page: "0" }, { limit: "51" }]) {
-            const invalid = response(); await getPublicFeed({ query: queryParams }, invalid); assert.equal(invalid.statusCode, 400);
             const invalidUserPosts = response(); await getPublicUserPosts({ params: { id }, query: queryParams }, invalidUserPosts); assert.equal(invalidUserPosts.statusCode, 400);
         }
-    } finally { [Post.find, Post.countDocuments, User.distinct, Comment.aggregate] = originals; }
+    } finally { [Post.find, Post.countDocuments, User.distinct, Comment.aggregate, User.findById] = originals; }
+});
+
+test("public router exposes only profile and profile-post routes", () => {
+    const routes = require("../routes/public").stack.filter((layer) => layer.route).map((layer) => `${Object.keys(layer.route.methods).join(",").toUpperCase()} ${layer.route.path}`);
+    assert.deepEqual(routes, ["GET /users/:id", "GET /users/:id/posts"]);
 });
 
 test("public routes apply publicRead without protect; existing user, post, and story routes stay protected", () => {

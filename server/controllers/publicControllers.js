@@ -37,10 +37,6 @@ async function getPosts(req, res, authorId) {
     }
 }
 
-async function getPublicFeed(req, res) {
-    return getPosts(req, res);
-}
-
 async function getPublicUserPosts(req, res) {
     if (invalidId(req.params.id)) return res.status(400).json({ message: invalidIdMessage });
     if (hasInvalidPagination(req.query)) return res.status(400).json({ message: "Tham số phân trang không hợp lệ!" });
@@ -54,4 +50,4 @@ async function getPublicUserPosts(req, res) {
     }
 }
 
-module.exports = { getPublicUser, getPublicFeed, getPublicUserPosts };
+module.exports = { getPublicUser, getPublicUserPosts };

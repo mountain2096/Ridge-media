@@ -5,7 +5,6 @@ import AppLayout from "./AppLayout.jsx";
 import GuestLayout from "./components/GuestLayout.jsx";
 import FeedPage from "./pages/FeedPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
-import GuestFeedPage from "./pages/GuestFeedPage.jsx";
 import GuestProfilePage from "./pages/GuestProfilePage.jsx";
 import MessagesView from "./components/MessagesView.jsx";
 import ProfileSettings from "./components/ProfileSettings.jsx";
@@ -123,7 +122,6 @@ function AuthPage() {
           {activeTab !== "register" && <Link className="ridge-auth-link ridge-auth-forgot" to="/forgot-password">Quên mật khẩu?</Link>}
           {feedback.text && <p className={`ridge-auth-feedback ${feedback.type}`} role={feedback.type === "error" ? "alert" : "status"} aria-live={feedback.type === "error" ? "assertive" : "polite"}>{feedback.text}</p>}
           <p className="ridge-auth-note">{activeTab === "register" ? "Bạn đã có tài khoản? " : "Chưa có tài khoản? "}<button className="ridge-auth-link" type="button" onClick={() => setActiveTab(activeTab === "register" ? "login" : "register")}>{activeTab === "register" ? "Đăng nhập ngay" : "Đăng ký ngay"}</button></p>
-          <p className="ridge-auth-note"><Link className="ridge-auth-link" to="/feed">Xem với tư cách khách</Link></p>
           <div className="ridge-auth-social"><div className="ridge-auth-divider"><span /> <p>Hoặc {activeTab === "register" ? "đăng ký" : "đăng nhập"} bằng</p> <span /></div><div className="ridge-auth-social-buttons"><button type="button" disabled title="Đăng nhập Google chưa được cấu hình">G</button><button type="button" disabled title="Đăng nhập Facebook chưa được cấu hình">f</button><button type="button" disabled title="Đăng nhập Apple chưa được cấu hình"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4a4.2 4.2 0 0 0-3.3-1.8c-1.4-.1-2.7.8-3.4.8s-1.8-.8-3-.8a4.4 4.4 0 0 0-3.7 2.3c-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.3 2.9 2.2 1.2-.1 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.3.9-1.3 1.2-2.6 1.2-2.7s-2.5-1-2.6-3.6ZM14.2 6a4.1 4.1 0 0 0 1-3 4.2 4.2 0 0 0-2.7 1.4 3.9 3.9 0 0 0-1 2.9 3.5 3.5 0 0 0 2.7-1.3Z"/></svg></button></div></div>
         </form>
       </section>
@@ -151,7 +149,7 @@ function App() {
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route element={<AppOrGuestLayout />}>
-        <Route path="feed" element={<TokenRoute guest={<GuestFeedPage />} authenticated={<FeedPage section="feed" />} />} />
+        <Route path="feed" element={<TokenRoute guest={<Navigate to="/" replace />} authenticated={<FeedPage section="feed" />} />} />
         <Route path="profile/:id" element={<TokenRoute guest={<GuestProfilePage />} authenticated={<ProfilePage embedded />} />} />
         <Route element={<RequireAuth />}>
           <Route path="messages" element={<MessagesViewRoute />} />
