@@ -5,4 +5,5 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   envDir: "..",
   plugins: [react()],
+  server: { allowedHosts: ['.trycloudflare.com'] },
 })

@@ -7,7 +7,8 @@
     "start": "node server/server.js",
     "dev": "nodemon server/server.js",
     "dev:client": "npm run dev --prefix client",
-    "dev:all": "concurrently -k -n API,WEB \"npm run dev\" \"npm run dev:client\""
+    "dev:all": "concurrently -k -n API,WEB \"npm run dev\" \"npm run dev:client\"",
+    "share": "powershell -ExecutionPolicy Bypass -File scripts/share-tunnel.ps1"
   },
   "keywords": [],
   "author": "",
