@@ -54,3 +54,14 @@ export async function sendReaction(path, type) {
   if (!response.ok) throw new Error(data.message || "Không thể thả cảm xúc.");
   return data;
 }
+
+export async function fetchPostReactions(postId, { type, page = 1 } = {}) {
+  const query = new URLSearchParams({ page: String(page) });
+  if (type) query.set("type", type);
+  const response = await fetch(`${API_BASE}/api/post/${postId}/reactions?${query}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || "Không thể tải danh sách cảm xúc.");
+  return data;
+}

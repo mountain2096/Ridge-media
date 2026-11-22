@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import CommentItem from "./CommentItem.jsx";
 import ReactionButton from "./ReactionButton.jsx";
 import MentionInput from "./MentionInput.jsx";
+import ReactionListDialog from "./ReactionListDialog.jsx";
 import "../comments.css";
 import { mergeLegacyLikes, summarizeReactions } from "../lib/reactions.js";
 
@@ -17,6 +18,7 @@ function PostCard({
   onCancelCommentEdit, onUpdateComment, onDeleteComment, onReportComment, onImageError,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reactionsOpen, setReactionsOpen] = useState(false);
   const menuRef = useRef(null);
   const commentsRef = useRef(null);
   const commentInputRef = useRef(null);
@@ -142,12 +144,10 @@ function PostCard({
       </>}
 
       <div className="post-stats">
-        {onReact ? (
-          <p className="post-likes ridge-react-summary" aria-label={`${reactionSummary.total} lượt thả cảm xúc`}>
-            {reactionSummary.total > 0 && <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>}
-            <span>{reactionSummary.total} lượt thích</span>
-          </p>
-        ) : <p className="post-likes">{post.likes?.length ?? 0} lượt thích</p>}
+        {reactionSummary.total > 0 && <button className="post-likes ridge-react-summary" type="button" aria-label={`${reactionSummary.total} lượt thả cảm xúc`} onClick={() => setReactionsOpen(true)}>
+          <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>
+          <span>{reactionSummary.total} lượt thích</span>
+        </button>}
         <button className="post-comment-count" type="button" onClick={() => onToggleComments?.(post)}>{post.commentsCount ?? 0} bình luận</button>
       </div>
       <div className="post-actions">
@@ -193,6 +193,7 @@ function PostCard({
           <button type="submit" disabled={isSendingComment}>{isSendingComment ? "Đang gửi..." : "Gửi"}</button>
         </form>
       </div>}
+      {reactionsOpen && <ReactionListDialog postId={post._id} onClose={() => setReactionsOpen(false)} />}
     </article>
   );
 }
