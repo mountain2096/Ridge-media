@@ -1,7 +1,7 @@
-# HANDOFF — Ridge-media
+# BÀN GIAO — Ridge-media
 
 > Dành cho agent mới (Claude, Codex hoặc agent khác) tiếp tục dự án. Đọc cùng `AGENTS.md`. Sau MỖI tính năng xong: cập nhật mục 4, 7 và 8 rồi commit file này.
-> Cập nhật lần cuối: 2026-11-22, after comment reaction list (branch `feat/comment-reaction-list`, feature commits `c010ab8`, `a28a27c`, `8fa86f1`).
+> Cập nhật lần cuối: 2026-11-22, sau tính năng nhãn chỉnh sửa bài viết (nhánh `feat/edited-post-label`, commit `1d957c2`, `1325b25`, `9212f66`, `aec963e`).
 
 ## 1. Dự án
 - Repo: https://github.com/mountain2096/Ridge-media (public). Mạng xã hội dạng feed: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO cho realtime.
@@ -13,13 +13,12 @@
 Chuỗi nhánh (mỗi nhánh tạo từ nhánh trước): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → **`feat/comment-reaction-list`** (hiện tại). Nhánh mới cho mỗi tính năng, tạo từ nhánh gần nhất. Push bình thường, KHÔNG `--force`. Chưa có PR nào được xác minh.
 
 ## 3. Chức năng đã xác minh trong code
-Đăng ký/đăng nhập JWT, quên/đổi mật khẩu (chính sách ≥8 ký tự); trang cá nhân (`/profile/:id`, `ProfilePage.jsx`); bài viết (public/friends/private, sửa, xóa mềm, chia sẻ, lưu); feed phân trang 20 bài + nút "Tải thêm bài viết"; reaction 6 loại cho bài/bình luận/tin nhắn; **reaction lists for posts and comments** (mới); trả lời bình luận 1 cấp + @mention; story; kết bạn, chặn, tìm người dùng; nhắn tin realtime (typing, "Đã xem"), emoji + nhãn dán; thông báo realtime (Socket.IO); báo cáo + trang Admin (thống kê, hàng đợi kiểm duyệt có điểm ưu tiên); rate limit, CORS allowlist, kiểm tra URL media; script seed dữ liệu demo.
+Đăng ký và đăng nhập bằng JWT; quên và đổi mật khẩu (tối thiểu 8 ký tự); trang cá nhân (`/profile/:id`, `ProfilePage.jsx`); bài viết công khai, bạn bè hoặc riêng tư, có thể sửa, xóa mềm, chia sẻ và lưu; feed phân trang 20 bài cùng nút "Tải thêm bài viết"; 6 loại cảm xúc cho bài viết, bình luận và tin nhắn; danh sách cảm xúc cho bài viết và bình luận; trả lời bình luận một cấp và @mention; tin (story); kết bạn, chặn và tìm người dùng; nhắn tin realtime (đang nhập, "Đã xem"), emoji và nhãn dán; thông báo realtime (Socket.IO); báo cáo và trang quản trị (thống kê, hàng đợi kiểm duyệt có điểm ưu tiên); giới hạn tần suất, danh sách cho phép CORS, kiểm tra URL media; script tạo dữ liệu mẫu.
 
-## 4. Test status (update each round)
-- `node --test`: 96 passed, 0 failed.
-- `npm run lint --prefix client`: passed.
-- `npm run build --prefix client`: passed.
-- No browser or live MongoDB verification was run this round.
+## 4. Trạng thái kiểm thử (cập nhật mỗi vòng)
+- Chủ dự án đã tự kiểm tra danh sách cảm xúc trong hộp thoại trên trình duyệt sau khi sửa lỗi tải thêm.
+- Vòng 4: `node --test`: 98 bài kiểm tra thành công, không lỗi; kiểm tra lint và bản dựng client thành công.
+- Vòng 4 chưa kiểm tra trên trình duyệt và chưa xác minh kết nối MongoDB trực tiếp.
 
 ## 5. Quy trình làm việc (3 bên)
 - **Chủ dự án**: test bằng mắt, chọn tính năng, tự `git push`.
@@ -28,23 +27,24 @@ Chuỗi nhánh (mỗi nhánh tạo từ nhánh trước): `main` → `fix/audit-
 - Mẫu làm việc một tính năng: mở `codex` → `/new` → chọn "Use current Git worktree" → dán prompt (Codex tự tạo nhánh) → Codex commit nhỏ, không push → chủ dự án test bằng mắt và `git push -u origin <nhánh>` → Claude review diff → cập nhật handoff.
 - Quy tắc prompt cho Codex: nêu rõ file cần sửa; dùng `git add <file cụ thể>`, không `git add .`; không push, không xóa file (chỉ di chuyển); chạy test hẹp khi lặp và test đầy đủ ở cuối; báo cáo dưới ~12 dòng.
 
-## 6. Known limitations
-General: realtime uses one process (Redis adapter needed to scale); read receipts support only one-to-one chat; JWTs are not revoked on logout; guest profiles are unavailable; posts have no edited label; like notifications are not grouped; replies are limited to two levels; stickers do not upload or animate; `FeedPage.jsx` remains about 1,250 lines.
+## 6. Giới hạn đã biết
+Tổng quát: realtime hiện chạy trên một tiến trình (cần Redis adapter để mở rộng); xác nhận đã đọc chỉ áp dụng cho hội thoại hai người; JWT chưa bị thu hồi khi đăng xuất; chưa có trang cá nhân cho khách; bài viết được sửa trước thay đổi này chưa có nhãn chỉnh sửa vì không có `editedAt`; thông báo lượt thích chưa được gộp nhóm; trả lời bình luận tối đa hai cấp; nhãn dán chưa tải lên hoặc chuyển động; `FeedPage.jsx` vẫn dài khoảng 1.250 dòng.
 
-Reactions: aggregate counters can include blocked or locked users that the list filters; the list endpoint loads all reactions before paging in memory, suitable for this project but not posts with thousands of reactions; tests still do not specifically cover legacy-like display or the maximum `limit` of 50; the dialog has a `tablist` but no `tabpanel`.
+Danh sách cảm xúc: bộ đếm tổng có thể tính cả người dùng bị chặn hoặc khóa, trong khi danh sách đã lọc họ; endpoint tải toàn bộ cảm xúc vào bộ nhớ trước khi phân trang, phù hợp với dự án hiện tại nhưng không phù hợp với bài có hàng nghìn lượt; kiểm thử chưa bao phủ riêng cách hiển thị lượt thích cũ hoặc `limit` tối đa 50; hộp thoại có `tablist` nhưng chưa có `tabpanel`.
 
-Done this round: reaction lists now cover comments as well as posts; tab changes clear old rows while loading; the comment count stays right-aligned when a post has no reactions.
+Đã hoàn thành vòng trước: danh sách cảm xúc áp dụng cho cả bình luận và bài viết; khi đổi thẻ, các dòng cũ được xóa trong lúc tải; số bình luận vẫn nằm sát bên phải khi bài viết chưa có cảm xúc. Vòng 4 giữ các dòng đang hiển thị khi tải thêm.
 
-## 7. Round log
-| Round | Work | Result | Commit |
+## 7. Nhật ký các vòng
+| Vòng | Công việc | Kết quả | Commit |
 |---|---|---|---|
-| 0 | Claude reviewed repository, branch and baseline | Baseline: 92 tests, lint and build passed | `e64c605` |
-| 1 | Cleaned worktree and updated project guide/status | Clean; pushed | `8c2b008` |
-| 2 | Post reaction list API, dialog and docs | 94 tests passed; lint/build passed; visually checked | `a0f8adc`, `6a56d8c`, `da637c2` |
-| 3 | Comment reaction list API and UI; fixed Mongoose subdocument normalization with real-document regression coverage; documented both endpoints | 96 tests passed; lint/build passed | `c010ab8`, `a28a27c`, `8fa86f1` |
+| 0 | Claude rà soát kho mã, nhánh và trạng thái ban đầu | Ban đầu: 92 bài kiểm tra, lint và build đều đạt | `e64c605` |
+| 1 | Dọn worktree và cập nhật hướng dẫn/trạng thái dự án | Worktree sạch; đã push | `8c2b008` |
+| 2 | API, hộp thoại danh sách cảm xúc bài viết và tài liệu | 94 bài kiểm tra; lint/build đạt; đã kiểm tra trực quan | `a0f8adc`, `6a56d8c`, `da637c2` |
+| 3 | API và giao diện danh sách cảm xúc bình luận; sửa chuẩn hóa subdocument Mongoose, bổ sung kiểm thử hồi quy bằng document thật và ghi tài liệu cho hai endpoint | 96 bài kiểm tra; lint/build đạt | `c010ab8`, `a28a27c`, `8fa86f1`, `7bbe25c`, `5f5af78` |
+| 4 | Giữ danh sách cảm xúc khi tải thêm; lưu `editedAt` khi nội dung/media thực sự đổi và hiện nhãn trên bài viết | 98 bài kiểm tra; lint/build đạt; chưa kiểm tra trình duyệt hoặc MongoDB trực tiếp | `1d957c2`, `1325b25`, `9212f66`, `aec963e` |
 
-## 8. Next candidates (owner chooses)
-Infinite scrolling instead of the "Load more" button; guest profiles; JWT revocation on logout; edited-post labels; splitting `FeedPage.jsx`; remaining test gaps listed in section 6.
+## 8. Việc có thể làm tiếp (chủ dự án lựa chọn)
+Cuộn vô hạn thay cho nút "Tải thêm"; trang cá nhân cho khách; thu hồi JWT khi đăng xuất; tách nhỏ `FeedPage.jsx`; bổ sung các phần kiểm thử còn thiếu ở mục 6.
 
 ## 9. Lưu ý cho agent mới
 - `docs/STATUS.md` và `docs/AUDIT.md` là snapshot CŨ; luôn kiểm chứng với code và `git log`.
