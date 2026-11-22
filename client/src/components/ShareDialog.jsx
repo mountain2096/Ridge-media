@@ -10,6 +10,7 @@ export default function ShareDialog({ post, onShare, onClose }) {
   const [selected, setSelected] = useState([]);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
+  const [caption, setCaption] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [toast, setToast] = useState("");
@@ -34,6 +35,13 @@ export default function ShareDialog({ post, onShare, onClose }) {
     } catch (error) { setFeedback(error.message); } finally { setBusy(false); }
   }
 
+  async function shareToFeed() {
+    setBusy(true); setFeedback("");
+    try { await onShare?.(post, caption); onClose(); }
+    catch (error) { setFeedback(error.message || "Không thể chia sẻ bài viết."); }
+    finally { setBusy(false); }
+  }
+
   async function copyLink() {
     const url = `${location.origin}/post/${originalId}`;
     try { if (!navigator.clipboard?.writeText) throw new Error(); await navigator.clipboard.writeText(url); setToast("Đã sao chép liên kết"); }
@@ -44,7 +52,7 @@ export default function ShareDialog({ post, onShare, onClose }) {
     <section className="ridge-share-dialog" role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" ref={dialogRef} tabIndex="-1">
       <header><h2 id="share-dialog-title">Chia sẻ bài viết</h2><button type="button" aria-label="Đóng" onClick={onClose}>×</button></header>
       <div className="ridge-share-preview"><strong>{original.authorId?.username || "Người dùng"}</strong><p>{(original.content || "").split("\n")[0]}</p>{original.image ? <img src={original.image} alt="" /> : original.video ? <span aria-label="Video">▶ Video</span> : null}</div>
-      <button className="ridge-share-option" type="button" onClick={() => { onClose(); onShare?.(post); }}>Chia sẻ lên bảng tin</button>
+      <div className="ridge-share-feed-block"><textarea aria-label="Viết gì đó về bài viết này..." placeholder="Viết gì đó về bài viết này..." maxLength={500} value={caption} onChange={(event) => setCaption(event.target.value)} /><small>{caption.length}/500</small><button className="ridge-share-option" type="button" disabled={busy} onClick={() => void shareToFeed()}>{busy ? "Đang chia sẻ..." : "Chia sẻ lên bảng tin"}</button></div>
       <h3>Gửi trong tin nhắn</h3>
       <input aria-label="Tìm bạn bè" placeholder="Tìm bạn bè" type="search" value={search} onChange={(event) => setSearch(event.target.value)} />
       <div className="ridge-share-friends">{friends.filter((friend) => friend.username?.toLowerCase().includes(search.toLowerCase())).map((friend) => <label key={friend._id}>

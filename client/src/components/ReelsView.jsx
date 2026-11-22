@@ -174,7 +174,7 @@ function ReelsView() {
   async function sharePost(post) {
     setSharingId(post._id);
     try {
-      const response = await fetch(`${API_BASE}/api/post/${post._id}/share`, { method: "POST", headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+      const response = await fetch(`${API_BASE}/api/post/${post._id}/share`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` }, body: JSON.stringify({ caption: "" }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể chia sẻ bài viết.");
       setToast(data.message);

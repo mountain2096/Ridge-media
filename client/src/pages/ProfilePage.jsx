@@ -435,19 +435,18 @@ function ProfilePage({ profileId, embedded = false }) {
     setCommentToast(data.message);
   }
 
-  async function handleShare(postId) {
+  async function handleShare(postId, caption) {
     setSharingPostId(postId);
     setPostActionError("");
     try {
       const response = await fetch(`${API}/post/${postId}/share`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: JSON.stringify({ caption }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể chia sẻ bài viết.");
-      setPostActionError("Đã chia sẻ bài viết.");
-    } catch (requestError) {
-      setPostActionError(requestError.message);
+      setCommentToast(data.message);
     } finally {
       setSharingPostId(null);
     }
@@ -659,7 +658,7 @@ function ProfilePage({ profileId, embedded = false }) {
   isUpdatingComment={isUpdatingComment}
   onReact={handleReactPost}
   onToggleComments={(item) => handleToggleComments(item._id)}
-  onShare={(item) => handleShare(item._id)}
+  onShare={(item, caption) => handleShare(item._id, caption)}
   onToggleSaved={(item, saved) => handleToggleSavedPost(item._id, saved)}
   onStartEdit={(item) => { setEditingPostId(item._id); setEditingPostContent(item.content || ''); }}
   onEditingPostContentChange={setEditingPostContent}

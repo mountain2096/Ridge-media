@@ -441,20 +441,17 @@ function FeedPage({ section = "feed" }){
         setPostActionError(requestError.message);
       }
     }
-    async function handleSharePost(postId) {
-      try {
+    async function handleSharePost(postId, caption) {
         const response = await fetch(`${API_BASE}/api/post/${postId}/share`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+          body: JSON.stringify({ caption }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Không thể chia sẻ bài viết.");
         setShareFeedback(data.message);
         setFeedPage(1);
         setReloadPosts((currentValue) => currentValue + 1);
-      } catch (requestError) {
-        setPostActionError(requestError.message);
-      }
     }
 
     function handleReport(targetType, targetId) {
@@ -1034,7 +1031,7 @@ function FeedPage({ section = "feed" }){
   }}
   onCancelReply={() => { setReplyTo(null); setCommentContent(""); }}
   onToggleComments={(item) => handleToggleComments(item._id)}
-  onShare={(item) => handleSharePost(item._id)}
+  onShare={(item, caption) => handleSharePost(item._id, caption)}
   onToggleSaved={(item, saved) => handleToggleSavedPost(item._id, saved)}
   onStartEdit={(item) => { setEditingPostId(item._id); setEditingPostContent(item.content || ''); }}
   onEditingPostContentChange={setEditingPostContent}
