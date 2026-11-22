@@ -16,21 +16,22 @@ function response() {
     };
 }
 
-test("share creates a reference post and a share notification for a public source", async () => {
+test("share creates a captioned root reference and notifies the root author", async () => {
     const originalFind = Post.findOne;
     const originalCreate = Post.create;
     const originalUserFind = User.findById;
     const originalNotificationCreate = Notification.create;
-    Post.findOne = async () => ({ _id: "source", authorId: "author", content: "Public content", image: "", video: "", privacy: "public" });
+    Post.findOne = async ({ _id }) => _id === "source" ? ({ _id: "source", authorId: "author", content: "Public content", image: "", video: "", privacy: "public", originalPostId: null }) : null;
     Post.create = async (data) => ({ _id: "share1", ...data });
     User.findById = () => ({ select: async () => ({ _id: "author", blockList: [] }) });
     let notification;
     Notification.create = async (data) => { notification = data; };
     try {
         const res = response();
-        await sharePost({ params: { id: "source" }, user: { _id: "sharer", blockList: [] } }, res);
+        await sharePost({ params: { id: "source" }, body: { caption: "  My caption  " }, user: { _id: "sharer", blockList: [] } }, res);
         assert.equal(res.statusCode, 201);
         assert.equal(res.body.post.originalPostId, "source");
+        assert.equal(res.body.post.content, "My caption");
         assert.equal(notification.type, "share");
         assert.equal(notification.recipientId, "author");
     } finally {
@@ -39,6 +40,62 @@ test("share creates a reference post and a share notification for a public sourc
         User.findById = originalUserFind;
         Notification.create = originalNotificationCreate;
     }
+});
+
+test("share without a caption stores an empty string", async () => {
+    const originalFind = Post.findOne, originalCreate = Post.create, originalUserFind = User.findById, originalNotificationCreate = Notification.create;
+    Post.findOne = async () => ({ _id: "root", authorId: "author", content: "Root", image: "", video: "", privacy: "public", originalPostId: null });
+    Post.create = async (data) => data;
+    User.findById = () => ({ select: async () => ({ _id: "author", blockList: [] }) });
+    Notification.create = async () => {};
+    try {
+        const res = response();
+        await sharePost({ params: { id: "root" }, body: {}, user: { _id: "sharer", blockList: [] } }, res);
+        assert.equal(res.statusCode, 201);
+        assert.equal(res.body.post.content, "");
+    } finally { Post.findOne = originalFind; Post.create = originalCreate; User.findById = originalUserFind; Notification.create = originalNotificationCreate; }
+});
+
+test("share rejects captions over 500 characters", async () => {
+    const res = response();
+    await sharePost({ params: { id: "root" }, body: { caption: "x".repeat(501) }, user: { _id: "sharer", blockList: [] } }, res);
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.message, "Chú thích không hợp lệ.");
+});
+
+test("share rejects a caption with the wrong type", async () => {
+    const res = response();
+    await sharePost({ params: { id: "root" }, body: { caption: 12 }, user: { _id: "sharer", blockList: [] } }, res);
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.message, "Chú thích không hợp lệ.");
+});
+
+test("share resolves a share to its active root post", async () => {
+    const originalFind = Post.findOne, originalCreate = Post.create, originalUserFind = User.findById, originalNotificationCreate = Notification.create;
+    Post.findOne = async ({ _id }) => _id === "share" ? { _id, authorId: "intermediate", originalPostId: "root" } : _id === "root" ? { _id, authorId: "root-author", content: "Root", image: "root.jpg", video: "", privacy: "public", originalPostId: null } : null;
+    Post.create = async (data) => data;
+    User.findById = () => ({ select: async () => ({ _id: "root-author", blockList: [] }) });
+    let notification;
+    Notification.create = async (data) => { notification = data; };
+    try {
+        const res = response();
+        await sharePost({ params: { id: "share" }, body: { caption: "caption" }, user: { _id: "sharer", blockList: [] } }, res);
+        assert.equal(res.statusCode, 201);
+        assert.equal(res.body.post.originalPostId, "root");
+        assert.equal(res.body.post.image, "root.jpg");
+        assert.equal(notification.recipientId, "root-author");
+    } finally { Post.findOne = originalFind; Post.create = originalCreate; User.findById = originalUserFind; Notification.create = originalNotificationCreate; }
+});
+
+test("share returns 404 when its root is unavailable", async () => {
+    const originalFind = Post.findOne;
+    Post.findOne = async ({ _id }) => _id === "share" ? { _id, originalPostId: "deleted-root" } : null;
+    try {
+        const res = response();
+        await sharePost({ params: { id: "share" }, body: {}, user: { _id: "sharer", blockList: [] } }, res);
+        assert.equal(res.statusCode, 404);
+        assert.equal(res.body.message, "Bài viết gốc không còn khả dụng.");
+    } finally { Post.findOne = originalFind; }
 });
 
 test("registration requires a matching confirmation and strong password", async () => {

@@ -360,22 +360,32 @@ const toggleSavePost = async (req, res) => {
 
 const sharePost = async (req, res) => {
     try {
-        const originalPost = await Post.findOne({ _id: req.params.id, status: "active" });
-        if (!originalPost) return res.status(404).json({ message: "Bài viết không tồn tại!" });
+        const invalidShare = () => res.status(404).json({ message: "Bài viết gốc không còn khả dụng." });
+        const rawCaption = req.body?.caption ?? "";
+        if (typeof rawCaption !== "string" || rawCaption.trim().length > 500) {
+            return res.status(400).json({ message: "Chú thích không hợp lệ." });
+        }
+        const caption = rawCaption.trim();
+        const requestedPost = await Post.findOne({ _id: req.params.id, status: "active" });
+        if (!requestedPost) return invalidShare();
+        const originalPost = requestedPost.originalPostId
+            ? await Post.findOne({ _id: requestedPost.originalPostId, status: "active", originalPostId: null })
+            : requestedPost;
+        if (!originalPost) return invalidShare();
 
         const isOwner = originalPost.authorId.toString() === req.user._id.toString();
         if (originalPost.privacy !== "public" && !isOwner) {
-            return res.status(403).json({ message: "Bạn không có quyền chia sẻ bài viết này!" });
+            return invalidShare();
         }
         const author = await User.findById(originalPost.authorId).select("blockList");
         if (!author || (req.user.blockList || []).some((id) => id.toString() === author._id.toString()) ||
             (author.blockList || []).some((id) => id.toString() === req.user._id.toString())) {
-            return res.status(403).json({ message: "Không thể chia sẻ nội dung của người đã chặn bạn hoặc bạn đã chặn!" });
+            return invalidShare();
         }
 
         const sharedPost = await Post.create({
             authorId: req.user._id,
-            content: originalPost.content,
+            content: caption,
             image: originalPost.image,
             video: originalPost.video,
             privacy: originalPost.privacy,

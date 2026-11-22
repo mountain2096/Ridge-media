@@ -11,7 +11,7 @@ const postSchema = new mongoose.Schema(
             type: String,
             trim: true,
             maxlength: 500,
-            required: true
+            required: function () { return !this.originalPostId; }
         },
         image:{
             type: String,

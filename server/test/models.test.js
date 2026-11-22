@@ -13,6 +13,7 @@ test("audit model fields and constraints are present", () => {
     assert.equal(Post.schema.path("privacy").defaultValue, "public");
     assert.equal(Post.schema.path("status").defaultValue, "active");
     assert.ok(Post.schema.path("originalPostId"));
+    assert.equal(Post.schema.path("content").options.required.call({ originalPostId: "root" }), false);
     assert.equal(Comment.schema.path("status").defaultValue, "active");
     assert.ok(Report.schema);
 
