@@ -10,7 +10,7 @@
 - Kiểm tra: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. Chưa có test client.
 
 ## 2. Nhánh Git
-Chuỗi nhánh (mỗi nhánh tạo từ nhánh trước): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → **`feat/comment-reaction-list`** (hiện tại). Nhánh mới cho mỗi tính năng, tạo từ nhánh gần nhất. Push bình thường, KHÔNG `--force`. Chưa có PR nào được xác minh.
+Chuỗi nhánh (mỗi nhánh tạo từ nhánh trước): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → **`feat/edited-post-label`** (hiện tại). Nhánh mới cho mỗi tính năng, tạo từ nhánh gần nhất. Push bình thường, KHÔNG `--force`. Chưa có PR nào được xác minh.
 
 ## 3. Chức năng đã xác minh trong code
 Đăng ký và đăng nhập bằng JWT; quên và đổi mật khẩu (tối thiểu 8 ký tự); trang cá nhân (`/profile/:id`, `ProfilePage.jsx`); bài viết công khai, bạn bè hoặc riêng tư, có thể sửa, xóa mềm, chia sẻ và lưu; feed phân trang 20 bài cùng nút "Tải thêm bài viết"; 6 loại cảm xúc cho bài viết, bình luận và tin nhắn; danh sách cảm xúc cho bài viết và bình luận; trả lời bình luận một cấp và @mention; tin (story); kết bạn, chặn và tìm người dùng; nhắn tin realtime (đang nhập, "Đã xem"), emoji và nhãn dán; thông báo realtime (Socket.IO); báo cáo và trang quản trị (thống kê, hàng đợi kiểm duyệt có điểm ưu tiên); giới hạn tần suất, danh sách cho phép CORS, kiểm tra URL media; script tạo dữ liệu mẫu.

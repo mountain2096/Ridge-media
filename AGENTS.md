@@ -50,7 +50,8 @@ The names in `.env.example` are `PORT`, `MONGO_URI`, `JWT_SECRET`, `EMAIL_USER`,
 
 ## Work rules
 
-- Work on a task branch; for this workstream the current branch is `feat/realtime-messaging`.
+- Nh?nh t?c v? hi?n t?i: xem `git branch --show-current` v? docs/HANDOFF.md m?c 2.
+- M?i t?nh n?ng d?ng nh?nh m?i t?o t? nh?nh g?n nh?t; chu?i nh?nh n?m ? docs/HANDOFF.md m?c 2.
 - Keep changes focused and make small commits with descriptive messages.
 - Run client lint and build before committing UI/client changes. Run the relevant backend tests when changing server behavior.
 - Never commit `.env`, API keys, passwords, or tokens. Do not run `git push --force`.
@@ -67,7 +68,7 @@ Latest handoff (branch chain, per-feature log, known limits, workflow): docs/HAN
 
 `docs/AUDIT.md` describes 22 audited use cases. At the time of that document, most API flows were implemented; several are explicitly partial, including JWT logout revocation, public guest profiles/search, edited-post labels, grouped like notifications, and some direct media URL validation. Read the audit table for the detailed status; verify current handlers before changing them.
 
-The current workstream branch is `feat/realtime-messaging`, tracking `origin/feat/realtime-messaging`.
+Nh?nh t?c v? hi?n t?i: xem `git branch --show-current` v? docs/HANDOFF.md m?c 2.
 
 Recent committed UI work (verified from `git log`):
 
@@ -92,7 +93,7 @@ Known environment issue from the last local run: starting the API attempted to c
 1. Check `git status`, review each diff, and confirm the intended scope before staging. Never stage `.env`.
 2. Run `npm run lint --prefix client` and `npm run build --prefix client`; when server files changed, also run `node --test` and report any environment-dependent failures.
 3. Start API and client, verify the browser renders `/` and authenticated routes, and confirm the API can reach the configured MongoDB. A health response alone does not verify database-backed flows.
-4. Commit the reviewed work in small, descriptive commits and push normally to `feat/realtime-messaging`; do not force-push. Verify the existing PR reflects the pushed branch.
+4. Commit the reviewed work in small, descriptive commits and push normally to the task branch shown by `git branch --show-current` and docs/HANDOFF.md mục 2; do not force-push. Verify the existing PR reflects the pushed branch.
 5. Revisit the partial items in `docs/AUDIT.md` only when they are in the requested scope.
 
 ## Working efficiently (for agents)
