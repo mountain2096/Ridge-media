@@ -68,7 +68,10 @@ const getPosts = async (req,res) =>{
             authorId: { $nin: blockedUserIds },
             $or: visibleByPrivacy,
         };
-        if (req.query.media === "video") filter.video = { $nin: ["", null] };
+        if (req.query.media === "video") {
+            filter.video = { $nin: ["", null] };
+            filter.originalPostId = null;
+        }
         if (req.query.authorId !== undefined) {
             if (typeof req.query.authorId !== "string" || !/^[a-f\d]{24}$/i.test(req.query.authorId)) {
                 return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
@@ -97,13 +100,14 @@ const getPosts = async (req,res) =>{
                 .limit(limit),
             Post.countDocuments(filter),
         ]);
-        const commentCounts = posts.length ? await Comment.aggregate([
-            { $match: { postId: { $in: posts.map((post) => post._id) }, status: "active" } },
+        const uniquePosts = [...new Map(posts.map((post) => [post._id.toString(), post])).values()];
+        const commentCounts = uniquePosts.length ? await Comment.aggregate([
+            { $match: { postId: { $in: uniquePosts.map((post) => post._id) }, status: "active" } },
             { $group: { _id: "$postId", count: { $sum: 1 } } },
         ]) : [];
         const commentCountByPost = new Map(commentCounts.map((entry) => [entry._id.toString(), entry.count]));
 
-        const postWithLikeStatus = posts.map((post) =>{
+        const postWithLikeStatus = uniquePosts.map((post) =>{
             const hasOriginalReference = Boolean(post.originalPostId || post.populated?.("originalPostId"));
             const postData = post.toObject();
 

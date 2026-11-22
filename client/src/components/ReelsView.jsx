@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useLocation, useOutletContext } from "react-router-dom";
 import ReactionButton from "./ReactionButton.jsx";
 import ReportDialog from "./ReportDialog.jsx";
 import Toast from "./Toast.jsx";
@@ -22,6 +22,7 @@ function relativeTime(value) {
 
 function ReelsView() {
   const { currentUser } = useOutletContext();
+  const location = useLocation();
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -70,7 +71,19 @@ function ReelsView() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể tải Reels.");
       if (!Array.isArray(data.posts)) throw new Error("Không thể tải Reels.");
-      const playablePosts = data.posts.filter((post) => !post.originalUnavailable && (typeof post.video === "string" ? post.video : post.video?.url || post.video?.src));
+      let pagePosts = data.posts;
+      const targetId = nextPage === 1 && new URLSearchParams(location.search).get("post");
+      if (targetId && !pagePosts.some((post) => post._id === targetId)) {
+        const targetResponse = await fetch(`${API_BASE}/api/post/${encodeURIComponent(targetId)}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const targetData = await targetResponse.json();
+        if (targetResponse.ok && targetData.post) pagePosts = [targetData.post, ...pagePosts];
+      }
+      const playablePosts = [...new Map(pagePosts
+        .filter((post) => !post.originalPostId && !post.originalUnavailable && (typeof post.video === "string" ? post.video : post.video?.url || post.video?.src))
+        .map((post) => [post._id, post])).values()];
+      if (targetId) playablePosts.sort((a, b) => Number(b._id === targetId) - Number(a._id === targetId));
       setPosts((current) => nextPage === 1 ? playablePosts : [...current, ...playablePosts.filter((post) => !current.some((item) => item._id === post._id))]);
       setPage(nextPage);
       setPages(data.pagination?.pages || 1);
@@ -80,7 +93,7 @@ function ReelsView() {
       setLoading(false);
       pageRequest.current = false;
     }
-  }, []);
+  }, [location.search]);
 
   const commentsPost = posts.find((post) => post._id === commentsPostId);
   const reportPost = posts.find((post) => post._id === reportPostId);

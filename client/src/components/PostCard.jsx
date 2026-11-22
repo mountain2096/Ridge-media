@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CommentItem from "./CommentItem.jsx";
 import ReactionButton from "./ReactionButton.jsx";
 import MentionInput from "./MentionInput.jsx";
@@ -18,6 +18,7 @@ function PostCard({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionPopped, setReactionPopped] = useState(false);
+  const navigate = useNavigate();
   const menuRef = useRef(null);
   const commentsRef = useRef(null);
   const commentInputRef = useRef(null);
@@ -120,7 +121,7 @@ function PostCard({
         </div>
       </header>
 
-      {!isShare && (visiblePost.video ? <video className="post-video" src={visiblePost.video} controls preload="metadata" /> : visiblePost.image && !failedImagePost ? <img className="post-image" src={visiblePost.image} alt={`Bài viết của ${username}`} loading="lazy" onError={() => onImageError?.(post)} /> : null)}
+      {!isShare && (visiblePost.video ? <div className="post-video-wrap"><video className="post-video" src={visiblePost.video} controls controlsList="nofullscreen" preload="metadata" /><button className="post-video-expand" type="button" aria-label="Mở video trong Reels" onClick={() => navigate(`/reels?post=${post._id}`)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m0-4 6 6m6-6h4v4m0-4-6 6M4 16v4h4m-4 0 6-6m10 2v4h-4m4 0-6-6" /></svg></button></div> : visiblePost.image && !failedImagePost ? <img className="post-image" src={visiblePost.image} alt={`Bài viết của ${username}`} loading="lazy" onError={() => onImageError?.(post)} /> : null)}
       {isShare && shareText && <p className="post-caption post-share-text">{shareText}</p>}
       {isShare ? <article className="shared-post-card">
         {originalPost ? <>
@@ -132,7 +133,7 @@ function PostCard({
           </header>
           {originalPost.content && <p className={originalPost.image || originalPost.video ? "post-caption" : "post-text"}>{originalPost.content}</p>}
           {originalPost.image && <img className="shared-post-media" src={originalPost.image} alt={`Bài viết của ${originalUsername}`} loading="lazy" />}
-          {originalPost.video && <video className="shared-post-media" src={originalPost.video} controls preload="metadata" />}
+          {originalPost.video && <div className="post-video-wrap is-shared-video"><video className="shared-post-media" src={originalPost.video} controls controlsList="nofullscreen" preload="metadata" /><button className="post-video-expand" type="button" aria-label="Mở video trong Reels" onClick={() => navigate(`/reels?post=${originalPost._id}`)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m0-4 6 6m6-6h4v4m0-4-6 6M4 16v4h4m-4 0 6-6m10 2v4h-4m4 0-6-6" /></svg></button></div>}
         </> : <p className="shared-post-unavailable">Nội dung này không còn khả dụng.</p>}
       </article> : <>
       {editingPostId === post._id ? <form className="post-edit-form" onSubmit={(event) => onUpdatePost(event, post)}>

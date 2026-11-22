@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const Post = require("../models/Post");
 const User = require("../models/User");
+const Comment = require("../models/Comment");
 const { getPosts } = require("../controllers/postControllers");
 
 function response() {
@@ -102,6 +103,40 @@ test("video feed filters media and author with the same paginated count query", 
     assert.equal(skip, 5);
     assert.equal(limit, 5);
     assert.deepEqual(res.body.pagination, { page: 2, limit: 5, total: 21, pages: 5 });
+});
+
+test("Reels returns an original video once and excludes its share", async (t) => {
+    const originals = { find: Post.find, count: Post.countDocuments, users: User.find, aggregate: Comment.aggregate };
+    t.after(() => {
+        Post.find = originals.find;
+        Post.countDocuments = originals.count;
+        User.find = originals.users;
+        Comment.aggregate = originals.aggregate;
+    });
+    const original = {
+        _id: "original-id", originalPostId: null, video: "/uploads/clip.mp4", likes: [], reactions: [],
+        authorId: { _id: "author", username: "author" },
+        toObject() { return { ...this }; }, populated() { return null; },
+    };
+    const share = { ...original, _id: "share-id", originalPostId: "original-id" };
+    let filter;
+    const chain = {
+        populate() { return this; }, sort() { return this; }, skip() { return this; }, limit() { return this; },
+        then(resolve, reject) {
+            return Promise.resolve([original, share, original].filter((post) => post.originalPostId == null)).then(resolve, reject);
+        },
+    };
+    Post.find = (query) => { filter = query; return chain; };
+    Post.countDocuments = async () => 2;
+    User.find = () => ({ select: async () => [] });
+    Comment.aggregate = async () => [];
+
+    const res = response();
+    await getPosts({ query: { media: "video" }, user: { _id: "viewer", friend: [], blockList: [], savedPosts: [] } }, res);
+
+    assert.equal(filter.originalPostId, null);
+    assert.deepEqual(res.body.posts.map((post) => post._id), ["original-id"]);
+    assert.equal(res.body.posts.length, 1);
 });
 
 test("feed rejects invalid media query values", async () => {
