@@ -34,6 +34,29 @@ function notificationText(type, reaction, commentId) {
   return NOTIFICATION_TEXT[type] || "có cập nhật mới";
 }
 
+function signOutLocal(stopHeartbeat, userId, navigate) {
+  stopHeartbeat();
+  disconnectSocket();
+  try {
+    if (userId) {
+      localStorage.removeItem(`ridge:recent-searches:${userId}`);
+    } else {
+      for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+        const key = localStorage.key(index);
+        if (key?.startsWith("ridge:recent-searches:")) localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // Continue logout even when browser storage is unavailable.
+  }
+  try {
+    localStorage.removeItem("token");
+  } catch {
+    // Continue logout even when browser storage is unavailable.
+  }
+  navigate("/", { replace: true });
+}
+
 function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,6 +72,7 @@ function AppLayout() {
   const stopHeartbeatRef = useRef(() => {});
   const refreshCountsRef = useRef(() => {});
   const currentUserIdRef = useRef("");
+  const navigateRef = useRef(navigate);
   const pathnameRef = useRef(location.pathname);
   const isFeed = location.pathname === "/feed";
 
@@ -58,6 +82,10 @@ function AppLayout() {
       headers: { Authorization: "Bearer " + localStorage.getItem("token") },
       signal: controller.signal,
     }).then(async (response) => {
+      if (response.status === 401) {
+        signOutLocal(stopHeartbeatRef.current, currentUserIdRef.current, navigateRef.current);
+        return;
+      }
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể tải hồ sơ.");
       setCurrentUser(data.user);
@@ -83,6 +111,8 @@ function AppLayout() {
           method: "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token") },
           signal: controller.signal,
+        }).then((response) => {
+          if (response.status === 401) signOutLocal(stopHeartbeatRef.current, currentUserIdRef.current, navigateRef.current);
         }).catch(() => {}).finally(() => controllers.delete(controller));
       } catch {
         // Heartbeat failures are intentionally silent.
@@ -117,6 +147,10 @@ function AppLayout() {
   useEffect(() => {
     currentUserIdRef.current = currentUser?._id || "";
   }, [currentUser?._id]);
+
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
 
   useEffect(() => {
     pathnameRef.current = location.pathname;
@@ -269,8 +303,6 @@ function AppLayout() {
   const navClass = ({ isActive }) => "menu-item " + (isActive ? "active" : "");
   const outletContext = { currentUser, setCurrentUser, searchQuery, setSearchQuery };
   function handleLogout() {
-    stopHeartbeatRef.current();
-    disconnectSocket();
     try {
       fetch(`${API_BASE}/api/auth/logout`, {
         method: "POST",
@@ -279,24 +311,7 @@ function AppLayout() {
     } catch {
       // Continue local logout if the request cannot be started.
     }
-    try {
-      if (currentUser?._id) {
-        localStorage.removeItem(`ridge:recent-searches:${currentUser._id}`);
-      } else {
-        for (let index = localStorage.length - 1; index >= 0; index -= 1) {
-          const key = localStorage.key(index);
-          if (key?.startsWith("ridge:recent-searches:")) localStorage.removeItem(key);
-        }
-      }
-    } catch {
-      // Continue logout even when browser storage is unavailable.
-    }
-    try {
-      localStorage.removeItem("token");
-    } catch {
-      // Continue logout even when browser storage is unavailable.
-    }
-    navigate("/", { replace: true });
+    signOutLocal(stopHeartbeatRef.current, currentUser?._id, navigateRef.current);
   }
   return (
     <ConfirmProvider>
