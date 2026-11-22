@@ -21,16 +21,20 @@ body:has(.home-layout) { background: var(--news-bg); }
 .guest-post-card > .ridge-video { width: calc(100% - 40px); margin: 0 20px; }
 .ridge-video-center { position: absolute; inset: 50% auto auto 50%; display: grid; width: 56px; height: 56px; padding: 0; place-items: center; transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: #fff; color: #2F4BE0; cursor: pointer; }
 .ridge-video-center svg { width: 24px; height: 24px; fill: currentColor; }
-.ridge-video-bar { position: absolute; right: 8px; bottom: 8px; left: 8px; z-index: 1; display: flex; min-height: 44px; align-items: center; gap: 10px; padding: 4px 10px; border-radius: 12px; background: rgb(12 14 20 / 76%); color: #fff; opacity: 1; transition: opacity 180ms ease; }
+.ridge-video-bar { position: absolute; right: 8px; bottom: 8px; left: 8px; z-index: 1; display: flex; min-height: 40px; align-items: center; gap: 10px; padding: 4px 10px; border-radius: 12px; background: rgb(12 14 20 / 76%); color: #fff; opacity: 1; transition: opacity 180ms ease; }
 .ridge-video.is-hidden .ridge-video-bar { opacity: 0; pointer-events: none; }
 .ridge-video:hover .ridge-video-bar, .ridge-video:focus-within .ridge-video-bar { opacity: 1; pointer-events: auto; }
 .ridge-video-bar button { display: grid; flex: 0 0 28px; width: 28px; height: 28px; padding: 3px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
 .ridge-video-bar button svg { width: 20px; height: 20px; fill: currentColor; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .ridge-video-bar button:focus-visible, .ridge-video-center:focus-visible { outline: 2px solid #2F4BE0; outline-offset: 2px; }
-.ridge-video-time { flex: 0 0 auto; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.ridge-video-bar input[type="range"] { flex: 1 1 auto; min-width: 20px; height: 4px; appearance: none; border-radius: 4px; background: linear-gradient(to right, #2F4BE0 var(--ridge-progress), rgb(255 255 255 / 42%) var(--ridge-progress)); cursor: pointer; }
-.ridge-video-bar input[type="range"]::-webkit-slider-thumb { width: 10px; height: 10px; appearance: none; border: 0; border-radius: 50%; background: #fff; }
-.ridge-video-bar input[type="range"]::-moz-range-thumb { width: 10px; height: 10px; border: 0; border-radius: 50%; background: #fff; }
+.ridge-video-time { flex: 0 0 auto; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ridge-video .ridge-video-bar input[type="range"] { flex: 1 1 auto; min-width: 20px; width: auto; height: 4px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; appearance: none; background: linear-gradient(to right, #2F4BE0 var(--ridge-progress), rgb(255 255 255 / 42%) var(--ridge-progress)); cursor: pointer; }
+.ridge-video .ridge-video-bar input[type="range"]::-webkit-slider-runnable-track { height: 4px; border: 0; background: transparent; }
+.ridge-video .ridge-video-bar input[type="range"]::-moz-range-track { height: 4px; border: 0; background: transparent; }
+.ridge-video .ridge-video-bar input[type="range"]::-webkit-slider-thumb { width: 12px; height: 12px; margin-top: -4px; appearance: none; border: 0; border-radius: 50%; background: #fff; opacity: 0; }
+.ridge-video .ridge-video-bar input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: #fff; opacity: 0; }
+.ridge-video .ridge-video-bar input[type="range"]:hover::-webkit-slider-thumb, .ridge-video .ridge-video-bar input[type="range"]:focus-visible::-webkit-slider-thumb, .ridge-video .ridge-video-bar input[type="range"]:active::-webkit-slider-thumb { opacity: 1; }
+.ridge-video .ridge-video-bar input[type="range"]:hover::-moz-range-thumb, .ridge-video .ridge-video-bar input[type="range"]:focus-visible::-moz-range-thumb, .ridge-video .ridge-video-bar input[type="range"]:active::-moz-range-thumb { opacity: 1; }
 .ridge-video-progress { position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: #2F4BE0; }
 .ridge-video:not(.is-hidden) .ridge-video-progress { display: none; }
 .ridge-video:hover .ridge-video-progress, .ridge-video:focus-within .ridge-video-progress { display: none; }
