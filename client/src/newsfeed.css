@@ -1099,6 +1099,14 @@
 .post-action-button:hover {
   background: var(--news-hover);
 }
+.post-action-button { transition: color 180ms ease, background-color 180ms ease, transform 180ms ease; }
+.post-action-button:active { transform: scale(.96); }
+.ridge-react-main.has-reaction { transition: color 220ms ease; }
+.ridge-react-main.has-reaction .ridge-react-emoji { display: inline-block; animation: reaction-pop 220ms ease; }
+@keyframes reaction-pop { 50% { transform: scale(1.28); } }
+.post-comments { animation: comments-enter 200ms ease both; }
+@keyframes comments-enter { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.privacy-select-trigger:hover { background: var(--news-hover); }
 
 .post-action-button svg {
   flex: none;
@@ -1175,6 +1183,11 @@
     padding: 0 8px;
     font-size: 13px;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-action-button, .post-comments, .ridge-react-main.has-reaction .ridge-react-emoji { animation: none; transition: none; }
+  .post-action-button:active { transform: none; }
 }
 
 @media (max-width: 600px) {
@@ -2145,3 +2158,4 @@
   }
 
 }
+
