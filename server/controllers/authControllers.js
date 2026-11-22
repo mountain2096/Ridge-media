@@ -110,6 +110,7 @@ const login = async(req,res) =>{
         const token = jwt.sign({
             id:user._id,
             isAdmin: user.isAdmin,
+            tv: user.tokenVersion || 0,
         },process.env.JWT_SECRET,
         {
             expiresIn:"7d",
@@ -227,6 +228,7 @@ const resetPassword = async (req, res) => {
             });
         }
         user.password = await bcrypt.hash(password, 10);
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
 
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
@@ -270,10 +272,20 @@ const changePassword = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    try {
+        await User.updateOne({ _id: req.user._id }, { $inc: { tokenVersion: 1 } });
+        return res.status(200).json({ message: "Đăng xuất thành công!" });
+    } catch (error) {
+        return errorResponse(res, error);
+    }
+};
+
 module.exports = {
     register,
     login,
     resetPassword,
     forgotPassword,
     changePassword,
+    logout,
 }

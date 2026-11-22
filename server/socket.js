@@ -17,8 +17,8 @@ async function authenticateSocket(socket, next) {
             return next(new Error("UNAUTHORIZED"));
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select("_id isLocked");
-        if (!user || user.isLocked) {
+        const user = await User.findById(decoded.id).select("_id isLocked tokenVersion");
+        if (!user || user.isLocked || (decoded.tv || 0) !== (user.tokenVersion || 0)) {
             return next(new Error("UNAUTHORIZED"));
         }
         socket.data.userId = toId(user._id);
