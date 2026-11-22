@@ -72,15 +72,15 @@ const reactToPost = async (req, res) => {
     }
 };
 
-const getPostReactions = async (req, res) => {
-    try {
+function reactionListOptions(req, res) {
         const type = req.query.type;
-        if (type !== undefined && !isReactionType(type)) return badType(res);
+        if (type !== undefined && !isReactionType(type)) { badType(res); return null; }
         const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
         const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 30));
-        const post = await loadReactablePost(req, req.params.id);
-        if (!post) return res.status(404).json({ message: "Bài viết không tồn tại!" });
-        const reactions = withLegacyLikes(post.reactions, post.likes);
+        return { type, page, limit };
+}
+
+async function sendReactionList(req, res, reactions, { type, page, limit }) {
         const ids = [...new Set(reactions.map((item) => idOf(item.userId)))];
         const users = await User.find({ _id: { $in: ids } }).select("username profilePicture isLocked blockList");
         const byId = new Map(users.map((user) => [idOf(user._id), user]));
@@ -92,8 +92,32 @@ const getPostReactions = async (req, res) => {
         const result = listReactions(populated, { viewerId: req.user._id, blockedIds, type, page, limit });
         result.counts = Object.fromEntries(REACTION_TYPES.map((reactionType) => [reactionType, result.counts[reactionType] || 0]));
         return res.json(result);
+}
+
+const getPostReactions = async (req, res) => {
+    try {
+        const options = reactionListOptions(req, res);
+        if (!options) return res;
+        const post = await loadReactablePost(req, req.params.id);
+        if (!post) return res.status(404).json({ message: "Bài viết không tồn tại!" });
+        return await sendReactionList(req, res, withLegacyLikes(post.reactions, post.likes), options);
     } catch (error) {
         if (error.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
+        return errorResponse(res, error);
+    }
+};
+
+const getCommentReactions = async (req, res) => {
+    try {
+        const options = reactionListOptions(req, res);
+        if (!options) return res;
+        const comment = await Comment.findOne({ _id: req.params.id, status: "active" });
+        if (!comment) return res.status(404).json({ message: "Bình luận không tồn tại!" });
+        const post = await loadReactablePost(req, comment.postId);
+        if (!post) return res.status(404).json({ message: "Bình luận không tồn tại!" });
+        return await sendReactionList(req, res, comment.reactions, options);
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID bình luận không hợp lệ!" });
         return errorResponse(res, error);
     }
 };
@@ -171,4 +195,4 @@ const reactToMessage = async (req, res) => {
     }
 };
 
-module.exports = { reactToPost, getPostReactions, reactToComment, reactToMessage };
+module.exports = { reactToPost, getPostReactions, getCommentReactions, reactToComment, reactToMessage };

@@ -7,7 +7,7 @@ const Message = require("../models/Message");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
-const { reactToPost, getPostReactions, reactToComment, reactToMessage } = require("../controllers/reactionControllers");
+const { reactToPost, getPostReactions, getCommentReactions, reactToComment, reactToMessage } = require("../controllers/reactionControllers");
 const { setIO } = require("../utils/realtime");
 
 const ME = "64b000000000000000000001";
@@ -170,6 +170,40 @@ test("comment: react, switch and remove; the comment author is notified", async 
 
         res = await call(reactToComment, "PUT", "nope", { params: { id: COMMENT_ID } });
         assert.equal(res.statusCode, 400);
+    } finally { s.restore(); }
+});
+
+test("comment reaction list: missing or hidden comments fail and visible list filters users", async () => {
+    const s = stubs();
+    const comment = { _id: COMMENT_ID, postId: POST_ID, reactions: [
+        { userId: ME, reaction: "love" },
+        { userId: AUTHOR, reaction: "wow" },
+        { userId: "64b000000000000000000003", reaction: "sad" },
+        { userId: "64b000000000000000000004", reaction: "like" },
+    ] };
+    const people = [
+        { _id: ME, username: "me", profilePicture: "me.png", blockList: [] },
+        { _id: AUTHOR, username: "author", profilePicture: "author.png", blockList: [] },
+        { _id: "64b000000000000000000003", username: "locked", isLocked: true, blockList: [] },
+        { _id: "64b000000000000000000004", username: "blocked", blockList: [] },
+    ];
+    Comment.findOne = async (query) => { assert.deepEqual(query, { _id: COMMENT_ID, status: "active" }); return comment; };
+    User.find = () => ({ select: async () => people });
+    const request = (query = {}) => getCommentReactions({ params: { id: COMMENT_ID }, query, user: { _id: ME, blockList: ["64b000000000000000000004"], friend: [] } }, response());
+    try {
+        Comment.findOne = async () => null;
+        assert.equal((await request()).statusCode, 404);
+        Comment.findOne = async () => comment;
+        Post.findOne = async () => fakePost({ privacy: "private" });
+        assert.equal((await request()).statusCode, 404);
+        Post.findOne = async () => fakePost();
+        assert.equal((await request({ type: "nope" })).statusCode, 400);
+        const res = await request({ page: "1", limit: "1" });
+        assert.equal(res.statusCode, 200);
+        assert.deepEqual(res.body.counts, { like: 0, love: 1, haha: 0, wow: 1, sad: 0, angry: 0 });
+        assert.equal(res.body.total, 2);
+        assert.equal(res.body.items[0].user.username, "me");
+        assert.deepEqual(Object.keys(res.body.items[0].user).sort(), ["_id", "profilePicture", "username"]);
     } finally { s.restore(); }
 });
 
