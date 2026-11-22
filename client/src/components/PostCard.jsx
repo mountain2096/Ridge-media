@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import CommentItem from "./CommentItem.jsx";
 import ReactionButton from "./ReactionButton.jsx";
 import MentionInput from "./MentionInput.jsx";
+import ReactionListDialog from "./ReactionListDialog.jsx";
 import "../comments.css";
 import { mergeLegacyLikes, summarizeReactions } from "../lib/reactions.js";
 
@@ -18,6 +19,7 @@ function PostCard({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionPopped, setReactionPopped] = useState(false);
+  const [reactionsOpen, setReactionsOpen] = useState(false);
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const commentsRef = useRef(null);
@@ -155,8 +157,10 @@ function PostCard({
           <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => onToggleComments?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận{post.commentsCount > 0 ? ` ${post.commentsCount}` : ""}</span></button>
           <button className="post-action-button" type="button" disabled={isSharing} onClick={() => onShare?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>{isSharing ? "Đang chia sẻ" : "Chia sẻ"}</span></button>
         </div>
+        {reactionSummary.total > 0 && <button className="post-reaction-chip" type="button" aria-label="Xem ai đã thả cảm xúc" onClick={() => setReactionsOpen(true)}><span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => <span key={item.type}>{item.emoji}</span>)}</span></button>}
       </div>
 
+      {reactionsOpen && <ReactionListDialog path={`/api/post/${post._id}/reactions`} onClose={() => setReactionsOpen(false)} />}
       {commentsOpen && <div className="post-comments profile-comments ridge-comments-list" ref={commentsRef}>
         <div className="comments-list">
           {isLoadingComments && <p>Đang tải bình luận...</p>}

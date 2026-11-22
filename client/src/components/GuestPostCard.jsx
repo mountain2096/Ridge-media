@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { mergeLegacyLikes, summarizeReactions } from "../lib/reactions.js";
 
 export default function GuestPostCard({ post }) {
   const shared = Boolean(post.originalPostId || post.originalUnavailable);
@@ -8,6 +9,7 @@ export default function GuestPostCard({ post }) {
   const date = (value) => value ? new Date(value).toLocaleDateString("vi-VN", { day: "numeric", month: "short" }) : "Mới đăng";
   const media = shared ? original : post;
   const hasMedia = Boolean(media?.image || media?.video);
+  const reactionSummary = summarizeReactions(mergeLegacyLikes(post.reactions, post.likes));
 
   return <article className="post-card card guest-post-card">
     <header className="post-header"><div className="post-author">
@@ -27,7 +29,7 @@ export default function GuestPostCard({ post }) {
         {original.video && <video className="shared-post-media" src={original.video} controls preload="metadata" />}
       </> : <p className="shared-post-unavailable">Nội dung này không còn khả dụng.</p>}</article>
     </> : post.content && <p className={hasMedia ? "post-caption" : "post-text"}>{hasMedia && <><strong>{username}</strong>{" "}</>}{post.content}</p>}
-    {post.reactionTotal > 0 && <div className="ridge-post-reactions" aria-label={`${post.reactionTotal} lượt thả cảm xúc`}><span className="ridge-react-stack" aria-hidden="true"><span className="ridge-reaction-heart"><svg viewBox="0 0 24 24"><path d="M20.8 8.7c0 5.3-8.8 10.1-8.8 10.1S3.2 14 3.2 8.7A4.2 4.2 0 0 1 12 6.8a4.2 4.2 0 0 1 8.8 1.9Z"/></svg></span><span className="ridge-reaction-like"><svg viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2 3l-.7 3H19a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 18 20H7z"/></svg></span></span><span>{post.reactionTotal} lượt thả cảm xúc</span></div>}
+    {post.reactionTotal > 0 && <div className="ridge-post-reactions" aria-label={`${post.reactionTotal} lượt thả cảm xúc`}><span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.length ? reactionSummary.top.slice(0, 3).map((item) => <span key={item.type}>{item.emoji}</span>) : <><span className="ridge-reaction-heart"><svg viewBox="0 0 24 24"><path d="M20.8 8.7c0 5.3-8.8 10.1-8.8 10.1S3.2 14 3.2 8.7A4.2 4.2 0 0 1 12 6.8a4.2 4.2 0 0 1 8.8 1.9Z"/></svg></span><span className="ridge-reaction-like"><svg viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2 3l-.7 3H19a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 18 20H7z"/></svg></span></>}</span><span>{post.reactionTotal} lượt thả cảm xúc</span></div>}
     <footer className="guest-post-footer">Đăng nhập để thích, bình luận hoặc chia sẻ · <Link to="/?tab=login">Đăng nhập</Link></footer>
   </article>;
 }

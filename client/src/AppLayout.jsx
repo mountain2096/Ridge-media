@@ -318,7 +318,7 @@ function AppLayout() {
     <main className="home-layout">
       <header className="home-topbar">
         <div className="header-brand-search">
-          <NavLink className="home-brand" to="/feed"><span className="home-brand-icon">R</span><span>Ridge</span></NavLink>
+          <NavLink className="home-brand" to="/feed" aria-label="Ridge - về bảng tin" onClick={(event) => { if (location.pathname === "/feed") { event.preventDefault(); window.location.assign("/feed"); } else window.scrollTo(0, 0); }}><span className="home-brand-icon">R</span><span>Ridge</span></NavLink>
           <UserSearch key={currentUser?._id || "search-loading"} currentUser={currentUser} />
         </div>
         <div className="news-topbar-right">

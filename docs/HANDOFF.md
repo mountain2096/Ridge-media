@@ -20,6 +20,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 
 ## 4. Test status (update each round)
 - Round 25: `node --test` passed 119 tests; client lint and build passed. Reels now filters out shared posts, de-duplicates ids, and opens the requested post from feed/profile cards, fetching it when absent from page one. No browser, API, Vite, or database was started.
+- Round 26: `node --test` passed 119 tests; client lint and build passed. Restored the reaction summary chip and reaction list dialog on shared feed/profile cards, use real reaction emojis in guest cards when available, and made the brand link return to the top or freshly reload `/feed`. No browser, API, Vite, or database was started.
 - Story viewer/strip: `node --test` passed 118 tests; client lint and build passed. Viewer timer survives parent renders, pause is tied to pointer hold, and newly created plus own stories appear in 112×176 strip cards. No backend behavior changed; not browser-verified.
 - Round 22 feed-card redesign: client lint/build passed; mocked API Playwright at 1440px rendered both reacted and zero-reaction posts. App and reference screenshots were saved to `%TEMP%` and visually compared; live API/database were not used.
 - Round 22 comments pass: client lint/build passed; mocked API Playwright screenshots at 1440px show a thread with two replies and a long multi-line reply. The app screenshots and `feed-redesign-reference.html` screenshot are saved under `%TEMP%` (`ridge-round22-comments-two-replies.png`, `ridge-round22-comments-long-reply.png`, `ridge-round22-feed-reference.png`). No live API/database was used.
@@ -103,6 +104,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 22 | Feed redesign using `feed-redesign.css`, Be Vietnam Pro, and `docs/design/feed-redesign-reference.html`; updated feed/guest cards, privacy icons, reaction summaries/actions, post menu, and comments/reply threads | Client lint/build passed; mocked API Playwright screenshots visually inspected at 1440px for two replies, a long reply, and the reference; no live API/database | this commit |
 | 24 | Keep story playback running across renders and show newly posted and own stories in the media-preview strip | 118 backend tests; client lint/build passed; no backend behavior changed; not browser-verified | pending |
 | 25 | Exclude shared posts from Reels, de-duplicate post ids, and open feed/profile videos at their original post in Reels | `node --test`: 119 passed; client lint/build passed; no API, Vite, database, or browser started | pending |
+| 26 | Restore reaction summaries and reaction list access on post cards; make the brand link return to the top of the feed | `node --test`: 119 passed; client lint/build passed; no API, Vite, database, or browser started | this commit |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
@@ -113,6 +115,7 @@ Responsive feed, friends, and messages layouts were checked at the requested vie
 Post action spacing and the profile reaction picker should be checked manually in the browser; the composer padding already matches on all sides in its active CSS.
 Story strip and playback fixes were statically reviewed; no API, Vite, or database was started.
 Round 25 Reels filtering, de-duplication, and deep-link behavior were covered by backend checks and static client build; no browser or live service was started.
+Round 26 reaction chips/dialogs and brand-link behavior passed client lint/build and backend checks; no browser or live service was started.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
