@@ -1,5 +1,5 @@
-import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
 import MessagesView from "../components/MessagesView.jsx";
 import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
@@ -26,6 +26,7 @@ function FeedPage({ section = "feed" }){
     const confirmAction = useConfirm();
     const navigate = useNavigate();
     const location = useLocation();
+    const { id: routePostId } = useParams();
     const { currentUser, setCurrentUser, searchQuery } = useOutletContext();
     const activeSection = section;
     const [posts, setPosts] = useState([]);
@@ -45,6 +46,7 @@ function FeedPage({ section = "feed" }){
     const [comments, setComments] = useState([]);
     const [replyTo, setReplyTo] = useState(null); // { rootId, username } while answering a comment
     const commentsRequestId = useRef(0);
+    const toggleCommentsRef = useRef(null);
     const handledPostHash = useRef("");
     const [isLoadingComments, setIsLoadingComments] = useState(false);
     const [commentError, setCommentError] = useState("");
@@ -212,11 +214,12 @@ function FeedPage({ section = "feed" }){
 
     useEffect(() => {
         async function loadPosts() {
+        if (activeSection === "post" || feedPage === 1) setIsLoading(true);
         setError("");
         try {
             const token = localStorage.getItem("token");
 
-            const response = await fetch(`${API_BASE}/api/post?page=${feedPage}&limit=20`, {
+            const response = await fetch(activeSection === "post" ? `${API_BASE}/api/post/${routePostId}` : `${API_BASE}/api/post?page=${feedPage}&limit=20`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -225,9 +228,17 @@ function FeedPage({ section = "feed" }){
             const data = await response.json();
 
             if (!response.ok) {
-            throw new Error(data.message || "Không thể tải bài viết.");
+            const requestError = new Error(data.message || "Không thể tải bài viết.");
+            requestError.status = response.status;
+            throw requestError;
             }
 
+            if (activeSection === "post") {
+              setPosts([data.post]);
+              setHasMorePosts(false);
+              setLikedPostIds(data.post?.isLiked ? [data.post._id] : []);
+              return;
+            }
             if (!Array.isArray(data.posts)) {
               throw new Error("Dữ liệu bài viết từ máy chủ không hợp lệ.");
             }
@@ -239,7 +250,7 @@ function FeedPage({ section = "feed" }){
                 .map((post) => post._id)
             );
         } catch (requestError) {
-            setError(requestError.message);
+            setError(activeSection === "post" ? requestError : requestError.message);
         } finally {
             setIsLoading(false);
             setIsLoadingMorePosts(false);
@@ -247,7 +258,19 @@ function FeedPage({ section = "feed" }){
         }
 
         loadPosts();
-    }, [reloadPosts, feedPage]);
+    }, [reloadPosts, feedPage, activeSection, routePostId]);
+
+    useEffect(() => {
+      if (activeSection !== "post" || isLoading || !location.search) return;
+      const commentId = new URLSearchParams(location.search).get("comment");
+      if (!commentId) return;
+      const comment = document.getElementById(`comment-${commentId}`);
+      if (!comment) return;
+      comment.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+      comment.classList.add("notification-comment-highlight");
+      const timer = window.setTimeout(() => comment.classList.remove("notification-comment-highlight"), 2000);
+      return () => window.clearTimeout(timer);
+    }, [activeSection, isLoading, location.search, comments]);
 
     useEffect(() => {
       if (isLoading || !location.hash || handledPostHash.current === location.hash) {
@@ -703,7 +726,7 @@ function FeedPage({ section = "feed" }){
         setCommentError(requestError.message);
       }
     }
-    async function handleToggleComments(postId) {
+    const handleToggleComments = useCallback(async (postId) => {
       setReplyTo(null);
       if (openCommentsFor === postId) {
         commentsRequestId.current += 1;
@@ -748,7 +771,12 @@ function FeedPage({ section = "feed" }){
           setIsLoadingComments(false);
         }
       }
-    }
+    }, [openCommentsFor]);
+    useEffect(() => { toggleCommentsRef.current = handleToggleComments; }, [handleToggleComments]);
+    useEffect(() => {
+      const postId = posts[0]?._id;
+      if (activeSection === "post" && postId === routePostId && openCommentsFor !== postId) toggleCommentsRef.current?.(postId);
+    }, [activeSection, openCommentsFor, posts, routePostId]);
     async function handleCreateComment(event, postId) {
       event.preventDefault();
 
@@ -927,6 +955,7 @@ function FeedPage({ section = "feed" }){
 
     return (
         <><section className={"feed-column " + (section === "feed" ? "" : "feed-column-single")}>
+                {activeSection === "post" && <Link className="single-post-back" to="/feed">← Bảng tin</Link>}
                 {activeSection === "messages" ? (
                   <MessagesView currentUser={currentUser} initialConversationId={location.state?.openConversationId} />
                 ) : activeSection === "settings" ? (
@@ -960,11 +989,12 @@ function FeedPage({ section = "feed" }){
                 </>}
                 {isLoading && <p>Đang tải bài viết...</p>}
 
-{!isLoading && error && (
-  <p className="feedback-message error">{error}</p>
+{!isLoading && error && activeSection === "post" && [404, 403].includes(error.status) ? <div className="single-post-unavailable card"><p>Bài viết không còn khả dụng hoặc bạn không có quyền xem.</p><Link to="/feed">Quay lại bảng tin</Link></div> : !isLoading && error && (
+  <p className="feedback-message error">{typeof error === "string" ? error : error.message}</p>
 )}
 
-{!isLoading && !error && displayedPosts.length === 0 && (
+{!isLoading && !error && activeSection === "post" && displayedPosts.length === 0 && <div className="single-post-unavailable card"><p>Bài viết không còn khả dụng hoặc bạn không có quyền xem.</p><Link to="/feed">Quay lại bảng tin</Link></div>}
+{!isLoading && !error && activeSection !== "post" && displayedPosts.length === 0 && (
   <p>{activeSection === "saved" ? "Bạn chưa lưu bài viết nào." : activeSection === "activity" ? "Bạn chưa đăng bài viết nào." : "Chưa có bài viết nào."}</p>
 )}
 {likeError && (

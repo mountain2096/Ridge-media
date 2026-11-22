@@ -161,6 +161,7 @@ function App() {
           <Route path="admin" element={<AdminPanelRoute />} />
           <Route path="reels" element={<ReelsView />} />
           <Route path="activity" element={<FeedPage section="activity" />} />
+          <Route path="post/:id" element={<FeedPage section="post" />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

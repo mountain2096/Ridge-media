@@ -153,9 +153,16 @@ const getPostById = async (req, res) =>{
             if (!await canAccessPost(req.user, sourcePost)) {
                 return res.status(404).json({ message: "Bài viết không tồn tại!" });
             }
+            await post.populate({ path: "originalPostId", select: "content image video authorId privacy status createdAt editedAt", populate: { path: "authorId", select: "username profilePicture" } });
         }
+        await post.populate("authorId", "username profilePicture");
+        const postData = post.toObject();
+        postData.isLiked = post.likes.some((userId) => userId.toString() === req.user._id.toString());
+        postData.isMine = post.authorId?._id?.toString() === req.user._id.toString();
+        postData.isSaved = (req.user.savedPosts || []).some((postId) => postId.toString() === post._id.toString());
+        postData.commentsCount = await Comment.countDocuments({ postId: post._id, status: "active" });
         res.status(200).json({
-            post
+            post: postData
         })
     } catch(err){
         if (err.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });

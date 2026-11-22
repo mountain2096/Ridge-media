@@ -101,7 +101,7 @@ function CommentItem({
   }
 
   return (
-    <div className={`comment-item ridge-comment-item ${isReply ? "is-reply" : ""} ${isLastReply ? "is-last-reply" : ""} ${isThreadParent ? "ridge-thread-parent" : ""}`}>
+    <div id={`comment-${comment._id}`} className={`comment-item ridge-comment-item ${isReply ? "is-reply" : ""} ${isLastReply ? "is-last-reply" : ""} ${isThreadParent ? "ridge-thread-parent" : ""}`}>
       <div className="ridge-comment-avatar-column">
         <Link className="comment-avatar" to={`/profile/${comment.authorId?._id}`} aria-label={`Xem trang cá nhân ${comment.authorId?.username || "người dùng"}`}>
           {comment.authorId?.profilePicture ? <img src={comment.authorId.profilePicture} alt="" /> : (comment.authorId?.username || "U").charAt(0).toUpperCase()}

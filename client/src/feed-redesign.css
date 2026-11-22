@@ -16,7 +16,7 @@
 .home-layout { max-width: 1360px; grid-template-columns: 248px minmax(0, 680px) 300px; justify-content: center; gap: 24px; padding: 0 24px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
 body:has(.home-layout) { background: var(--news-bg); }
 .home-layout { margin-inline: auto; }
-.ridge-video { position: relative; width: 100%; overflow: hidden; background: #080a10; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+.ridge-video { position: relative; width: 100%; overflow: hidden; border-radius: 14px; background: #080a10; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
 .ridge-video > video { display: block; width: 100%; margin: 0; }
 .guest-post-card > .ridge-video { width: calc(100% - 40px); margin: 0 20px; }
 .ridge-video-center { position: absolute; inset: 50% auto auto 50%; display: grid; width: 56px; height: 56px; padding: 0; place-items: center; transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: #fff; color: #2F4BE0; cursor: pointer; }
@@ -36,6 +36,8 @@ body:has(.home-layout) { background: var(--news-bg); }
 .ridge-video .ridge-video-bar input[type="range"]:hover::-webkit-slider-thumb, .ridge-video .ridge-video-bar input[type="range"]:focus-visible::-webkit-slider-thumb, .ridge-video .ridge-video-bar input[type="range"]:active::-webkit-slider-thumb { opacity: 1; }
 .ridge-video .ridge-video-bar input[type="range"]:hover::-moz-range-thumb, .ridge-video .ridge-video-bar input[type="range"]:focus-visible::-moz-range-thumb, .ridge-video .ridge-video-bar input[type="range"]:active::-moz-range-thumb { opacity: 1; }
 .ridge-video-progress { position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: #2F4BE0; }
+.ridge-video-progress { border-radius: 0 0 14px 14px; }
+.shared-post-card .ridge-video { border-radius: 12px; }
 .ridge-video:not(.is-hidden) .ridge-video-progress { display: none; }
 .ridge-video:hover .ridge-video-progress, .ridge-video:focus-within .ridge-video-progress { display: none; }
 .ridge-video-error { position: absolute; top: 12px; left: 12px; padding: 5px 8px; border-radius: 8px; background: rgb(12 14 20 / 76%); color: #fff; font-size: 12px; }
