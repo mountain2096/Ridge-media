@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 19 (branch `feat/reels-view`).
+> Last updated: 2026-11-22, after Round 20 (branch `fix/reels-layout`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -85,7 +85,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 19 | Add the standalone vertical Reels view, route/sidebar navigation, and remove legacy FeedPage reels branches | 116 tests passed; lint/build passed; live demo DB and the browser flows above verified; Round 19b and 19c redesigns | `c83e6b5`, `ea69ce7`, `91aeafc`, `6e19776`, `6f10afa`, `c345a33`, `b955cad` |
 | 19d | Fix Reels captions, progress updates, mobile overlay padding, and desktop navigation | 116 tests; lint/build passed; mocked API Playwright flows and screenshots verified | `8468777` |
 | 19e | Fix Reels overlay clearance, caption resize measurement, narrow desktop navigation, and small CSS leftovers | 116 tests; lint/build passed; mocked API Playwright screenshots verified at five viewport sizes and after resize | `a5c4039` |
-| 20 | Fix Reels page sizing and responsive top/left offsets; skip unavailable or URL-less video posts | Client lint/build passed; mocked API Playwright layout and comments-panel checks at 1440x900, 820x1100, and 390x844 | pending |
+| 20 | Fix Reels page sizing and responsive top/left offsets; skip unavailable or URL-less video posts | Client lint/build passed; mocked API Playwright layout and comments-panel checks at 1440x900, 820x1100, and 390x844 | `de6a86a` |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
