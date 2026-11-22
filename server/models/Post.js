@@ -21,6 +21,7 @@ const postSchema = new mongoose.Schema(
             type: String,
             default: ""
         },
+        editedAt: { type: Date, default: null },
         privacy: { type: String, enum: ["public", "friends", "private"], default: "public" },
         status: { type: String, enum: ["active", "hidden", "deleted"], default: "active", index: true },
         originalPostId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: null },

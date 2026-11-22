@@ -75,7 +75,7 @@ const getPosts = async (req,res) =>{
                 .populate("authorId", "username profilePicture")
                 .populate({
                     path: "originalPostId",
-                    select: "content image video authorId privacy status createdAt",
+                    select: "content image video authorId privacy status createdAt editedAt",
                     match: {
                         status: "active",
                         authorId: { $nin: blockedUserIds },
@@ -195,6 +195,7 @@ const updatePost = async (req, res) =>{
             })
         }
 
+        let contentChanged = false;
         if(content !== undefined){
             if(!content.trim()){
                 return res.status(400).json({
@@ -202,15 +203,19 @@ const updatePost = async (req, res) =>{
                 })
             }
 
+            contentChanged = content.trim() !== post.content.trim();
             post.content = content;
         }
 
+        const imageChanged = image !== undefined && image.trim() !== (post.image || "").trim();
+        const videoChanged = video !== undefined && video.trim() !== (post.video || "").trim();
         if (image !== undefined) {
             post.image = image.trim();
         }
         if (video !== undefined) {
             post.video = video.trim();
         }
+        if (contentChanged || imageChanged || videoChanged) post.editedAt = new Date();
         await post.save();
 
         res.status(200).json({
