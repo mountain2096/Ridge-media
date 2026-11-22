@@ -55,6 +55,10 @@ body:has(.home-layout) { background: var(--news-bg); }
 .home-layout .header-icon-link:hover { background: var(--news-hover); }
 .home-layout .home-sidebar { top: 0; width: 248px; height: 100vh; padding: calc(var(--app-header-height) + 24px) 0 24px; }
 .home-layout .home-menu { gap: 4px; }
+.home-layout .home-menu.has-active-pill { position: relative; }
+.home-layout .sidebar-active-pill { position: absolute; z-index: 0; top: 0; left: 0; border-radius: 12px; background: #E6EBFF; pointer-events: none; }
+.home-layout .home-menu.has-active-pill .menu-item.active { position: relative; z-index: 1; background: transparent; }
+.home-layout .home-menu:not(.has-active-pill) .menu-item.active { background: #E6EBFF; }
 .home-layout .menu-item { min-height: 44px; gap: 12px; padding: 0 14px; border-radius: 12px; font-size: 15px; font-weight: 500; }
 .home-layout .menu-item.active { background: #E6EBFF; color: var(--news-accent); font-weight: 600; }
 .home-layout .sidebar-count { min-width: 22px; min-height: 22px; padding: 0 7px; font-size: 12px; font-weight: 600; }
@@ -178,9 +182,7 @@ body:has(.home-layout) { background: var(--news-bg); }
 .home-layout .post-action-button:active { transform: scale(.97); }
 .home-layout .post-action-button.liked, .home-layout .post-action-button.liked svg, .home-layout .ridge-react-main.has-reaction { color: var(--news-accent); font-weight: 600; }
 .home-layout .post-action-button.liked svg { fill: currentColor; }
-.home-layout .ridge-reaction-popped { display: inline-block; animation: ridge-reaction-pop 220ms ease-out; }
-@keyframes ridge-reaction-pop { 50% { transform: scale(1.28); } }
-@media (prefers-reduced-motion: reduce) { .home-layout .post-action-button:active { transform: none; } .home-layout .ridge-reaction-popped { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .home-layout .post-action-button:active { transform: none; } }
 @media (max-width: 640px) { .home-layout .post-action-button, .home-layout .ridge-react-main.post-action-button { padding-inline: 4px; } }
 
 .guest-layout .post-card { padding: 0 20px 8px; border: 1px solid var(--news-border); border-radius: 16px; background: #fff; box-shadow: none; }
@@ -285,4 +287,6 @@ a[class*="button"]:active,
   button, a[class*="button"], .header-icon-link, .profile-menu-trigger,
   .home-layout .home-menu a { transition: none; }
   .route-motion, .profile-tab-motion { animation: none; }
+  .home-layout .sidebar-active-pill { display: none; }
+  .home-layout .home-menu.has-active-pill .menu-item.active { background: #E6EBFF; }
 }

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
 import { API_BASE } from "./lib/api.js";
 import { ConfirmProvider } from "./components/ConfirmDialog.jsx";
 import UserSearch from "./components/UserSearch.jsx";
@@ -352,6 +353,31 @@ function AppLayout() {
   }
 
   const navClass = ({ isActive }) => "menu-item " + (isActive ? "active" : "");
+  const menuRef = useRef(null);
+  const activePillRef = useRef(null);
+  const sidebarMotion = useRef(null);
+  useLayoutEffect(() => {
+    sidebarMotion.current = gsap.context(() => {}, menuRef);
+    return () => sidebarMotion.current?.revert();
+  }, []);
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    const pill = activePillRef.current;
+    const active = menu?.querySelector(".menu-item.active");
+    if (!menu || !pill || !active) return;
+    menu.classList.add("has-active-pill");
+    const x = active.offsetLeft;
+    const y = active.offsetTop;
+    const width = active.offsetWidth;
+    const height = active.offsetHeight;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const initialized = pill.dataset.ready === "true";
+    sidebarMotion.current?.add(() => {
+      if (!initialized || reduced) gsap.set(pill, { x, y, width, height });
+      else gsap.to(pill, { x, y, width, height, duration: 0.35, ease: "power3.out" });
+    });
+    pill.dataset.ready = "true";
+  }, [location.pathname]);
   const outletContext = { currentUser, setCurrentUser, searchQuery, setSearchQuery };
   function handleLogout() {
     try {
@@ -392,7 +418,8 @@ function AppLayout() {
         </div>
       </header>
       <aside className="home-sidebar">
-        <nav className="home-menu" aria-label="Điều hướng chính">
+        <nav className="home-menu" aria-label="Điều hướng chính" ref={menuRef}>
+          <span className="sidebar-active-pill" ref={activePillRef} aria-hidden="true" />
           <NavLink className={navClass} to="/feed" end title="Bảng tin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg><span className="menu-item-label">Bảng tin</span></NavLink>
           <NavLink className={navClass} to="/reels" end title="Reels"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="m10 9 5 3-5 3z" /></svg><span className="menu-item-label">Reels</span></NavLink>
           <NavLink className={navClass} to="/messages" title="Tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg><span className="menu-item-label">Tin nhắn</span>{messageCount > 0 && <span className="sidebar-count">{messageCount > 99 ? "99+" : messageCount}</span>}</NavLink>

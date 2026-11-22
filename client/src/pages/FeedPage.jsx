@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
 import MessagesView from "../components/MessagesView.jsx";
 import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
@@ -30,6 +31,32 @@ function FeedPage({ section = "feed" }){
     const { currentUser, setCurrentUser, searchQuery } = useOutletContext();
     const activeSection = section;
     const [posts, setPosts] = useState([]);
+    const postCardRefs = useRef(new Map());
+    const pendingCardAnimations = useRef(new Set());
+    const createdPostId = useRef(null);
+    const feedMotionContext = useRef(null);
+    useEffect(() => {
+      feedMotionContext.current = gsap.context(() => {});
+      return () => feedMotionContext.current?.revert();
+    }, []);
+    useEffect(() => {
+      if (activeSection !== "feed" || !pendingCardAnimations.current.size) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        pendingCardAnimations.current.clear();
+        return;
+      }
+      const pending = [...pendingCardAnimations.current].slice(0, 8);
+      pending.forEach((id) => pendingCardAnimations.current.delete(id));
+      const created = pending.find((id) => id.startsWith("created:"));
+      const cards = pending.filter((id) => !id.startsWith("created:")).map((id) => postCardRefs.current.get(id)).filter(Boolean);
+      if (cards.length) feedMotionContext.current?.add(() => gsap.fromTo(cards, { autoAlpha: 0, y: 16 }, {
+        autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.06, ease: "power3.out", clearProps: "all",
+      }));
+      const createdCard = created && postCardRefs.current.get(created.slice("created:".length));
+      if (createdCard) feedMotionContext.current?.add(() => gsap.fromTo(createdCard, { autoAlpha: 0, scale: 0.94 }, {
+        autoAlpha: 1, scale: 1, duration: 0.6, ease: "elastic.out(1, 0.7)", clearProps: "all",
+      }));
+    }, [activeSection, posts]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [postContent, setPostContent] = useState("");
@@ -242,6 +269,11 @@ function FeedPage({ section = "feed" }){
             if (!Array.isArray(data.posts)) {
               throw new Error("Dữ liệu bài viết từ máy chủ không hợp lệ.");
             }
+            data.posts.slice(0, 8).forEach((post) => pendingCardAnimations.current.add(post._id));
+            if (createdPostId.current && data.posts.some((post) => post._id === createdPostId.current)) {
+              pendingCardAnimations.current.delete(createdPostId.current);
+              pendingCardAnimations.current.add(`created:${createdPostId.current}`);
+            }
             setPosts((currentPosts) => feedPage === 1 ? data.posts : [...currentPosts, ...data.posts]);
             setHasMorePosts(data.pagination ? feedPage < data.pagination.pages : false);
             setLikedPostIds(
@@ -333,6 +365,7 @@ function FeedPage({ section = "feed" }){
           throw new Error(data.message || "Không thể đăng bài.");
         }
 
+        createdPostId.current = data.post?._id || null;
         setPostContent("");
         setPostImageFile(null);
         setPostVideoFile(null);
@@ -1003,6 +1036,7 @@ function FeedPage({ section = "feed" }){
 {!isLoading && !error && displayedPosts.map((post) => <PostCard
   key={post._id}
   post={post}
+  motionRef={(node) => { if (node) postCardRefs.current.set(post._id, node); else postCardRefs.current.delete(post._id); }}
   currentUser={currentUser}
   isLiked={post.isLiked ?? likedPostIds.includes(post._id)}
   commentsCount={post.commentsCount ?? 0}
