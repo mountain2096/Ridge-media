@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Round 27: `node --test`, client lint, and client build passed. Added the custom Ridge video player to feed, shared-post, and guest cards; no browser screenshot was taken.
 - Round 25: `node --test` passed 119 tests; client lint and build passed. Reels now filters out shared posts, de-duplicates ids, and opens the requested post from feed/profile cards, fetching it when absent from page one. No browser, API, Vite, or database was started.
 - Round 26: `node --test` passed 119 tests; client lint and build passed. Restored the reaction summary chip and reaction list dialog on shared feed/profile cards, use real reaction emojis in guest cards when available, and made the brand link return to the top or freshly reload `/feed`. No browser, API, Vite, or database was started.
 - Story viewer/strip: `node --test` passed 118 tests; client lint and build passed. Viewer timer survives parent renders, pause is tied to pointer hold, and newly created plus own stories appear in 112×176 strip cards. No backend behavior changed; not browser-verified.
@@ -105,6 +106,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 24 | Keep story playback running across renders and show newly posted and own stories in the media-preview strip | 118 backend tests; client lint/build passed; no backend behavior changed; not browser-verified | pending |
 | 25 | Exclude shared posts from Reels, de-duplicate post ids, and open feed/profile videos at their original post in Reels | `node --test`: 119 passed; client lint/build passed; no API, Vite, database, or browser started | pending |
 | 26 | Restore reaction summaries and reaction list access on post cards; make the brand link return to the top of the feed | `node --test`: 119 passed; client lint/build passed; no API, Vite, database, or browser started | this commit |
+| 27 | Add custom Ridge video controls to feed, shared, and guest post cards | `node --test`, client lint/build passed; no browser screenshot | pending |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
@@ -116,6 +118,7 @@ Post action spacing and the profile reaction picker should be checked manually i
 Story strip and playback fixes were statically reviewed; no API, Vite, or database was started.
 Round 25 Reels filtering, de-duplication, and deep-link behavior were covered by backend checks and static client build; no browser or live service was started.
 Round 26 reaction chips/dialogs and brand-link behavior passed client lint/build and backend checks; no browser or live service was started.
+Round 27 player uses native video playback with custom accessible controls, keeps one feed video playing at a time, and preserves Reels deep links; no live service or browser screenshot was used.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
