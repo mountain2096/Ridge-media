@@ -1,0 +1,189 @@
+/* Message icon picker (emoji + stickers) and sticker bubbles. */
+
+.ridge-messages .ridge-message-compose button.ridge-emoji-toggle {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 50%;
+  background: var(--news-surface, #fff);
+  color: var(--news-nav, #3a4358);
+}
+
+.ridge-messages .ridge-message-compose button.ridge-emoji-toggle:hover:not(:disabled),
+.ridge-messages .ridge-message-compose button.ridge-emoji-toggle[aria-expanded="true"] {
+  background: var(--news-hover, #eef0f7);
+  color: var(--news-accent, #2f4be0);
+  filter: none;
+}
+
+.ridge-messages .ridge-picker {
+  position: absolute;
+  bottom: 80px;
+  left: 16px;
+  z-index: 20;
+  display: flex;
+  width: min(360px, calc(100% - 32px));
+  height: min(380px, calc(100% - 100px));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 14px;
+  background: var(--news-surface, #fff);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 18%);
+}
+
+.ridge-picker-search {
+  flex: 0 0 auto;
+  min-height: 38px;
+  margin: 10px 10px 6px;
+  padding: 0 12px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 10px;
+  background: var(--news-field, #f8f9fc);
+  color: var(--news-ink, #0f172a);
+  font-size: 14px;
+}
+
+.ridge-picker-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 0 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--news-border, #e6e8ef);
+}
+
+.ridge-picker-tab {
+  flex: 1 0 auto;
+  min-width: 38px;
+  height: 38px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ridge-picker-tab:hover { background: var(--news-hover, #eef0f7); }
+.ridge-picker-tab[aria-selected="true"] { border-bottom-color: var(--news-accent, #2f4be0); background: var(--news-hover, #eef0f7); }
+
+.ridge-picker-body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  overscroll-behavior: contain;
+}
+
+.ridge-picker-heading {
+  margin: 6px 4px;
+  color: var(--news-muted, #5b6478);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.ridge-picker-empty {
+  margin: 0;
+  padding: 24px 8px;
+  color: var(--news-muted, #5b6478);
+  font-size: 14px;
+  text-align: center;
+}
+
+.ridge-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  gap: 2px;
+}
+
+.ridge-emoji-btn {
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ridge-emoji-btn:hover { background: var(--news-hover, #eef0f7); }
+
+.ridge-picker-packs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ridge-picker-pack {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 999px;
+  background: var(--news-surface, #fff);
+  color: var(--news-ink, #0f172a);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ridge-picker-pack.active {
+  border-color: var(--news-accent, #2f4be0);
+  background: var(--news-accent, #2f4be0);
+  color: #fff;
+}
+
+.ridge-sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 6px;
+}
+
+.ridge-sticker-btn {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ridge-sticker-btn:hover { background: var(--news-hover, #eef0f7); }
+.ridge-sticker-btn img { width: 100%; height: 100%; object-fit: contain; }
+
+.ridge-picker button:focus-visible,
+.ridge-picker input:focus-visible {
+  outline: 2px solid var(--news-accent, #2f4be0);
+  outline-offset: 1px;
+}
+
+/* A sticker message has no bubble: just the picture and the time. */
+.ridge-messages .ridge-message-bubble.sticker,
+.ridge-messages .ridge-message-bubble.sticker.mine,
+.ridge-messages .ridge-message-bubble.sticker.theirs {
+  padding: 2px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--news-ink, #0f172a);
+  box-shadow: none;
+}
+
+.ridge-messages .ridge-message-bubble.sticker .ridge-message-time {
+  color: var(--news-muted, #5b6478);
+}
+
+.ridge-sticker-img {
+  display: block;
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+}
+
+@media (max-width: 767px) {
+  .ridge-messages .ridge-picker { left: 8px; bottom: 76px; width: calc(100% - 16px); }
+  .ridge-sticker-img { width: 96px; height: 96px; }
+}

@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
 import { getSocket } from "../lib/socket.js";
 import ReactionButton from "./ReactionButton.jsx";
+import EmojiStickerPicker from "./EmojiStickerPicker.jsx";
+import { findSticker } from "../lib/stickers.js";
 import { sendReaction, summarizeReactions } from "../lib/reactions.js";
 import "../messages.css";
 
@@ -37,7 +39,10 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [friendSearch, setFriendSearch] = useState("");
   const [typingConversationId, setTypingConversationId] = useState(null);
   const [syncTick, setSyncTick] = useState(0);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const messageListRef = useRef(null);
+  const messageInputRef = useRef(null);
+  const emojiToggleRef = useRef(null);
   const handledUserRequestRef = useRef("");
   const activeConversationIdRef = useRef(null);
   const conversationsRef = useRef([]);
@@ -112,6 +117,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       setMessages([]);
       setActiveConversationId(conversation._id);
       setShowChatPane(true);
+      setIsPickerOpen(false);
       setIsFriendPickerOpen(false);
       setFriendSearch("");
     } catch (requestError) {
@@ -374,8 +380,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     state.active = false;
   }, []);
 
-  function handleMessageInput(event) {
-    const value = event.target.value;
+  function applyMessageValue(value) {
     setMessageContent(value);
     if (!activeConversationId) return;
     if (!value.trim()) {
@@ -393,6 +398,29 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     state.timer = window.setTimeout(() => stopTyping(activeConversationId), 4000);
   }
 
+  function handleMessageInput(event) {
+    applyMessageValue(event.target.value);
+  }
+
+  const closePicker = useCallback((restoreFocus) => {
+    setIsPickerOpen(false);
+    if (restoreFocus === true) emojiToggleRef.current?.focus();
+  }, []);
+
+  function handleInsertEmoji(emoji) {
+    const input = messageInputRef.current;
+    const start = input?.selectionStart ?? messageContent.length;
+    const end = input?.selectionEnd ?? start;
+    const next = `${messageContent.slice(0, start)}${emoji}${messageContent.slice(end)}`;
+    if (next.length > 2000) return;
+    applyMessageValue(next);
+    const caret = start + emoji.length;
+    window.requestAnimationFrame(() => {
+      input?.focus();
+      input?.setSelectionRange(caret, caret);
+    });
+  }
+
   async function handleReactMessage(message, type) {
     const conversationId = activeConversationIdRef.current;
     if (!conversationId) return;
@@ -404,10 +432,9 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     }
   }
 
-  async function handleSendMessage(event) {
-    event.preventDefault();
-    const content = messageContent.trim();
-    if (!content || !activeConversationId) return;
+  // Sends a text message ({ content }) or a sticker ({ stickerId }). Returns true on success.
+  async function submitMessage(body) {
+    if (!activeConversationId) return false;
 
     setIsSending(true);
     setError("");
@@ -421,7 +448,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ content }),
+          body: JSON.stringify(body),
         }
       );
       const data = await response.json();
@@ -430,24 +457,38 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       }
       // The socket may deliver this message before the HTTP response does.
       setMessages((items) => items.some((item) => item._id === data.newMessage._id) ? items : [...items, data.newMessage]);
-      setMessageContent("");
       stopTyping(activeConversationId);
       setConversations((items) => items.map((item) =>
         item._id === activeConversationId
           ? { ...item, lastMessage: data.newMessage, updatedAt: data.newMessage.createdAt }
           : item
       ).sort((left, right) => new Date(right.updatedAt) - new Date(left.updatedAt)));
+      return true;
     } catch (requestError) {
       setError(requestError.message);
+      return false;
     } finally {
       setIsSending(false);
     }
+  }
+
+  async function handleSendMessage(event) {
+    event.preventDefault();
+    const content = messageContent.trim();
+    if (!content || !activeConversationId) return;
+    if (await submitMessage({ content })) setMessageContent("");
+  }
+
+  async function handleSendSticker(stickerId) {
+    setIsPickerOpen(false);
+    await submitMessage({ stickerId });
   }
 
   function handleSelectConversation(conversationId) {
     if (conversationId !== activeConversationId) {
       stopTyping(activeConversationId);
       setMessages([]);
+      setIsPickerOpen(false);
     }
     setActiveConversationId(conversationId);
     setShowChatPane(true);
@@ -541,12 +582,13 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               {messages.map((message) => {
                 const isMine = message.senderId?._id === currentUser?._id;
                 const reactionSummary = summarizeReactions(message.reactions, currentUser?._id);
+                const sticker = message.type === "sticker" ? findSticker(message.stickerId) : null;
                 return (
                   <Fragment key={message._id}>
                     <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
                       <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
-                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}`}>
-                          {message.content}
+                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}`}>
+                          {sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.content}
                           <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
                         </div>
                         {reactionSummary.total > 0 && (
@@ -586,9 +628,22 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               )}
             </div>
             <form className="message-compose ridge-message-compose" onSubmit={handleSendMessage}>
+              <button
+                className="ridge-emoji-toggle"
+                type="button"
+                ref={emojiToggleRef}
+                aria-label="Chọn biểu tượng và nhãn dán"
+                aria-haspopup="dialog"
+                aria-expanded={isPickerOpen}
+                title="Biểu tượng và nhãn dán"
+                onClick={() => setIsPickerOpen((open) => !open)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>
+              </button>
               <label className="ridge-visually-hidden" htmlFor="message-content">Nội dung tin nhắn</label>
               <input
                 id="message-content"
+                ref={messageInputRef}
                 value={messageContent}
                 onChange={handleMessageInput}
                 placeholder="Viết tin nhắn..."
@@ -599,6 +654,14 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                 <span className="ridge-visually-hidden">{isSending ? "Đang gửi..." : "Gửi"}</span>
               </button>
             </form>
+            {isPickerOpen && (
+              <EmojiStickerPicker
+                toggleRef={emojiToggleRef}
+                onClose={closePicker}
+                onPickEmoji={handleInsertEmoji}
+                onPickSticker={(stickerId) => void handleSendSticker(stickerId)}
+              />
+            )}
           </>
         ) : (
           <div className="empty-messages">Chọn một hội thoại để xem tin nhắn.</div>
