@@ -5,6 +5,30 @@ const Notification = require("../models/Notification");
 const errorResponse = require("../utils/errorResponse");
 const { emitToUser } = require("../utils/realtime");
 const { isStickerId, STICKER_PREVIEW } = require("../utils/stickers");
+const SHARE_PREVIEW = "Đã chia sẻ một bài viết";
+
+async function findOrCreateConversation(senderId, receiverId) {
+    let conversation = await Conversation.findOne({ participants: { $all: [senderId, receiverId], $size: 2 }, hiddenFor: { $ne: senderId } });
+    if (!conversation) conversation = await Conversation.create({ participants: [senderId, receiverId] });
+    return conversation;
+}
+
+async function createAndEmitMessage(conversation, senderId, receiverId, data) {
+    const newMessage = await Message.create({ conversationId: conversation._id, senderId, ...data });
+    conversation.lastMessage = newMessage._id;
+    await conversation.save();
+    await newMessage.populate("senderId", "username profilePicture");
+    if (newMessage.type === "post_share") await newMessage.populate({ path: "sharedPostId", select: "authorId content image video status", populate: { path: "authorId", select: "username profilePicture" } });
+    try {
+        await Notification.create({ recipientId: receiverId, senderId, type: "message" });
+    } catch (notificationError) {
+        console.error("Could not create message notification:", notificationError);
+    }
+    const payload = { conversationId: conversation._id.toString(), message: newMessage.toObject() };
+    emitToUser(receiverId, "message:new", payload);
+    emitToUser(senderId, "message:new", payload);
+    return newMessage;
+}
 
 const idString = (value) => (value?._id || value).toString();
 
@@ -147,46 +171,12 @@ const sendMessage = async (req, res) => {
 
         if (await rejectIfBlocked(conversation, req, res)) return;
 
-        const newMessage = await Message.create({
-            conversationId: conversation._id,
-            senderId: req.user._id,
-            ...(isSticker
-                ? { type: "sticker", stickerId, content: STICKER_PREVIEW }
-                : { content: content.trim() }),
-        });
-
-        conversation.lastMessage = newMessage._id;
-        await conversation.save();
-
-        await newMessage.populate(
-            "senderId",
-            "username profilePicture"
-        );
-
         const receiverId = conversation.participants.find(
             (id) => id.toString() !== req.user._id.toString()
         )
-
-        if(receiverId){
-            try {
-                await Notification.create({
-                    recipientId: receiverId,
-                    senderId: req.user._id,
-                    type: "message",
-                });
-            } catch (notificationError) {
-                console.error("Could not create message notification:", notificationError);
-            }
-        }
-
-        // Realtime push: the receiver sees the message instantly, and the
-        // sender's other open tabs stay in sync (clients de-duplicate by _id).
-        const realtimePayload = {
-            conversationId: conversation._id.toString(),
-            message: newMessage.toObject(),
-        };
-        if (receiverId) emitToUser(receiverId, "message:new", realtimePayload);
-        emitToUser(req.user._id, "message:new", realtimePayload);
+        const newMessage = await createAndEmitMessage(conversation, req.user._id, receiverId, isSticker
+            ? { type: "sticker", stickerId, content: STICKER_PREVIEW }
+            : { content: content.trim() });
 
         res.status(201).json({
             message: "Gửi tin nhắn thành công!",
@@ -233,7 +223,16 @@ const getMessage = async (req, res) =>{
 
         const message = await Message.find({conversationId})
         .populate("senderId", "username profilePicture")
+        .populate({ path: "sharedPostId", select: "authorId content image video status privacy", populate: { path: "authorId", select: "username profilePicture" } })
         .sort({ createdAt: 1})
+
+        for (const item of message) {
+            if (item.sharedPostId && item.sharedPostId.status !== "active") item.sharedPostId = null;
+            else if (item.sharedPostId) {
+                const { canAccessPost } = require("../utils/postAccess");
+                if (!await canAccessPost(req.user, item.sharedPostId)) item.sharedPostId = null;
+            }
+        }
 
         res.status(200).json({
             message,
@@ -362,6 +361,9 @@ const markMessageIsRead = async (req, res) =>{
 module.exports = {
     createOrGetConversation,
     sendMessage,
+    findOrCreateConversation,
+    createAndEmitMessage,
+    SHARE_PREVIEW,
     getMessage,
     getConversations,
     markMessageIsRead,

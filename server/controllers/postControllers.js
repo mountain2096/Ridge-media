@@ -5,6 +5,7 @@ const Comment = require("../models/Comment");
 const User = require("../models/User");
 const validateMediaUrl = require("../utils/validateMediaUrl");
 const { canAccessPost } = require("../utils/postAccess");
+const { findOrCreateConversation, createAndEmitMessage, SHARE_PREVIEW } = require("./messageCotrollers");
 
 const createPost = async (req,res) =>{
     try{
@@ -398,6 +399,39 @@ const sharePost = async (req, res) => {
         return errorResponse(res, error);
     }
 };
+
+const sendPost = async (req, res) => {
+    try {
+        const { recipientIds, message } = req.body;
+        if (!Array.isArray(recipientIds) || recipientIds.length < 1 || recipientIds.length > 10 ||
+            recipientIds.some((id) => !/^[a-f\d]{24}$/i.test(String(id))) ||
+            (message !== undefined && (typeof message !== "string" || message.length > 500))) {
+            return res.status(400).json({ message: "Danh sách người nhận hoặc nội dung không hợp lệ." });
+        }
+        const post = await Post.findById(req.params.id);
+        if (!post || !await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
+        const sent = [], failed = [];
+        for (const recipientId of [...new Set(recipientIds.map(String))]) {
+            if (recipientId === String(req.user._id)) { failed.push({ id: recipientId, reason: "Không thể gửi cho chính mình." }); continue; }
+            const recipient = await User.findById(recipientId);
+            if (!recipient) { failed.push({ id: recipientId, reason: "Không tìm thấy người dùng." }); continue; }
+            const blocked = (req.user.blockList || []).some((id) => id.toString() === recipientId) ||
+                (recipient.blockList || []).some((id) => id.toString() === String(req.user._id));
+            if (blocked) { failed.push({ id: recipientId, reason: "Một trong hai người đã chặn người còn lại." }); continue; }
+            if (!(req.user.friend || []).some((id) => id.toString() === recipientId)) { failed.push({ id: recipientId, reason: "Chỉ có thể nhắn tin với bạn bè." }); continue; }
+            if (!await canAccessPost(recipient, post)) { failed.push({ id: recipientId, reason: "Người nhận không thể xem bài viết." }); continue; }
+            const conversation = await findOrCreateConversation(req.user._id, recipient._id);
+            if (message?.trim()) await createAndEmitMessage(conversation, req.user._id, recipient._id, { content: message.trim() });
+            await createAndEmitMessage(conversation, req.user._id, recipient._id, { type: "post_share", content: SHARE_PREVIEW, sharedPostId: post._id });
+            sent.push(recipientId);
+        }
+        if (!sent.length) return res.status(403).json({ sent, failed });
+        return res.status(201).json({ sent, failed });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID không hợp lệ." });
+        return errorResponse(res, error);
+    }
+};
 module.exports = {
     createPost,
     getPosts,
@@ -408,4 +442,5 @@ module.exports = {
     unlikePost,
     toggleSavePost,
     sharePost,
+    sendPost,
 }

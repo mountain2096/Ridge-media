@@ -24,7 +24,7 @@ const messageSchema = new mongoose.Schema(
         // "sticker" messages keep a readable label in `content` and the sticker id here.
         type: {
             type: String,
-            enum: ["text", "sticker"],
+            enum: ["text", "sticker", "post_share"],
             default: "text",
         },
 
@@ -33,6 +33,8 @@ const messageSchema = new mongoose.Schema(
             maxlength: 64,
             default: null,
         },
+
+        sharedPostId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: null },
 
         isRead: {
             type: Boolean,

@@ -8,7 +8,7 @@ const { createPost,
          likePost,
           unlikePost,
           toggleSavePost,
-          sharePost } = require("../controllers/postControllers");
+          sharePost, sendPost } = require("../controllers/postControllers");
 const { reactToPost, getPostReactions } = require("../controllers/reactionControllers");
 
 const protect = require("../middlewares/protect");
@@ -26,4 +26,5 @@ router.delete("/:id/reaction", protect, reactToPost);
 router.get("/:id/reactions", protect, getPostReactions);
 router.put("/:id/save", protect, toggleSavePost);
 router.post("/:id/share", protect, sharePost);
+router.post("/:id/send", protect, sendPost);
 module.exports = router;
