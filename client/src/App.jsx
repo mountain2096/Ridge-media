@@ -17,7 +17,9 @@ import './auth.css'
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("register");
+  const location = useLocation();
+  const tab = new URLSearchParams(location.search).get("tab");
+  const [activeTab, setActiveTab] = useState(tab === "login" || tab === "register" ? tab : "register");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

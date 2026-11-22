@@ -47,7 +47,7 @@ export default function GuestProfilePage() {
         <div className="guest-profile-identity"><h1>{profile.username}</h1><p>{profile.bio || "Chưa có giới thiệu"}</p><div className="guest-profile-stats">{profile.friendCount ?? profile.friends?.length ?? 0} bạn bè · Tham gia {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("vi-VN") : ""}</div></div>
       </div>
     </section>
-    <p className="guest-page-message guest-message"><Link to="/">Đăng nhập để kết bạn hoặc nhắn tin</Link></p>
+    <p className="guest-page-message guest-message"><Link to="/?tab=login">Đăng nhập để kết bạn hoặc nhắn tin</Link></p>
     {posts.map((post) => <GuestPostCard key={post._id} post={post} />)}
     {error && <p className="guest-page-message" role="alert">{error} <button type="button" onClick={() => { setLoading(true); setError(""); setRetryPosts((n) => n + 1); }}>Thử lại</button></p>}
     {loading && !posts.length && <p className="guest-page-message">Đang tải bài viết...</p>}

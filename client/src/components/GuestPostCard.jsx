@@ -28,6 +28,6 @@ export default function GuestPostCard({ post }) {
       </> : <p className="shared-post-unavailable">Nội dung này không còn khả dụng.</p>}</article>
     </> : post.content && <p className={hasMedia ? "post-caption" : "post-text"}>{hasMedia && <><strong>{username}</strong>{" "}</>}{post.content}</p>}
     <div className="post-stats"><span>{post.reactionTotal ?? 0} lượt thích</span><span>{post.commentsCount ?? 0} bình luận</span></div>
-    <footer className="guest-post-footer">Đăng nhập để thích, bình luận hoặc chia sẻ · <Link to="/">Đăng nhập</Link></footer>
+    <footer className="guest-post-footer">Đăng nhập để thích, bình luận hoặc chia sẻ · <Link to="/?tab=login">Đăng nhập</Link></footer>
   </article>;
 }
