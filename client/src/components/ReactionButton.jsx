@@ -6,7 +6,7 @@ import "../reactions.css";
 // - click the button: toggle "Thích" (or remove your current reaction)
 // - hover, keyboard focus or long-press (touch): open the picker
 // props: mine (type | null), onReact(type | null), compact, className
-function ReactionButton({ mine, onReact, compact = false, iconOnly = false, disabled = false, idleLabel = "Thích", idleIcon = null }) {
+function ReactionButton({ mine, onReact, compact = false, iconOnly = false, disabled = false, idleLabel = "Thích", idleIcon = null, count = 0, popped = false }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const openTimer = useRef(0);
@@ -89,8 +89,8 @@ function ReactionButton({ mine, onReact, compact = false, iconOnly = false, disa
         onTouchMove={() => window.clearTimeout(longPressTimer.current)}
         onContextMenu={(event) => { if (longPressed.current) event.preventDefault(); }}
       >
-        {info ? <span className="ridge-react-emoji" aria-hidden="true">{info.emoji}</span> : idleIcon}
-        {!iconOnly && <span>{info ? info.label : idleLabel}</span>}
+        {info?.type === "like" ? <span className={`ridge-react-emoji ${popped ? "ridge-reaction-popped" : ""}`} aria-hidden="true">{idleIcon}</span> : info ? <span className={`ridge-react-emoji ${popped ? "ridge-reaction-popped" : ""}`} aria-hidden="true">{info.emoji}</span> : idleIcon}
+        {!iconOnly && <span>{info ? info.label : idleLabel}{count > 0 ? ` ${count}` : ""}</span>}
       </button>
       {open && (
         <div className="ridge-react-picker" role="menu" aria-label="Chọn cảm xúc" onKeyDown={handlePickerKeyDown}>

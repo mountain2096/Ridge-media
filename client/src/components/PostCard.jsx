@@ -19,6 +19,7 @@ function PostCard({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionsOpen, setReactionsOpen] = useState(false);
+  const [reactionPopped, setReactionPopped] = useState(false);
   const menuRef = useRef(null);
   const commentsRef = useRef(null);
   const commentInputRef = useRef(null);
@@ -40,6 +41,7 @@ function PostCard({
   const ownsPost = Boolean(post.isMine);
   const reactionSummary = summarizeReactions(mergeLegacyLikes(post.reactions, post.likes), currentUser?._id);
   const myReaction = currentUser?._id ? reactionSummary.mine : (isLiked ? "like" : null);
+  const reactionNames = [...new Set((post.reactions || []).map((item) => item.userId?.username).filter(Boolean))];
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -97,7 +99,7 @@ function PostCard({
             <div className="post-name-row"><Link className="profile-name-link" to={authorId ? `/profile/${authorId}` : "#"}>{username}</Link>{isShare && <span className="post-share-label">đã chia sẻ một bài viết</span>}</div>
             <span className="post-meta">
               <span>Ridge</span><span aria-hidden="true">·</span><time dateTime={post.createdAt || undefined} title={fullDate}>{postDate}</time>{!isShare && post.editedAt && <><span aria-hidden="true">·</span><time title={new Date(post.editedAt).toLocaleString("vi-VN")}>Đã chỉnh sửa</time></>}<span aria-hidden="true">·</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0-18" /></svg>
+              {post.privacy === "private" ? <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg> : post.privacy === "friends" ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg> : <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>}
               <span>{visibilityLabel}</span>
             </span>
           </div>
@@ -143,21 +145,20 @@ function PostCard({
       </form> : visiblePost?.content && <p className={hasMedia ? "post-caption" : "post-text"}>{hasMedia && <><strong>{username}</strong>{" "}</>}{visiblePost.content}</p>}
       </>}
 
-      <div className="post-stats">
-        {reactionSummary.total > 0 && <button className="post-likes ridge-react-summary" type="button" aria-label={`${reactionSummary.total} lượt thả cảm xúc`} onClick={() => setReactionsOpen(true)}>
-          <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>
-          <span>{reactionSummary.total} lượt thích</span>
-        </button>}
-        <button className="post-comment-count" type="button" onClick={() => onToggleComments?.(post)}>{post.commentsCount ?? 0} bình luận</button>
-      </div>
+      {reactionSummary.total > 0 && <div className="ridge-post-reactions"><button className="ridge-react-summary" type="button" aria-label={`${reactionSummary.total} lượt thả cảm xúc`} onClick={() => setReactionsOpen(true)}>
+        <span className="ridge-react-stack" aria-hidden="true"><span className="ridge-reaction-heart"><svg viewBox="0 0 24 24"><path d="M20.8 8.7c0 5.3-8.8 10.1-8.8 10.1S3.2 14 3.2 8.7A4.2 4.2 0 0 1 12 6.8a4.2 4.2 0 0 1 8.8 1.9Z" /></svg></span><span className="ridge-reaction-like"><svg viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2 3l-.7 3H19a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 18 20H7z" /></svg></span></span>
+        <span>{reactionNames.length ? `${reactionNames.slice(0, 2).join(", ")}${reactionNames.length > 2 ? ` và ${reactionSummary.total - 2} người khác` : ""}` : `${reactionSummary.total} lượt thả cảm xúc`}</span>
+      </button></div>}
       <div className="post-actions">
         <div className="post-action-group">
           {onReact ? <ReactionButton
             mine={myReaction}
-            onReact={(type) => onReact(post, type)}
-            idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg>}
-          /> : <button className={`post-action-button ${isLiked ? "liked" : ""}`} type="button" aria-label={isLiked ? "Bỏ thích" : "Thích"} aria-pressed={Boolean(isLiked)} onClick={() => onLike?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg><span>{isLiked ? "Đã thích" : "Thích"}</span></button>}
-          <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => onToggleComments?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận</span></button>
+            onReact={(type) => { setReactionPopped(true); window.setTimeout(() => setReactionPopped(false), 220); onReact(post, type); }}
+            count={reactionSummary.total}
+            popped={reactionPopped}
+            idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2 3l-.7 3H19a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 18 20H7z" /></svg>}
+          /> : <button className={`post-action-button ${isLiked ? "liked" : ""}`} type="button" aria-label={isLiked ? "Bỏ thích" : "Thích"} aria-pressed={Boolean(isLiked)} onClick={() => onLike?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5c0 6.1-8 11-8 11z" /></svg><span>{isLiked ? "Đã thích" : "Thích"}{reactionSummary.total > 0 ? ` ${reactionSummary.total}` : ""}</span></button>}
+          <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => onToggleComments?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận{post.commentsCount > 0 ? ` ${post.commentsCount}` : ""}</span></button>
           <button className="post-action-button" type="button" disabled={isSharing} onClick={() => onShare?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>{isSharing ? "Đang chia sẻ" : "Chia sẻ"}</span></button>
         </div>
         <button className={`post-action-button ${post.isSaved ? "saved" : ""}`} type="button" aria-label={post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"} aria-pressed={Boolean(post.isSaved)} onClick={() => onToggleSaved?.(post, Boolean(post.isSaved))}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg></button>

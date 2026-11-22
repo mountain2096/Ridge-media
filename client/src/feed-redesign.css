@@ -83,6 +83,59 @@ body:has(.home-layout) { background: var(--news-bg); }
 .home-layout .create-post-card .privacy-option .privacy-check { margin-left: auto; color: var(--news-accent); }
 .home-layout .create-post-card .create-post-button { min-height: 44px; padding: 0 24px; border-radius: 999px; font-size: 14px; }
 
+/* Round 2: post cards */
+.home-layout .post-card { padding: 0 20px 8px; border: 1px solid var(--news-border); border-radius: 16px; background: #fff; box-shadow: none; }
+.home-layout .post-header { padding: 0; margin: 20px 0 14px; }
+.home-layout .post-avatar { flex-basis: 44px; width: 44px; height: 44px; }
+.home-layout .post-name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.home-layout .post-name-row .profile-name-link { font-size: 15px; font-weight: 600; }
+.home-layout .post-author-info .post-meta { gap: 5px; font-size: 13px; line-height: 1.4; }
+.home-layout .post-text, .home-layout .post-caption { max-width: 62ch; padding: 0; margin: 14px 0; font-size: 16px; font-weight: 400; line-height: 1.65; }
+.home-layout .post-image, .home-layout .post-video { width: 100%; margin: 10px 0; }
+.home-layout .shared-post-card { margin: 12px 0; padding: 14px 16px; border: 1px solid var(--news-border); border-radius: 12px; background: #FAFBFD; }
+.home-layout .shared-post-card .post-text, .home-layout .shared-post-card .post-caption { margin: 10px 0 0; }
+.home-layout .shared-post-header { padding: 0; }
+.home-layout .post-menu { border: 1px solid var(--news-border); border-radius: 14px; box-shadow: 0 8px 24px rgb(15 23 42 / 12%); }
+.home-layout .post-menu button { min-height: 40px; border-radius: 9px; }
+.home-layout .ridge-post-reactions { display: flex; align-items: center; min-height: 32px; padding: 0 0 8px; }
+.home-layout .ridge-post-reactions .ridge-react-summary { display: inline-flex; min-height: 28px; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; color: var(--news-muted); font-size: 13px; cursor: pointer; }
+.home-layout .ridge-react-stack { display: inline-flex; }
+.home-layout .ridge-react-stack > span { display: grid; width: 22px; height: 22px; place-items: center; border: 2px solid #fff; border-radius: 50%; color: #fff; }
+.home-layout .ridge-react-stack > span + span { margin-left: -6px; }
+.home-layout .ridge-reaction-heart { background: var(--news-like); }
+.home-layout .ridge-reaction-like { background: var(--news-accent); }
+.home-layout .ridge-react-stack svg { width: 11px; height: 11px; fill: currentColor; stroke: none; }
+.home-layout .post-actions { justify-content: stretch; gap: 4px; margin: 0; padding: 4px 0; border-top: 1px solid #EEF0F7; }
+.home-layout .post-action-group { display: contents; }
+.home-layout .post-action-button, .home-layout .ridge-react-main.post-action-button { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 8px; border-radius: 12px; font-size: 14px; }
+.home-layout .post-action-button:hover { background: var(--news-bg); }
+.home-layout .post-action-button:active { transform: scale(.97); }
+.home-layout .post-action-button.liked, .home-layout .post-action-button.liked svg, .home-layout .ridge-react-main.has-reaction { color: var(--news-accent); font-weight: 600; }
+.home-layout .post-action-button.liked svg { fill: currentColor; }
+.home-layout .post-actions > .post-action-button { flex: 0 0 44px; width: 44px; }
+.home-layout .ridge-reaction-popped { display: inline-block; animation: ridge-reaction-pop 220ms ease-out; }
+@keyframes ridge-reaction-pop { 50% { transform: scale(1.28); } }
+@media (prefers-reduced-motion: reduce) { .home-layout .post-action-button:active { transform: none; } .home-layout .ridge-reaction-popped { animation: none; } }
+
+.guest-layout .post-card { padding: 0 20px 8px; border: 1px solid var(--news-border); border-radius: 16px; background: #fff; box-shadow: none; }
+.guest-layout .post-header { padding: 0; margin: 20px 0 14px; }
+.guest-layout .post-avatar { flex-basis: 44px; width: 44px; height: 44px; }
+.guest-layout .post-name-row .profile-name-link { font-size: 15px; font-weight: 600; }
+.guest-layout .post-author-info .post-meta { gap: 5px; font-size: 13px; line-height: 1.4; }
+.guest-layout .post-author-info .post-meta svg { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.guest-layout .post-text, .guest-layout .post-caption { max-width: 62ch; padding: 0; margin: 14px 0; font-size: 16px; font-weight: 400; line-height: 1.65; }
+.guest-layout .shared-post-card { margin: 12px 0; padding: 14px 16px; border: 1px solid var(--news-border); border-radius: 12px; background: #FAFBFD; }
+.guest-layout .shared-post-header { padding: 0; }
+.guest-layout .shared-post-card .post-text, .guest-layout .shared-post-card .post-caption { margin: 10px 0 0; padding: 0; }
+.guest-layout .post-menu { border: 1px solid var(--news-border); border-radius: 14px; box-shadow: 0 8px 24px rgb(15 23 42 / 12%); }
+.guest-layout .post-menu button { min-height: 40px; border-radius: 9px; }
+.guest-layout .ridge-post-reactions { display: flex; align-items: center; min-height: 32px; padding: 0 0 8px; color: var(--news-muted); font-size: 13px; }
+.guest-layout .ridge-react-stack { display: inline-flex; }
+.guest-layout .ridge-react-stack > span { display: grid; width: 22px; height: 22px; place-items: center; border: 2px solid #fff; border-radius: 50%; color: #fff; }
+.guest-layout .ridge-react-stack > span + span { margin-left: -6px; }
+.guest-layout .ridge-reaction-heart { background: var(--news-like); }
+.guest-layout .ridge-reaction-like { background: var(--news-accent); }
+.guest-layout .ridge-react-stack svg { width: 11px; height: 11px; fill: currentColor; stroke: none; }
 @media (max-width: 1279px) {
   .home-layout { grid-template-columns: 248px minmax(0, 680px); }
   .home-layout .home-columns,

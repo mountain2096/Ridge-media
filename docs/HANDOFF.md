@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Current branch: `integrate/reels-and-fixes`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Current task branch: `ui/redesign`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Round 22 feed-card redesign: client lint/build passed; mocked API Playwright at 1440px rendered both reacted and zero-reaction posts. App and reference screenshots were saved to `%TEMP%` and visually compared; live API/database were not used.
 - The project owner manually checked the reaction list dialog in a browser after the load-more fix.
 - Round 5: `node --test` passed 102 tests; only edge cases for reaction lists were added (client lint/build not run; no client changes); the post-edit flow has not been verified in a browser or against a live MongoDB instance.
 - Round 6: `node --test` passed 107 tests; client lint and build passed. The logout flow was not verified in a browser or against live MongoDB.
@@ -94,9 +95,11 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 19 | Wait for `currentUser._id` before mounting profile settings and key the form by user ID | Client lint and build passed; direct `/settings` reload not browser-verified | pending |
 | 19 | Add responsive sidebar labels/titles and fix narrow search and friends-list action layout | Client lint/build passed; mocked API Playwright checks at 820x1100, 600x900, and 390x844 | pending |
 | 21 | Integrate Reels view, post access checks, settings initial state, and responsive navigation | `node --test`: 118 passed; client lint and build passed; Reels route and NavLink confirmed in source | `37f2fdc` |
+| 22 | Redesign feed and guest post cards, privacy icons, reaction summaries/actions, and post menu | Client lint/build passed; mocked API Playwright rendered two posts at 1440px; screenshots saved under `%TEMP%` | this commit |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
+Round 22 keeps post API/data behavior intact and updates the shared feed/profile card plus duplicated guest card styling.
 Post visibility checks now cover direct post reads, reactions, saves, comments, and comment reads (Round 19).
 Responsive feed, friends, and messages layouts were checked at the requested viewports in Round 19.
 
