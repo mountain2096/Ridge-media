@@ -187,12 +187,13 @@ function MessagesViewRoute() {
 function ProfileSettingsRoute() {
   const { currentUser, setCurrentUser } = useOutletContext();
   return <section className="feed-column feed-column-single">
-    <ProfileSettings
+    {!currentUser?._id ? <p>Đang tải hồ sơ...</p> : <ProfileSettings
+      key={currentUser._id}
       currentUser={currentUser}
       onProfileSaved={(savedUser) => setCurrentUser((current) => ({
         ...current, ...savedUser, _id: savedUser.id || current?._id,
       }))}
-    />
+    />}
   </section>;
 }
 

@@ -43,6 +43,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 19e: client lint/build passed and `node --test` passed all 116 tests. Mocked API Playwright checks at 390x844, 768x1024, 1024x700, 1280x720, and 1536x864 confirmed caption/action clearance; the nav was hidden at 1024px and remained visible without overlap at 1280px and 1536px. Caption expand/collapse worked. On resize from 1280px to 600px the test caption remained clamped, so its toggle correctly stayed visible. Opened and visually inspected `%TEMP%` screenshots `ridge-19e-390x844.png`, `ridge-19e-768x1024.png`, `ridge-19e-1024x700.png`, `ridge-19e-1280x720.png`, `ridge-19e-1536x864.png`, and `ridge-19e-resize-600.png`.
 - Round 20: corrected Reels container sizing and viewport offsets for the full-width mobile bar and the 601–900px left rail; filtered unavailable or URL-less videos. Client lint/build passed. Playwright used mocked API data at 1440x900, 820x1100, and 390x844: each Reels area filled the space below the header/sidebar, excluded both unusable mock posts, and opened its comments panel. Screenshots are under `%TEMP%`: `ridge-20-1440x900.png`, `ridge-20-1440x900-comments.png`, `ridge-20-820x1100.png`, `ridge-20-820x1100-comments.png`, `ridge-20-390x844.png`, and `ridge-20-390x844-comments.png`.
 - Round 19: focused post-access tests passed; full `node --test` passed 118 tests. Backend-only; not verified against live MongoDB.
+- Settings initial-state fix: ProfileSettings mounts after `currentUser._id` loads and remounts for a changed user ID. Client lint/build passed; direct `/settings` reload was not browser-verified.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -88,6 +89,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 19e | Fix Reels overlay clearance, caption resize measurement, narrow desktop navigation, and small CSS leftovers | 116 tests; lint/build passed; mocked API Playwright screenshots verified at five viewport sizes and after resize | `a5c4039` |
 | 20 | Fix Reels page sizing and responsive top/left offsets; skip unavailable or URL-less video posts | Client lint/build passed; mocked API Playwright layout and comments-panel checks at 1440x900, 820x1100, and 390x844 | `de6a86a` |
 | 19 | Centralize post visibility checks and enforce them for post reactions, saves, and comment access; hide comments by blocked users | 118 tests passed; client untouched; not verified against live MongoDB | pending |
+| 19 | Wait for `currentUser._id` before mounting profile settings and key the form by user ID | Client lint and build passed; direct `/settings` reload not browser-verified | pending |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
