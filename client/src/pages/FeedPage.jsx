@@ -912,9 +912,7 @@ function FeedPage({ section = "feed" }){
       ? posts.filter((post) => post.isSaved)
       : activeSection === "activity"
         ? posts.filter((post) => post.isMine)
-        : activeSection === "reels"
-          ? posts.filter((post) => post.video)
-          : posts;
+        : posts;
     const storyGroups = Object.values(stories.reduce((groups, story) => {
       const authorId = story.authorId?._id;
       if (!authorId) return groups;
@@ -952,7 +950,7 @@ function FeedPage({ section = "feed" }){
                 {activeSection !== "feed" && (
                   <h1 className="section-title">
                     {activeSection === "saved" ? "Bài viết đã lưu" :
-                     activeSection === "activity" ? "Hoạt động của bạn" : "Reels"}
+                     "Hoạt động của bạn"}
                   </h1>
                 )}
                 {activeSection === "feed" && <>
@@ -967,7 +965,7 @@ function FeedPage({ section = "feed" }){
 )}
 
 {!isLoading && !error && displayedPosts.length === 0 && (
-  <p>{activeSection === "saved" ? "Bạn chưa lưu bài viết nào." : activeSection === "activity" ? "Bạn chưa đăng bài viết nào." : activeSection === "reels" ? "Chưa có Reels nào. Khi đăng bài, thêm đường dẫn video MP4 để bài xuất hiện tại đây." : "Chưa có bài viết nào."}</p>
+  <p>{activeSection === "saved" ? "Bạn chưa lưu bài viết nào." : activeSection === "activity" ? "Bạn chưa đăng bài viết nào." : "Chưa có bài viết nào."}</p>
 )}
 {likeError && (
   <p className="feedback-message error">{likeError}</p>
