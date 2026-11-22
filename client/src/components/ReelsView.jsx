@@ -99,10 +99,19 @@ function ReelsView() {
   }, [commentsPostId, menuPostId]);
 
   useEffect(() => {
-    const next = {};
-    captionRefs.current.forEach((element, id) => { next[id] = element.scrollHeight > element.clientHeight + 1; });
-    const frame = requestAnimationFrame(() => setClampedCaptions(next));
-    return () => cancelAnimationFrame(frame);
+    let frame;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const next = {};
+        captionRefs.current.forEach((element, id) => { next[id] = element.scrollHeight > element.clientHeight + 1; });
+        setClampedCaptions(next);
+      });
+    };
+    const observer = new ResizeObserver(measure);
+    if (containerRef.current) observer.observe(containerRef.current);
+    measure();
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
   }, [posts, ratios, expandedCaption]);
 
   useEffect(() => {
@@ -299,11 +308,12 @@ function ReelsView() {
           const summary = summarizeReactions(mergeLegacyLikes(post.reactions, post.likes), currentUser?._id);
           const video = post.video;
           const videoSrc = typeof video === "string" ? video : video?.url || video?.src;
-          const ratio = Math.min(1, Math.max(9 / 16, ratios[post._id] || 9 / 16));
+          const rawRatio = ratios[post._id] || 9 / 16;
+          const ratio = Math.min(1, Math.max(9 / 16, rawRatio));
           return <article className="reel-item" data-index={index} key={post._id}>
             <div className={`reel-stage ${commentsPostId === post._id ? "has-comments" : ""}`}>
               <div className="reel-frame" style={{ "--reel-ratio": ratio }}>
-            {index <= activeIndex + 1 && index >= activeIndex - 1 && ratio > 0.58 && <video className="reel-backdrop" ref={(element) => element ? backdropRefs.current.set(index, element) : backdropRefs.current.delete(index)} src={videoSrc} muted playsInline loop aria-hidden="true" tabIndex={-1} onLoadedMetadata={(event) => { if (index === activeIndex) event.currentTarget.play().catch(() => {}); }} />}
+            {index <= activeIndex + 1 && index >= activeIndex - 1 && rawRatio > 0.58 && <video className="reel-backdrop" ref={(element) => element ? backdropRefs.current.set(index, element) : backdropRefs.current.delete(index)} src={videoSrc} muted playsInline loop aria-hidden="true" tabIndex={-1} onLoadedMetadata={(event) => { if (index === activeIndex) event.currentTarget.play().catch(() => {}); }} />}
             <video className="reel-main-video" ref={(element) => element ? videoRefs.current.set(index, element) : videoRefs.current.delete(index)} src={videoSrc} playsInline loop preload="metadata" muted={muted} onLoadedMetadata={(event) => { const { videoWidth, videoHeight } = event.currentTarget; if (videoWidth && videoHeight) setRatios((current) => ({ ...current, [post._id]: videoWidth / videoHeight })); }} onTimeUpdate={(event) => { const main = event.currentTarget; const back = backdropRefs.current.get(index); if (back && Math.abs(back.currentTime - main.currentTime) > 0.5) back.currentTime = main.currentTime; if (index === activeIndex) progressRefs.current.get(index)?.style.setProperty("--reel-progress", `${main.duration ? main.currentTime / main.duration * 100 : 0}%`); }} onPlay={() => backdropRefs.current.get(index)?.play().catch(() => {})} onPause={() => backdropRefs.current.get(index)?.pause()} onSeeked={(event) => { const back = backdropRefs.current.get(index); if (back) back.currentTime = event.currentTarget.currentTime; }} onClick={(event) => event.currentTarget.paused ? event.currentTarget.play().catch(() => {}) : event.currentTarget.pause()} aria-label="Video Reels" />
             <div className="reel-overlay">
               <div className="reel-author">
