@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 21 (`integrate/reels-and-fixes`).
+> Last updated: 2026-11-22, after Round 22 (`ui/redesign`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Current task branch: `ui/redesign`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. Current task branch: `ui/redesign`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -20,6 +20,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 
 ## 4. Test status (update each round)
 - Round 22 feed-card redesign: client lint/build passed; mocked API Playwright at 1440px rendered both reacted and zero-reaction posts. App and reference screenshots were saved to `%TEMP%` and visually compared; live API/database were not used.
+- Round 22 comments pass: client lint/build passed; mocked API Playwright screenshots at 1440px show a thread with two replies and a long multi-line reply. The app screenshots and `feed-redesign-reference.html` screenshot are saved under `%TEMP%` (`ridge-round22-comments-two-replies.png`, `ridge-round22-comments-long-reply.png`, `ridge-round22-feed-reference.png`). No live API/database was used.
 - The project owner manually checked the reaction list dialog in a browser after the load-more fix.
 - Round 5: `node --test` passed 102 tests; only edge cases for reaction lists were added (client lint/build not run; no client changes); the post-edit flow has not been verified in a browser or against a live MongoDB instance.
 - Round 6: `node --test` passed 107 tests; client lint and build passed. The logout flow was not verified in a browser or against live MongoDB.
@@ -95,11 +96,12 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 19 | Wait for `currentUser._id` before mounting profile settings and key the form by user ID | Client lint and build passed; direct `/settings` reload not browser-verified | pending |
 | 19 | Add responsive sidebar labels/titles and fix narrow search and friends-list action layout | Client lint/build passed; mocked API Playwright checks at 820x1100, 600x900, and 390x844 | pending |
 | 21 | Integrate Reels view, post access checks, settings initial state, and responsive navigation | `node --test`: 118 passed; client lint and build passed; Reels route and NavLink confirmed in source | `37f2fdc` |
-| 22 | Redesign feed and guest post cards, privacy icons, reaction summaries/actions, and post menu | Client lint/build passed; mocked API Playwright rendered two posts at 1440px; screenshots saved under `%TEMP%` | this commit |
+| 22 | Feed redesign using `feed-redesign.css`, Be Vietnam Pro, and `docs/design/feed-redesign-reference.html`; updated feed/guest cards, privacy icons, reaction summaries/actions, post menu, and comments/reply threads | Client lint/build passed; mocked API Playwright screenshots visually inspected at 1440px for two replies, a long reply, and the reference; no live API/database | this commit |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
 Round 22 keeps post API/data behavior intact and updates the shared feed/profile card plus duplicated guest card styling.
+Round 22 comment styling keeps the existing two-level rendering, mention behavior, reactions, and menus; thread geometry was visually checked against the static reference.
 Post visibility checks now cover direct post reads, reactions, saves, comments, and comment reads (Round 19).
 Responsive feed, friends, and messages layouts were checked at the requested viewports in Round 19.
 

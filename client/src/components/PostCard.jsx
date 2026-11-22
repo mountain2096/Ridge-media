@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import CommentItem from "./CommentItem.jsx";
 import ReactionButton from "./ReactionButton.jsx";
@@ -78,9 +78,9 @@ function PostCard({
   const isReplyItem = (item) => Boolean(item.parentId) && commentIds.has(String(item.parentId));
   const topLevelComments = comments.filter((item) => !isReplyItem(item));
   const repliesOf = (parent) => comments.filter((item) => isReplyItem(item) && String(item.parentId) === String(parent._id));
-  const renderComment = (comment, isReply = false) => <CommentItem
+  const renderComment = (comment, isReply = false, threadOptions = {}) => <CommentItem
     key={comment._id} comment={comment} currentUserId={currentUser?._id} postOwnerId={authorId} isAdmin={currentUser?.isAdmin}
-    isReply={isReply}
+    isReply={isReply} {...threadOptions}
     isEditing={editingCommentId === comment._id} editingContent={editingCommentContent} isUpdating={isUpdatingComment}
     onEdit={onCommentEdit} onEditingChange={onCommentEditingChange} onCancelEdit={onCancelCommentEdit}
     onUpdate={onUpdateComment} onDelete={() => onDeleteComment?.(comment)} onReport={() => onReportComment?.(comment)}
@@ -171,10 +171,10 @@ function PostCard({
           {!isLoadingComments && !commentError && comments.length === 0 && <p>Chưa có bình luận nào.</p>}
           {!isLoadingComments && !commentError && topLevelComments.map((comment) => {
             const replies = repliesOf(comment);
-            return <Fragment key={comment._id}>
-              {renderComment(comment)}
-              {replies.length > 0 && <div className="ridge-replies">{replies.map((reply) => renderComment(reply, true))}</div>}
-            </Fragment>;
+            return replies.length > 0 ? <div className="ridge-comment-thread" key={comment._id}>
+              {renderComment(comment, false, { isThreadParent: true, hasReplies: true })}
+              <div className="ridge-replies">{replies.map((reply, index) => renderComment(reply, true, { isLastReply: index === replies.length - 1 }))}</div>
+            </div> : renderComment(comment, false);
           })}
         </div>
         {replyTo && <div className="ridge-reply-bar" role="status">
@@ -191,7 +191,7 @@ function PostCard({
             value={commentContent}
             onChange={(text) => onCommentChange?.(text)}
           />
-          <button type="submit" disabled={isSendingComment}>{isSendingComment ? "Đang gửi..." : "Gửi"}</button>
+          <button type="submit" aria-label="Gửi bình luận" disabled={isSendingComment}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z" /></svg></button>
         </form>
       </div>}
       {reactionsOpen && <ReactionListDialog path={`/api/post/${post._id}/reactions`} onClose={() => setReactionsOpen(false)} />}

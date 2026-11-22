@@ -1,5 +1,5 @@
 /* Replies, @mentions and the reply bar under a post's comments. */
-.ridge-replies { display: grid; gap: 6px; margin: 6px 0 0 40px; padding-left: 10px; border-left: 2px solid var(--news-border, #e6e8ef); }
+.ridge-replies { display: grid; gap: 6px; }
 .ridge-comment-reactions button.ridge-reply-button {
   width: auto !important; min-width: 0 !important; height: 28px !important; min-height: 0 !important;
   margin: 0; padding: 0 6px !important; border: 0; border-radius: 6px; background: transparent;

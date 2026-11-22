@@ -17,6 +17,15 @@ function renderContent(content, mentions = []) {
   });
 }
 
+function formatCommentTime(value) {
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60000));
+  if (!Number.isFinite(minutes)) return "";
+  if (minutes < 1) return "Vừa xong";
+  if (minutes < 60) return `${minutes} phút`;
+  if (minutes < 1440) return `${Math.floor(minutes / 60)} giờ`;
+  return `${Math.floor(minutes / 1440)} ngày`;
+}
+
 function CommentItem({
   comment,
   currentUserId,
@@ -34,6 +43,9 @@ function CommentItem({
   onReact,
   onReply,
   isReply = false,
+  isThreadParent = false,
+  hasReplies = false,
+  isLastReply = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionsOpen, setReactionsOpen] = useState(false);
@@ -89,10 +101,13 @@ function CommentItem({
   }
 
   return (
-    <div className={`comment-item ridge-comment-item ${isReply ? "is-reply" : ""}`}>
-      <Link className="comment-avatar" to={`/profile/${comment.authorId?._id}`} aria-label={`Xem trang cá nhân ${comment.authorId?.username || "người dùng"}`}>
-        {comment.authorId?.profilePicture ? <img src={comment.authorId.profilePicture} alt="" /> : (comment.authorId?.username || "U").charAt(0).toUpperCase()}
-      </Link>
+    <div className={`comment-item ridge-comment-item ${isReply ? "is-reply" : ""} ${isLastReply ? "is-last-reply" : ""} ${isThreadParent ? "ridge-thread-parent" : ""}`}>
+      <div className="ridge-comment-avatar-column">
+        <Link className="comment-avatar" to={`/profile/${comment.authorId?._id}`} aria-label={`Xem trang cá nhân ${comment.authorId?.username || "người dùng"}`}>
+          {comment.authorId?.profilePicture ? <img src={comment.authorId.profilePicture} alt="" /> : (comment.authorId?.username || "U").charAt(0).toUpperCase()}
+        </Link>
+        {hasReplies && <span className="ridge-comment-spine" aria-hidden="true" />}
+      </div>
       <div className="comment-main ridge-comment-main">
         {isEditing ? (
           <form className="comment-edit-form" onSubmit={(event) => onUpdate(event, comment._id)}>
@@ -144,6 +159,7 @@ function CommentItem({
           <div className="ridge-comment-reactions">
             {onReact && <ReactionButton compact mine={reactionSummary.mine} onReact={onReact} />}
             {onReply && <button className="ridge-reply-button" type="button" onClick={() => onReply(comment)}>Trả lời</button>}
+            {comment.createdAt && <time className="ridge-comment-time" dateTime={comment.createdAt} title={new Date(comment.createdAt).toLocaleString("vi-VN")}>{formatCommentTime(comment.createdAt)}</time>}
             {onReact && reactionSummary.total > 0 && (
               <button className="ridge-react-summary" type="button" aria-label={`${reactionSummary.total} lượt thả cảm xúc`} onClick={() => setReactionsOpen(true)}>
                 <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>

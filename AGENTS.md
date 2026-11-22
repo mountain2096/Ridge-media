@@ -16,7 +16,7 @@ Ridge is a social feed application. It has a React single-page client and an Exp
 - `client/src/AppLayout.jsx`: authenticated application frame, navigation, notifications, counts, and outlet context.
 - `client/src/pages/`: feed, profile, password reset, and other page views.
 - `client/src/components/`: profile settings, messaging, admin, and reusable UI.
-- `client/src/newsfeed.css`, `App.css`, `profile.css`: application styles and design tokens.
+- `client/src/newsfeed.css`, `client/src/feed-redesign.css`, `App.css`, `profile.css`: application styles and design tokens.
 - `client/src/lib/`: client helpers such as media upload.
 - `server/server.js`: Express startup and route mounting.
 - `server/routes/`, `controllers/`, `models/`, `middleware/`, `config/`: API routes, handlers, schemas, auth, and database setup.
@@ -24,7 +24,7 @@ Ridge is a social feed application. It has a React single-page client and an Exp
 - `server/test/`: Node built-in test runner tests.
 - `docs/AUDIT.md`: audited use cases and known functional limitations. It is an audit snapshot, so verify against current code before treating every note as current.
 - `docs/CHANGES.md`: audit-roadmap implementation notes.
-- `docs/design/newsfeed-reference.html`: visual reference only; it contains sample content and is not application code.
+- `docs/design/feed-redesign-reference.html`: visual reference only; it contains sample content and is not application code.
 
 ## Install and run
 
@@ -60,7 +60,7 @@ The names in `.env.example` are `PORT`, `MONGO_URI`, `JWT_SECRET`, `EMAIL_USER`,
 
 ## UI direction
 
-Use `docs/design/newsfeed-reference.html` as the visual reference for the news feed: Inter/system sans-serif, cool gray page background, white rounded cards, ink/muted/accent/danger/like colors, clear focus rings, and responsive layouts. The reference is a static mockup with sample data, not a source of product content. The client has corresponding `--news-*` variables in `client/src/newsfeed.css`. Keep the existing inline SVG stroke icon style; do not introduce emoji in place of icons. Inter can fall back to the system font when unavailable.
+Use `docs/design/feed-redesign-reference.html` as the visual reference for the news feed: Be Vietnam Pro/system sans-serif, cool gray page background, white rounded cards, ink/muted/accent/danger/like colors, clear focus rings, and responsive layouts. The reference is a static mockup with sample data, not a source of product content. The client has corresponding `--news-*` variables in `client/src/newsfeed.css`; feed redesign overrides belong in `client/src/feed-redesign.css`, imported last. Keep the existing inline SVG stroke icon style; do not introduce emoji in place of icons. Be Vietnam Pro can fall back to the system font when unavailable.
 
 ## Work completed and current state
 

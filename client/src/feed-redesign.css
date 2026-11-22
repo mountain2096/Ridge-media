@@ -83,6 +83,39 @@ body:has(.home-layout) { background: var(--news-bg); }
 .home-layout .create-post-card .privacy-option .privacy-check { margin-left: auto; color: var(--news-accent); }
 .home-layout .create-post-card .create-post-button { min-height: 44px; padding: 0 24px; border-radius: 999px; font-size: 14px; }
 
+.home-layout .ridge-comments-list { animation: ridge-comments-in 200ms ease-out both; }
+@keyframes ridge-comments-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .home-layout .ridge-comments-list { animation: none; } }
+.home-layout .ridge-comment-thread { display: grid; min-width: 0; grid-template-columns: 36px minmax(0, 1fr); column-gap: 10px; }
+.home-layout .ridge-thread-parent { display: contents; }
+.home-layout .ridge-comment-avatar-column { display: flex; width: 36px; min-height: 36px; flex-direction: column; align-items: center; }
+.home-layout .ridge-thread-parent > .ridge-comment-avatar-column { grid-row: 1; }
+.home-layout .ridge-comment-spine { width: 2px; min-height: 12px; flex: 1 1 auto; margin-top: 6px; border-radius: 2px; background: #D5D9E6; }
+.home-layout .ridge-thread-parent > .ridge-comment-main,
+.home-layout .ridge-replies { grid-column: 2; min-width: 0; }
+.home-layout .ridge-replies { position: relative; display: grid; grid-row: 2; gap: 10px; margin: 0 0 0 -28px; padding: 10px 0 0 28px; }
+.home-layout .ridge-replies .ridge-comment-item { position: relative; gap: 10px; }
+.home-layout .ridge-replies .ridge-comment-item::before { position: absolute; top: -10px; left: -28px; width: 22px; height: 24px; border-bottom: 2px solid #D5D9E6; border-left: 2px solid #D5D9E6; border-bottom-left-radius: 14px; content: ""; }
+.home-layout .ridge-replies .ridge-comment-item:not(.is-last-reply)::after { position: absolute; top: 14px; bottom: -10px; left: -28px; border-left: 2px solid #D5D9E6; content: ""; }
+.home-layout .ridge-comment-item.is-reply .ridge-comment-avatar-column { width: 28px; min-height: 28px; flex-basis: 28px; }
+.home-layout .ridge-comment-item .comment-avatar { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; overflow: hidden; border-radius: 50%; font-size: 14px; }
+.home-layout .ridge-comment-item.is-reply .comment-avatar { width: 28px; height: 28px; flex-basis: 28px; font-size: 12px; }
+.home-layout .ridge-comment-item .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.home-layout .ridge-comment-main { min-width: 0; flex: 1 1 auto; }
+.home-layout .ridge-comment-content-row { align-items: flex-start; }
+.home-layout .ridge-comment-bubble { display: inline-block; max-width: 100%; padding: 8px 14px; border-radius: 16px; background: #F4F5F9; }
+.home-layout .ridge-comment-bubble .profile-name-link { font-size: 14px; font-weight: 600; }
+.home-layout .ridge-comment-bubble p { font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.home-layout .ridge-comment-reactions { min-height: 24px; align-items: center; gap: 12px; margin: 2px 0 0 6px; }
+.home-layout .ridge-comment-reactions button.ridge-reply-button,
+.home-layout .ridge-comment-reactions .ridge-react-compact button.ridge-react-main { height: 24px !important; min-height: 24px !important; padding: 0 2px !important; font-size: 13px; font-weight: 600; }
+.home-layout .ridge-comment-time { color: var(--news-muted); font-size: 13px; font-weight: 600; line-height: 24px; }
+.home-layout .ridge-comment-reactions .ridge-react-summary { font-size: 13px; }
+.home-layout .comment-form.profile-comment-form { align-items: center; gap: 10px; margin: 8px 0 0; }
+.home-layout .comment-form.profile-comment-form .ridge-mention-wrap input { box-sizing: border-box; height: 44px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--news-field); font-size: 15px; }
+.home-layout .comment-form.profile-comment-form > button { display: grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--news-accent); color: #fff; }
+.home-layout .comment-form.profile-comment-form > button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
 /* Round 2: post cards */
 .home-layout .post-card { padding: 0 20px 8px; border: 1px solid var(--news-border); border-radius: 16px; background: #fff; box-shadow: none; }
 .home-layout .post-header { padding: 0; margin: 20px 0 14px; }
