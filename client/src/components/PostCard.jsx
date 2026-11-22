@@ -193,7 +193,7 @@ function PostCard({
           <button type="submit" disabled={isSendingComment}>{isSendingComment ? "Đang gửi..." : "Gửi"}</button>
         </form>
       </div>}
-      {reactionsOpen && <ReactionListDialog postId={post._id} onClose={() => setReactionsOpen(false)} />}
+      {reactionsOpen && <ReactionListDialog path={`/api/post/${post._id}/reactions`} onClose={() => setReactionsOpen(false)} />}
     </article>
   );
 }

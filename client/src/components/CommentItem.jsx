@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import ReactionButton from "./ReactionButton.jsx";
+import ReactionListDialog from "./ReactionListDialog.jsx";
 import { summarizeReactions } from "../lib/reactions.js";
 
 // Turns "@username" into a profile link when that user is in `mentions`.
@@ -35,6 +36,7 @@ function CommentItem({
   isReply = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reactionsOpen, setReactionsOpen] = useState(false);
   const menuButtonRef = useRef(null);
   const menuRef = useRef(null);
   const isAuthor = Boolean(currentUserId)
@@ -143,14 +145,15 @@ function CommentItem({
             {onReact && <ReactionButton compact mine={reactionSummary.mine} onReact={onReact} />}
             {onReply && <button className="ridge-reply-button" type="button" onClick={() => onReply(comment)}>Trả lời</button>}
             {onReact && reactionSummary.total > 0 && (
-              <span className="ridge-react-summary" aria-label={`${reactionSummary.total} lượt thả cảm xúc`}>
+              <button className="ridge-react-summary" type="button" aria-label={`${reactionSummary.total} lượt thả cảm xúc`} onClick={() => setReactionsOpen(true)}>
                 <span className="ridge-react-stack" aria-hidden="true">{reactionSummary.top.slice(0, 3).map((item) => item.emoji).join("")}</span>
                 <span>{reactionSummary.total}</span>
-              </span>
+              </button>
             )}
           </div>
         )}
       </div>
+      {reactionsOpen && <ReactionListDialog path={`/api/comment/${comment._id}/reactions`} onClose={() => setReactionsOpen(false)} />}
     </div>
   );
 }

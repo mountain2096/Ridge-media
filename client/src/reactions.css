@@ -62,5 +62,6 @@
 .ridge-reaction-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .ridge-reaction-person .profile-name-link { flex: 1; }
 .ridge-reaction-more { display: block; margin: 12px auto 0; }
-.post-stats .ridge-react-summary { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; font: inherit; cursor: pointer; }
-.post-stats .ridge-react-summary:focus-visible { outline: 2px solid var(--news-accent, #2f4be0); outline-offset: 2px; border-radius: 5px; }
+.post-stats .ridge-react-summary, .ridge-comment-reactions .ridge-react-summary { display: inline-flex; min-height: 0; align-items: center; gap: 6px; padding: 0; border: 0; background: transparent; font: inherit; cursor: pointer; }
+.post-stats .ridge-react-summary:focus-visible, .ridge-comment-reactions .ridge-react-summary:focus-visible { outline: 2px solid var(--news-accent, #2f4be0); outline-offset: 2px; border-radius: 5px; }
+.post-stats .post-comment-count { margin-left: auto; }
