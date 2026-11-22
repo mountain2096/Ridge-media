@@ -45,6 +45,7 @@ Hai tính năng này **đã có từ phiên bản đầu** (nút "Lưu bài vi�
 |---|---|---|
 | PUT | `/api/post/:id/reaction` | Thả hoặc đổi cảm xúc, body `{ "type": "love" }` |
 | DELETE | `/api/post/:id/reaction` | Bỏ cảm xúc |
+| GET | `/api/post/:id/reactions` | Danh sách người thả cảm xúc; tùy chọn `type`, `page`, `limit` |
 | PUT / DELETE | `/api/comment/:id/reaction` | Như trên, cho bình luận |
 | PUT / DELETE | `/api/message/conversation/:conversationId/messages/:messageId/reaction` | Như trên, cho tin nhắn |
 
@@ -53,7 +54,6 @@ Hai tính năng này **đã có từ phiên bản đầu** (nút "Lưu bài vi�
 Dữ liệu: trường `reactions` (mảng `{ userId, reaction }`) được thêm vào bài đăng, bình luận và tin nhắn. Trường `likes` của bài đăng vẫn liệt kê mọi người đã thả cảm xúc nên màn hình và thống kê cũ không bị hỏng. Thông báo có thêm trường `reaction`.
 
 ## Giới hạn
-- Chưa có danh sách "ai đã thả cảm xúc gì" (chỉ có số đếm theo loại).
 - Trang cá nhân vẫn dùng nút "Thích" cũ cho đến khi được đổi sang giao diện mới; dữ liệu hai bên vẫn khớp nhau.
 - Thông báo cảm xúc dùng loại thông báo "like" kèm tên cảm xúc.
 
