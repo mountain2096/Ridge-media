@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 22 (`ui/redesign`).
+> Last updated: 2026-11-23, after Round 30 (`ui/redesign`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Round 30: `node --test` passed 123 tests; client lint and build passed. Added post sharing in messages, an accessible share dialog, and shared-post cards; no API, Vite server, database, or browser was started.
 - Round 28: `node --test` passed 119 tests; client lint and build passed. Profile posts now keep the left cards sticky on desktop; Ridge video controls use a scoped 4px range track across feed/profile/guest cards. No browser screenshot, API, Vite, or database was used.
 - Round 29: `node --test` passed 120 tests; client lint and build passed. Added the authenticated single-post route and rounded Ridge video frames; notifications now include post/comment previews, avatars, relative time, and navigation. No API, Vite server, database, or browser was started.
 - Round 27: `node --test`, client lint, and client build passed. Added the custom Ridge video player to feed, shared-post, and guest cards; no browser screenshot was taken.
@@ -111,6 +112,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 27 | Add custom Ridge video controls to feed, shared, and guest post cards | `node --test`, client lint/build passed; no browser screenshot | pending |
 | 28 | Keep profile left cards sticky while reading posts; fix the scoped Ridge video progress range styling | `node --test`: 119 passed; client lint/build passed; no browser/API/Vite/database/screenshot | pending |
 | 29 | Add rounded Ridge videos, authenticated single-post links, and notification previews and click-through | `node --test`: 120 passed; client lint/build passed; no API/Vite server/database/browser started | `cea6627`, this commit |
+| 30 | Send posts in chat with visibility/block checks; add accessible share dialog and shared-post message cards | `node --test`: 123 passed; client lint/build passed; no API/Vite server/database/browser started | this commit |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
@@ -122,6 +124,7 @@ Post action spacing and the profile reaction picker should be checked manually i
 Story strip and playback fixes were statically reviewed; no API, Vite, or database was started.
 Round 25 Reels filtering, de-duplication, and deep-link behavior were covered by backend checks and static client build; no browser or live service was started.
 Round 26 reaction chips/dialogs and brand-link behavior passed client lint/build and backend checks; no browser or live service was started.
+Round 30 reuses conversation and realtime helpers, checks post visibility for both users, and renders unavailable shares without the post payload. The dialog uses the existing modal focus/escape behavior; no live service or browser was used.
 Round 27 player uses native video playback with custom accessible controls, keeps one feed video playing at a time, and preserves Reels deep links; no live service or browser screenshot was used.
 Round 28 uses the existing 56px app header variable for desktop profile sticky positioning; the range styling overrides the global 44px input minimum and retains existing timeupdate/seek progress updates. No browser screenshot or live service was used.
 Round 29 uses the protected AppLayout route and existing PostCard handlers for direct post links. Notification reads cap at 50, and deleted post/comment references resolve to null in both loaded and realtime payloads. Client/browser interactions were not manually verified.

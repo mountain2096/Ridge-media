@@ -588,7 +588,9 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                     <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
                       <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
                         <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}`}>
-                          {sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.content}
+                          {sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
+                            {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={message.sharedPostId.authorId.profilePicture} alt="" /> : (message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?")}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span><span className="ridge-shared-post-text">{message.sharedPostId.content}</span>{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={message.sharedPostId.image} alt="" /> : <span aria-label="Video">▶</span>}</span>}</> : "Bài viết không còn khả dụng"}
+                          </Link> : message.content}
                           <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
                         </div>
                         {reactionSummary.total > 0 && (
