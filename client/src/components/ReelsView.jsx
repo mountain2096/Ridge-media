@@ -38,7 +38,6 @@ function ReelsView() {
   const [toast, setToast] = useState("");
   const [sharingId, setSharingId] = useState("");
   const [expandedCaption, setExpandedCaption] = useState({});
-  const [progress, setProgress] = useState(0);
   const [clampedCaptions, setClampedCaptions] = useState({});
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -48,6 +47,7 @@ function ReelsView() {
   const containerRef = useRef(null);
   const videoRefs = useRef(new Map());
   const backdropRefs = useRef(new Map());
+  const progressRefs = useRef(new Map());
   const menuRef = useRef(null);
   const captionRefs = useRef(new Map());
   const commentListRef = useRef(null);
@@ -104,6 +104,11 @@ function ReelsView() {
     const frame = requestAnimationFrame(() => setClampedCaptions(next));
     return () => cancelAnimationFrame(frame);
   }, [posts, ratios, expandedCaption]);
+
+  useEffect(() => {
+    const video = videoRefs.current.get(activeIndex);
+    progressRefs.current.get(activeIndex)?.style.setProperty("--reel-progress", `${video?.duration ? video.currentTime / video.duration * 100 : 0}%`);
+  }, [activeIndex]);
 
   useEffect(() => { if (!commentsLoading && comments.length) commentListRef.current?.scrollTo({ top: commentListRef.current.scrollHeight }); }, [comments, commentsLoading]);
 
@@ -299,7 +304,7 @@ function ReelsView() {
             <div className={`reel-stage ${commentsPostId === post._id ? "has-comments" : ""}`}>
               <div className="reel-frame" style={{ "--reel-ratio": ratio }}>
             {index <= activeIndex + 1 && index >= activeIndex - 1 && ratio > 0.58 && <video className="reel-backdrop" ref={(element) => element ? backdropRefs.current.set(index, element) : backdropRefs.current.delete(index)} src={videoSrc} muted playsInline loop aria-hidden="true" tabIndex={-1} onLoadedMetadata={(event) => { if (index === activeIndex) event.currentTarget.play().catch(() => {}); }} />}
-            <video className="reel-main-video" ref={(element) => element ? videoRefs.current.set(index, element) : videoRefs.current.delete(index)} src={videoSrc} playsInline loop preload="metadata" muted={muted} onLoadedMetadata={(event) => { const { videoWidth, videoHeight } = event.currentTarget; if (videoWidth && videoHeight) setRatios((current) => ({ ...current, [post._id]: videoWidth / videoHeight })); }} onTimeUpdate={(event) => { const main = event.currentTarget; const back = backdropRefs.current.get(index); if (back && Math.abs(back.currentTime - main.currentTime) > 0.5) back.currentTime = main.currentTime; if (index === activeIndex) setProgress(main.duration ? main.currentTime / main.duration * 100 : 0); }} onPlay={() => backdropRefs.current.get(index)?.play().catch(() => {})} onPause={() => backdropRefs.current.get(index)?.pause()} onSeeked={(event) => { const back = backdropRefs.current.get(index); if (back) back.currentTime = event.currentTarget.currentTime; }} onClick={(event) => event.currentTarget.paused ? event.currentTarget.play().catch(() => {}) : event.currentTarget.pause()} aria-label="Video Reels" />
+            <video className="reel-main-video" ref={(element) => element ? videoRefs.current.set(index, element) : videoRefs.current.delete(index)} src={videoSrc} playsInline loop preload="metadata" muted={muted} onLoadedMetadata={(event) => { const { videoWidth, videoHeight } = event.currentTarget; if (videoWidth && videoHeight) setRatios((current) => ({ ...current, [post._id]: videoWidth / videoHeight })); }} onTimeUpdate={(event) => { const main = event.currentTarget; const back = backdropRefs.current.get(index); if (back && Math.abs(back.currentTime - main.currentTime) > 0.5) back.currentTime = main.currentTime; if (index === activeIndex) progressRefs.current.get(index)?.style.setProperty("--reel-progress", `${main.duration ? main.currentTime / main.duration * 100 : 0}%`); }} onPlay={() => backdropRefs.current.get(index)?.play().catch(() => {})} onPause={() => backdropRefs.current.get(index)?.pause()} onSeeked={(event) => { const back = backdropRefs.current.get(index); if (back) back.currentTime = event.currentTarget.currentTime; }} onClick={(event) => event.currentTarget.paused ? event.currentTarget.play().catch(() => {}) : event.currentTarget.pause()} aria-label="Video Reels" />
             <div className="reel-overlay">
               <div className="reel-author">
                 <Link to={authorId ? `/profile/${authorId}` : "#"} aria-label={`Trang cá nhân ${post.authorId?.username || "Người dùng"}`}>
@@ -307,10 +312,10 @@ function ReelsView() {
                   <span>{post.authorId?.username || "Người dùng"}</span>
                 </Link>
               </div>
-              {post.content && <p ref={(element) => element ? captionRefs.current.set(post._id, element) : captionRefs.current.delete(post._id)} className={`reel-caption ${expandedCaption[post._id] ? "is-expanded" : ""}`}>{post.content}{(clampedCaptions[post._id] || expandedCaption[post._id]) && <button type="button" onClick={() => setExpandedCaption((current) => ({ ...current, [post._id]: !current[post._id] }))}>{expandedCaption[post._id] ? "Thu gọn" : "Xem thêm"}</button>}</p>}
+              {post.content && <><p ref={(element) => element ? captionRefs.current.set(post._id, element) : captionRefs.current.delete(post._id)} className={`reel-caption ${expandedCaption[post._id] ? "is-expanded" : ""}`}>{post.content}</p>{(clampedCaptions[post._id] || expandedCaption[post._id]) && <button className="reel-caption-toggle" type="button" onClick={() => setExpandedCaption((current) => ({ ...current, [post._id]: !current[post._id] }))}>{expandedCaption[post._id] ? "Thu gọn" : "Xem thêm"}</button>}</>}
               </div>
               <button className="reel-mute" type="button" aria-label={muted ? "Bật tiếng" : "Tắt tiếng"} onClick={() => setMuted((value) => !value)}><svg viewBox="0 0 24 24" aria-hidden="true">{muted ? <><path d="M11 5 6 9H3v6h3l5 4z" /><path d="m16 9 5 6m0-6-5 6" /></> : <><path d="M11 5 6 9H3v6h3l5 4z" /><path d="M15 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12" /></>}</svg></button>
-              <div className="reel-progress" style={{ "--reel-progress": `${index === activeIndex ? progress : 0}%` }} />
+              <div className="reel-progress" ref={(element) => element ? progressRefs.current.set(index, element) : progressRefs.current.delete(index)} style={{ "--reel-progress": "0%" }} />
               </div>
               <div className="reel-actions">
                 <div className="reel-reaction"><ReactionButton compact iconOnly idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 10-8.8 10s-8.8-4.8-8.8-10A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z" /></svg>} mine={summary.mine} onReact={(type) => handleReact(post, type)} idleLabel="Thích" /><span>{summary.total}</span></div>
@@ -324,8 +329,8 @@ function ReelsView() {
       </div>
       {error && posts.length > 0 && <div className="reel-page-error" role="alert"><span>{error || "Không thể tải Reels."}</span><button type="button" onClick={() => loadPage(failedPage)}>Thử lại</button></div>}
       {reactionError && <p className="reel-error" role="alert">{reactionError}</p>}
-      <button className="reel-nav reel-nav-prev" type="button" aria-label="Reel trước" disabled={activeIndex === 0} hidden={Boolean(commentsPostId)} onClick={() => containerRef.current?.querySelectorAll(".reel-item")[Math.max(0, activeIndex - 1)]?.scrollIntoView({ behavior: "smooth" })}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></button>
-      <button className="reel-nav reel-nav-next" type="button" aria-label="Reel tiếp theo" disabled={activeIndex >= posts.length - 1} hidden={Boolean(commentsPostId)} onClick={() => containerRef.current?.querySelectorAll(".reel-item")[Math.min(posts.length - 1, activeIndex + 1)]?.scrollIntoView({ behavior: "smooth" })}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></button>
+      <button className="reel-nav reel-nav-prev" type="button" aria-label="Reel trước" disabled={activeIndex === 0} hidden={Boolean(commentsPostId)} onClick={() => containerRef.current?.querySelectorAll(".reel-item")[Math.max(0, activeIndex - 1)]?.scrollIntoView({ behavior: "smooth" })}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" /></svg></button>
+      <button className="reel-nav reel-nav-next" type="button" aria-label="Reel tiếp theo" disabled={activeIndex >= posts.length - 1} hidden={Boolean(commentsPostId)} onClick={() => containerRef.current?.querySelectorAll(".reel-item")[Math.min(posts.length - 1, activeIndex + 1)]?.scrollIntoView({ behavior: "smooth" })}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
       {commentsPost && <button type="button" className="reel-comments-backdrop" aria-label="Đóng bình luận" onClick={() => setCommentsPostId("")} />}
       {commentsPost && <aside className="reel-comments-panel" ref={commentPanelRef} tabIndex={-1} aria-label="Bình luận" onClick={(event) => event.stopPropagation()}>
         <header><h2>Bình luận</h2><button type="button" aria-label="Đóng" onClick={() => { setCommentsPostId(""); commentButtonRef.current?.focus(); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></header>
