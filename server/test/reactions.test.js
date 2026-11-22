@@ -29,6 +29,22 @@ test("listReactions filters locked and blocked users, keeps viewer, and counts b
     assert.equal(listReactions(reactions, { type: "like", viewerId: "me", blockedIds: ["blocked"] }).total, 1);
 });
 
+test("listReactions returns zero pages for empty lists and keeps totals beyond the last page", () => {
+    const empty = listReactions();
+    assert.deepEqual(empty.counts, { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 });
+    assert.deepEqual(empty.items, []);
+    assert.deepEqual(empty.pagination, { page: 1, limit: 30, pages: 0 });
+
+    const result = listReactions([
+        { userId: { _id: "u1", username: "One" }, reaction: "like" },
+        { userId: { _id: "u2", username: "Two" }, reaction: "love" },
+    ], { page: 3, limit: 1 });
+    assert.equal(result.total, 2);
+    assert.deepEqual(result.items, []);
+    assert.deepEqual(result.counts, { like: 1, love: 1, haha: 0, wow: 0, sad: 0, angry: 0 });
+    assert.deepEqual(result.pagination, { page: 3, limit: 1, pages: 2 });
+});
+
 test("applyReaction sets, switches and removes one reaction per user", () => {
     let result = applyReaction([], "u1", "love");
     assert.deepEqual(result.reactions, [{ userId: "u1", reaction: "love" }]);

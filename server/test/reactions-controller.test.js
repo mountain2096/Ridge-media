@@ -127,6 +127,76 @@ test("post reaction list: hidden posts and invalid filters fail; visible list is
     } finally { s.restore(); }
 });
 
+test("post reaction list: legacy likes appear as Like and support the Like filter", async () => {
+    const s = stubs();
+    const legacyId = "64b000000000000000000003";
+    const post = fakePost({ likes: [ME, legacyId], reactions: [] });
+    Post.findOne = async () => post;
+    User.find = () => ({ select: async () => [
+        { _id: ME, username: "me", blockList: [] },
+        { _id: legacyId, username: "legacy", blockList: [] },
+    ] });
+    const request = (query = {}) => getPostReactions({ params: { id: POST_ID }, query, user: { _id: ME, blockList: [], friend: [] } }, response());
+    try {
+        const all = await request();
+        assert.equal(all.statusCode, 200);
+        assert.deepEqual(all.body.items.map(({ user, reaction }) => [user.username, reaction]), [["me", "like"], ["legacy", "like"]]);
+        assert.equal(all.body.counts.like, 2);
+        assert.equal(all.body.total, 2);
+
+        const filtered = await request({ type: "like" });
+        assert.equal(filtered.statusCode, 200);
+        assert.deepEqual(filtered.body.items.map(({ user }) => user.username), ["me", "legacy"]);
+        assert.equal(filtered.body.counts.like, 2);
+        assert.equal(filtered.body.total, 2);
+    } finally { s.restore(); }
+});
+
+test("post reaction list clamps limits and defaults invalid pagination values", async () => {
+    const s = stubs();
+    Post.findOne = async () => fakePost();
+    User.find = () => ({ select: async () => [] });
+    const request = (query) => getPostReactions({ params: { id: POST_ID }, query, user: { _id: ME, blockList: [], friend: [] } }, response());
+    try {
+        assert.equal((await request({ limit: "999" })).body.pagination.limit, 50);
+        assert.equal((await request({ limit: "0" })).body.pagination.limit, 30);
+        assert.equal((await request({ limit: "-5" })).body.pagination.limit, 1);
+        const invalid = await request({ page: "0", limit: "abc" });
+        assert.equal(invalid.statusCode, 200);
+        assert.deepEqual(invalid.body.pagination, { page: 1, limit: 30, pages: 0 });
+        const invalidPage = await request({ page: "abc" });
+        assert.equal(invalidPage.statusCode, 200);
+        assert.equal(invalidPage.body.pagination.page, 1);
+    } finally { s.restore(); }
+});
+
+test("empty and beyond-last-page post reaction lists keep six zero-count types and totals", async () => {
+    const s = stubs();
+    let post = fakePost();
+    Post.findOne = async () => post;
+    User.find = () => ({ select: async () => [
+        { _id: ME, username: "me", blockList: [] },
+        { _id: AUTHOR, username: "author", blockList: [] },
+    ] });
+    const request = (query = {}) => getPostReactions({ params: { id: POST_ID }, query, user: { _id: ME, blockList: [], friend: [] } }, response());
+    const zeroCounts = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+    try {
+        const empty = await request();
+        assert.equal(empty.body.pagination.pages, 0);
+        assert.deepEqual(empty.body.items, []);
+        assert.deepEqual(empty.body.counts, zeroCounts);
+
+        post = fakePost({ reactions: [
+            { userId: ME, reaction: "like" }, { userId: AUTHOR, reaction: "love" },
+        ] });
+        const beyond = await request({ page: "3", limit: "1" });
+        assert.equal(beyond.body.total, 2);
+        assert.deepEqual(beyond.body.items, []);
+        assert.deepEqual(beyond.body.counts, { like: 1, love: 1, haha: 0, wow: 0, sad: 0, angry: 0 });
+        assert.deepEqual(beyond.body.pagination, { page: 3, limit: 1, pages: 2 });
+    } finally { s.restore(); }
+});
+
 test("post: no notification for your own post; blocked or private posts are not reactable", async () => {
     const s = stubs();
     try {
