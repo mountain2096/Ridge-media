@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
+const User = require("../models/User");
 const { deletePost } = require("../controllers/postControllers");
 const { deleteComment } = require("../controllers/commentControllers");
 
@@ -34,10 +35,12 @@ test("post owner and admin can soft-delete; deleted posts are not physically rem
 
 test("comment author, post owner and admin can soft-delete; others cannot", async () => {
     const originalCommentFind = Comment.findOne;
-    const originalPostFind = Post.findById;
+    const originalPostFind = Post.findOne;
+    const originalUserFind = User.findById;
     const comment = { authorId: "author", postId: "p1", status: "active", save: async function () {} };
     Comment.findOne = async () => comment;
-    Post.findById = async () => ({ authorId: "post-owner" });
+    Post.findOne = async () => ({ _id: "p1", authorId: "post-owner", privacy: "public", status: "active" });
+    User.findById = () => ({ select: async () => ({ _id: "post-owner", blockList: [] }) });
 
     try {
         const denied = response();
@@ -51,6 +54,7 @@ test("comment author, post owner and admin can soft-delete; others cannot", asyn
         assert.equal(comment.status, "deleted");
     } finally {
         Comment.findOne = originalCommentFind;
-        Post.findById = originalPostFind;
+        Post.findOne = originalPostFind;
+        User.findById = originalUserFind;
     }
 });

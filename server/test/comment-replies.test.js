@@ -27,6 +27,7 @@ function setup({ users = [] } = {}) {
     const original = {
         postFind: Post.findOne, commentFind: Comment.findOne, commentCreate: Comment.create,
         commentUpdateMany: Comment.updateMany, userFind: User.find, notificationCreate: Notification.create,
+        userFindById: User.findById,
     };
     const created = [];
     const notifications = [];
@@ -35,11 +36,13 @@ function setup({ users = [] } = {}) {
     Comment.updateMany = async () => ({ modifiedCount: 0 });
     Notification.create = async (data) => { notifications.push(data); return data; };
     User.find = () => ({ select: async () => users });
+    User.findById = () => ({ select: async () => ({ _id: POST_AUTHOR, blockList: [] }) });
     return {
         created, notifications,
         restore() {
             Post.findOne = original.postFind; Comment.findOne = original.commentFind; Comment.create = original.commentCreate;
             Comment.updateMany = original.commentUpdateMany; User.find = original.userFind; Notification.create = original.notificationCreate;
+            User.findById = original.userFindById;
         },
     };
 }
@@ -124,7 +127,7 @@ test("mentions respect privacy: friends-only post only reaches friends of the au
     ] });
     Post.findOne = async () => ({ _id: POST_ID, id: POST_ID, authorId: POST_AUTHOR, privacy: "friends" });
     try {
-        await post({ content: "@ban_be @nguoi_la" });
+        await post({ content: "@ban_be @nguoi_la" }, { user: { _id: ME, blockList: [], friend: [POST_AUTHOR] } });
         assert.deepEqual(s.created[0].mentions, ["64b000000000000000000010"]);
     } finally { s.restore(); }
 });

@@ -4,6 +4,7 @@ const Notification = require("../models/Notification")
 const Comment = require("../models/Comment");
 const User = require("../models/User");
 const validateMediaUrl = require("../utils/validateMediaUrl");
+const { canAccessPost } = require("../utils/postAccess");
 
 const createPost = async (req,res) =>{
     try{
@@ -133,34 +134,19 @@ const getPosts = async (req,res) =>{
 }
 const getPostById = async (req, res) =>{
     try{
-        const post = await Post.findOne({ _id: req.params.id, status: "active" })
-        .populate("authorId","username profilePicture");
+        const post = await Post.findOne({ _id: req.params.id, status: "active" });
 
         if(!post){
             return res.status(404).json({
                 message:"Bài đăng không tồn tại!"
             })
         }
-        const isOwner = post.authorId._id.toString() === req.user._id.toString();
-        const isFriend = (req.user.friend || []).some((id) => id.toString() === post.authorId._id.toString());
-        const isBlocked = (req.user.blockList || []).some((id) => id.toString() === post.authorId._id.toString());
-        const author = await User.findById(post.authorId._id).select("blockList");
-        const blockedViewer = (author?.blockList || []).some((id) => id.toString() === req.user._id.toString());
-        const canView = post.privacy === "public" || isOwner || (post.privacy === "friends" && isFriend);
-        if (!canView || isBlocked || blockedViewer) {
-            return res.status(404).json({ message: "Bài viết không tồn tại!" });
-        }
+        if (!await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
+        await post.populate("authorId", "username profilePicture");
         if (post.originalPostId) {
             const sourcePost = await Post.findOne({ _id: post.originalPostId, status: "active" });
             if (!sourcePost) return res.status(404).json({ message: "Bài viết không tồn tại!" });
-            const sourceAuthorId = sourcePost.authorId.toString();
-            const sourceIsOwner = sourceAuthorId === req.user._id.toString();
-            const sourceIsFriend = (req.user.friend || []).some((id) => id.toString() === sourceAuthorId);
-            const sourceAuthor = await User.findById(sourcePost.authorId).select("blockList");
-            const sourceBlocked = (req.user.blockList || []).some((id) => id.toString() === sourceAuthorId) ||
-                (sourceAuthor?.blockList || []).some((id) => id.toString() === req.user._id.toString());
-            if (sourceBlocked || !(sourcePost.privacy === "public" || sourceIsOwner ||
-                (sourcePost.privacy === "friends" && sourceIsFriend))) {
+            if (!await canAccessPost(req.user, sourcePost)) {
                 return res.status(404).json({ message: "Bài viết không tồn tại!" });
             }
         }
@@ -264,6 +250,8 @@ const deletePost = async (req, res) =>{
 }
 const likePost = async (req, res) =>{
     try {
+        const target = await Post.findOne({ _id: req.params.id, status: "active" });
+        if (!target || !await canAccessPost(req.user, target)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
         const post = await Post.findOneAndUpdate(
             {
                 _id: req.params.id,
@@ -333,10 +321,11 @@ const toggleSavePost = async (req, res) => {
             return res.status(400).json({ message: "Thiếu trạng thái lưu bài viết!" });
         }
 
-        const post = await Post.findOne({ _id: req.params.id, status: "active" }).select("_id");
+        const post = await Post.findOne({ _id: req.params.id, status: "active" }).select("_id authorId privacy");
         if (!post) {
             return res.status(404).json({ message: "Không tìm thấy bài viết!" });
         }
+        if (!await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
 
         await User.updateOne(
             { _id: req.user._id },

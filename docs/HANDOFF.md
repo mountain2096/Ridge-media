@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 20 (branch `fix/reels-layout`).
+> Last updated: 2026-11-22, during integration of Reels and fixes.
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Reels remains unmerged from main; Round 20 branches from `feat/reels-view`. Current branch: `fix/reels-layout`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Reels and follow-up fixes are being integrated from parallel branches. Current branch: `integrate/reels-and-fixes`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -42,6 +42,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 19d: fixed the clamped caption toggle, mobile overlay padding, and desktop up/down reel navigation; timeupdate now writes progress directly to the active reel. Client lint/build passed and all 116 backend tests passed. Playwright used mocked API responses; caption expand/collapse, 390x844 overlay clearance, one-reel navigation, and hidden nav controls with the 1280x720 comments panel passed. At 1536x864 and 1280x720 the paired controls sat 12px inside the Reels page edge, vertically centered with a 12px gap. Visually inspected `%TEMP%` screenshots `ridge-19d-mobile-390.png`, `ridge-19d-caption-expanded.png`, `ridge-19d-desktop-1536.png`, `ridge-19d-panel-1280.png`, and `ridge-19d-desktop-1280.png`.
 - Round 19e: client lint/build passed and `node --test` passed all 116 tests. Mocked API Playwright checks at 390x844, 768x1024, 1024x700, 1280x720, and 1536x864 confirmed caption/action clearance; the nav was hidden at 1024px and remained visible without overlap at 1280px and 1536px. Caption expand/collapse worked. On resize from 1280px to 600px the test caption remained clamped, so its toggle correctly stayed visible. Opened and visually inspected `%TEMP%` screenshots `ridge-19e-390x844.png`, `ridge-19e-768x1024.png`, `ridge-19e-1024x700.png`, `ridge-19e-1280x720.png`, `ridge-19e-1536x864.png`, and `ridge-19e-resize-600.png`.
 - Round 20: corrected Reels container sizing and viewport offsets for the full-width mobile bar and the 601–900px left rail; filtered unavailable or URL-less videos. Client lint/build passed. Playwright used mocked API data at 1440x900, 820x1100, and 390x844: each Reels area filled the space below the header/sidebar, excluded both unusable mock posts, and opened its comments panel. Screenshots are under `%TEMP%`: `ridge-20-1440x900.png`, `ridge-20-1440x900-comments.png`, `ridge-20-820x1100.png`, `ridge-20-820x1100-comments.png`, `ridge-20-390x844.png`, and `ridge-20-390x844-comments.png`.
+- Round 19: focused post-access tests passed; full `node --test` passed 118 tests. Backend-only; not verified against live MongoDB.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -86,9 +87,11 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 19d | Fix Reels captions, progress updates, mobile overlay padding, and desktop navigation | 116 tests; lint/build passed; mocked API Playwright flows and screenshots verified | `8468777` |
 | 19e | Fix Reels overlay clearance, caption resize measurement, narrow desktop navigation, and small CSS leftovers | 116 tests; lint/build passed; mocked API Playwright screenshots verified at five viewport sizes and after resize | `a5c4039` |
 | 20 | Fix Reels page sizing and responsive top/left offsets; skip unavailable or URL-less video posts | Client lint/build passed; mocked API Playwright layout and comments-panel checks at 1440x900, 820x1100, and 390x844 | `de6a86a` |
+| 19 | Centralize post visibility checks and enforce them for post reactions, saves, and comment access; hide comments by blocked users | 118 tests passed; client untouched; not verified against live MongoDB | pending |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
+Post visibility checks now cover direct post reads, reactions, saves, comments, and comment reads (Round 19).
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.

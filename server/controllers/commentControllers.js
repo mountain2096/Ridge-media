@@ -4,6 +4,7 @@ const Notification = require("../models/Notification");
 const User = require("../models/User");
 const errorResponse = require("../utils/errorResponse");
 const { extractMentionUsernames } = require("../utils/mentions");
+const { canAccessPost, loadAccessiblePost } = require("../utils/postAccess");
 
 const idOf = (value) => String(value?._id || value || "");
 
@@ -41,6 +42,7 @@ const createComment = async (req, res) =>{
                 message:"Bài viết không tồn tại!"
             })
         }
+        if (!await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
 
         // Optional reply: the parent must be an active comment of the same post.
         // Replying to a reply attaches to the top-level comment (two levels only).
@@ -110,16 +112,18 @@ const getCommentByPost = async (req, res) =>{
                 message:"Không tìm thấy bài viết!"
             })
         }
+        if (!await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
 
         const comment = await Comment.find({ postId, status: "active" })
         .populate([
-            { path: "authorId", select: "username profilePicture" },
+            { path: "authorId", select: "username profilePicture blockList" },
             { path: "mentions", select: "username" },
         ])
         .sort({ createdAt : 1})
 
-        const commentsWithOwner = comment.map((item) => {
+        const commentsWithOwner = comment.filter((item) => item.authorId && !blockedEitherWay(req.user, item.authorId)).map((item) => {
         const commentData = item.toObject();
+        if (commentData.authorId) delete commentData.authorId.blockList;
 
         commentData.isMine =
             item.authorId?._id?.toString() === req.user._id.toString();
@@ -153,6 +157,10 @@ const updateComment = async (req, res) =>{
             })
         }
 
+        if (!await canAccessPost(req.user, await Post.findById(comment.postId))) {
+            return res.status(404).json({ message: "Bài viết không tồn tại!" });
+        }
+
         if(comment.authorId.toString() !== req.user._id.toString()){
             return res.status(403).json({
                 message:"Bạn không có quyền chỉnh sửa bình luận này!"
@@ -180,7 +188,8 @@ const deleteComment = async (req, res) =>{
             return res.status(404).json({ message: "Bình luận không tồn tại!" });
         }
 
-        const post = await Post.findById(comment.postId);
+        const post = await loadAccessiblePost(req.user, comment.postId);
+        if (!post) return res.status(404).json({ message: "Bài viết không tồn tại!" });
         const isCommentOwner = comment.authorId.toString() === req.user._id.toString();
         const isPostOwner = post && post.authorId.toString() === req.user._id.toString();
 
