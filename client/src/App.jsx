@@ -4,6 +4,7 @@ import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletCon
 import AppLayout from "./AppLayout.jsx";
 import GuestLayout from "./components/GuestLayout.jsx";
 import FeedPage from "./pages/FeedPage.jsx";
+import ReelsView from "./components/ReelsView.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import GuestProfilePage from "./pages/GuestProfilePage.jsx";
 import MessagesView from "./components/MessagesView.jsx";
@@ -158,7 +159,7 @@ function App() {
           <Route path="saved" element={<FeedPage section="saved" />} />
           <Route path="settings" element={<ProfileSettingsRoute />} />
           <Route path="admin" element={<AdminPanelRoute />} />
-          <Route path="reels" element={<FeedPage section="reels" />} />
+          <Route path="reels" element={<ReelsView />} />
           <Route path="activity" element={<FeedPage section="activity" />} />
         </Route>
       </Route>
