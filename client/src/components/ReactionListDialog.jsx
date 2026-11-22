@@ -43,7 +43,7 @@ export default function ReactionListDialog({ path, onClose }) {
         {REACTIONS.filter((reaction) => data.counts[reaction.type] > 0).map((reaction) => <button key={reaction.type} type="button" role="tab" aria-selected={type === reaction.type} onClick={() => { if (type !== reaction.type) { setLoading(true); setError(""); setItems([]); setType(reaction.type); } }}>{reaction.emoji} <span>{data.counts[reaction.type]}</span></button>)}
       </div>}
       <div className="ridge-reaction-people" aria-live="polite">
-        {!loading && items.map(({ user, reaction }) => <div className="ridge-reaction-person" key={user._id}>
+        {items.map(({ user, reaction }) => <div className="ridge-reaction-person" key={user._id}>
           <Link className="ridge-reaction-avatar" to={`/profile/${user._id}`} onClick={onClose}>{user.profilePicture ? <img src={user.profilePicture} alt="" /> : (user.username || "?").charAt(0).toUpperCase()}</Link>
           <Link className="profile-name-link" to={`/profile/${user._id}`} onClick={onClose}>{user.username}</Link>
           <span aria-label={REACTIONS.find((item) => item.type === reaction)?.label}>{REACTIONS.find((item) => item.type === reaction)?.emoji}</span>
