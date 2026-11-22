@@ -20,6 +20,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 
 ## 4. Test status (update each round)
 - Round 28: `node --test` passed 119 tests; client lint and build passed. Profile posts now keep the left cards sticky on desktop; Ridge video controls use a scoped 4px range track across feed/profile/guest cards. No browser screenshot, API, Vite, or database was used.
+- Round 29: `node --test` passed 120 tests; client lint and build passed. Added the authenticated single-post route and rounded Ridge video frames; notifications now include post/comment previews, avatars, relative time, and navigation. No API, Vite server, database, or browser was started.
 - Round 27: `node --test`, client lint, and client build passed. Added the custom Ridge video player to feed, shared-post, and guest cards; no browser screenshot was taken.
 - Round 25: `node --test` passed 119 tests; client lint and build passed. Reels now filters out shared posts, de-duplicates ids, and opens the requested post from feed/profile cards, fetching it when absent from page one. No browser, API, Vite, or database was started.
 - Round 26: `node --test` passed 119 tests; client lint and build passed. Restored the reaction summary chip and reaction list dialog on shared feed/profile cards, use real reaction emojis in guest cards when available, and made the brand link return to the top or freshly reload `/feed`. No browser, API, Vite, or database was started.
@@ -109,6 +110,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 26 | Restore reaction summaries and reaction list access on post cards; make the brand link return to the top of the feed | `node --test`: 119 passed; client lint/build passed; no API, Vite, database, or browser started | this commit |
 | 27 | Add custom Ridge video controls to feed, shared, and guest post cards | `node --test`, client lint/build passed; no browser screenshot | pending |
 | 28 | Keep profile left cards sticky while reading posts; fix the scoped Ridge video progress range styling | `node --test`: 119 passed; client lint/build passed; no browser/API/Vite/database/screenshot | pending |
+| 29 | Add rounded Ridge videos, authenticated single-post links, and notification previews and click-through | `node --test`: 120 passed; client lint/build passed; no API/Vite server/database/browser started | `cea6627`, this commit |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
@@ -122,6 +124,7 @@ Round 25 Reels filtering, de-duplication, and deep-link behavior were covered by
 Round 26 reaction chips/dialogs and brand-link behavior passed client lint/build and backend checks; no browser or live service was started.
 Round 27 player uses native video playback with custom accessible controls, keeps one feed video playing at a time, and preserves Reels deep links; no live service or browser screenshot was used.
 Round 28 uses the existing 56px app header variable for desktop profile sticky positioning; the range styling overrides the global 44px input minimum and retains existing timeupdate/seek progress updates. No browser screenshot or live service was used.
+Round 29 uses the protected AppLayout route and existing PostCard handlers for direct post links. Notification reads cap at 50, and deleted post/comment references resolve to null in both loaded and realtime payloads. Client/browser interactions were not manually verified.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.

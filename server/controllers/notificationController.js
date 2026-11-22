@@ -7,7 +7,9 @@ const getNotification = async (req, res) =>{
         const notifications = await Notification.find({
             recipientId: req.user._id
         }).populate("senderId", "username profilePicture")
-        .sort({ createdAt: -1})
+        .populate({ path: "postId", select: "content image video originalPostId status", match: { status: "active" } })
+        .populate({ path: "commentId", select: "content", match: { status: "active" } })
+        .sort({ createdAt: -1}).limit(50)
         
         res.status(200).json({
             notifications

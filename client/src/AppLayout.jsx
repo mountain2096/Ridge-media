@@ -4,6 +4,7 @@ import { API_BASE } from "./lib/api.js";
 import { ConfirmProvider } from "./components/ConfirmDialog.jsx";
 import UserSearch from "./components/UserSearch.jsx";
 import LiveToast from "./components/LiveToast.jsx";
+import { reactionInfo } from "./lib/reactions.js";
 import { connectSocket, disconnectSocket, getSocket } from "./lib/socket.js";
 import "./newsfeed.css";
 
@@ -12,6 +13,7 @@ const NOTIFICATION_TEXT = {
   comment: "đã bình luận bài viết của bạn",
   friend_request: "đã gửi lời mời kết bạn",
   friend_accept: "đã chấp nhận lời mời kết bạn",
+  friend_reject: "đã từ chối lời mời kết bạn",
   message: "đã gửi tin nhắn cho bạn",
   share: "đã chia sẻ bài viết của bạn",
   reply: "đã trả lời bình luận của bạn",
@@ -32,6 +34,34 @@ function notificationText(type, reaction, commentId) {
     return `${REACTION_NOTIFICATION_TEXT[reaction]} ${commentId ? "bình luận" : "bài viết"} của bạn`;
   }
   return NOTIFICATION_TEXT[type] || "có cập nhật mới";
+}
+
+function notificationTime(value) {
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60000));
+  if (minutes < 1) return "Vừa xong";
+  if (minutes < 60) return `${minutes} phút`;
+  if (minutes < 1440) return `${Math.floor(minutes / 60)} giờ`;
+  if (minutes < 2880) return "Hôm qua";
+  return `${Math.floor(minutes / 1440)} ngày`;
+}
+
+function NotificationItem({ item, onOpen }) {
+  const sender = item.senderId && typeof item.senderId === "object" ? item.senderId : {};
+  const post = item.postId && typeof item.postId === "object" && item.postId.status !== "deleted" ? item.postId : null;
+  const comment = item.commentId && typeof item.commentId === "object" ? item.commentId : null;
+  const hasPost = ["like", "comment", "reply", "mention", "share"].includes(item.type);
+  const preview = !hasPost ? (item.type === "message" ? "Tin nhắn" : "") : !post ? "Bài viết đã bị xóa" : ["comment", "reply", "mention"].includes(item.type) && comment?.content
+    ? comment.content : post.content?.trim() || (post.video ? "Video" : post.image ? "Ảnh" : "Bài viết");
+  const reaction = item.type === "like" ? reactionInfo(item.reaction)?.emoji : null;
+  const badgePath = ["comment", "reply", "mention"].includes(item.type) ? "M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"
+    : item.type === "share" ? "M22 3 11 14M22 3l-7 18-4-7-7-4z"
+      : item.type.startsWith("friend_") ? "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21v-1a8 8 0 0 1 16 0v1" : null;
+  return <button className={`notification-item ${item.isRead ? "read" : "unread"}`} type="button" onClick={() => onOpen(item)}>
+    <span className="notification-avatar">{sender.profilePicture ? <img src={sender.profilePicture} alt="" /> : (sender.username?.charAt(0).toUpperCase() || "?")}<span className="notification-kind">{reaction || (badgePath ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d={badgePath} /></svg> : "•")}</span></span>
+    <span className="notification-copy"><span><strong>{sender.username || "Người dùng"}</strong> {notificationText(item.type, item.reaction, item.commentId)}</span><span className="notification-preview">{preview}</span><time>{notificationTime(item.createdAt)}</time></span>
+    {post?.image ? <img className="notification-thumb" src={post.image} alt="" /> : post?.video ? <span className="notification-thumb notification-video" aria-label="Video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z" /></svg></span> : null}
+    {!item.isRead && <span className="notification-unread-dot" />}
+  </button>;
 }
 
 function signOutLocal(stopHeartbeat, userId, navigate) {
@@ -210,6 +240,7 @@ function AppLayout() {
         title: notification.senderId?.username || "Người dùng",
         body: notificationText(notification.type, notification.reaction, notification.commentId),
         avatar: notification.senderId?.profilePicture || "",
+        notification,
       });
       if (notification.type === "friend_request" || notification.type === "friend_accept") scheduleRefresh();
     }
@@ -291,8 +322,22 @@ function AppLayout() {
     }
   }
 
+  async function openNotification(item) {
+    if (!item.isRead) await markRead(item._id);
+    setNotificationOpen(false);
+    const senderId = item.senderId?._id;
+    if (["like", "comment", "reply", "mention", "share"].includes(item.type)) {
+      if (!item.postId || typeof item.postId !== "object" || item.postId.status === "deleted") return;
+      const commentId = item.commentId?._id || (typeof item.commentId === "string" ? item.commentId : "");
+      navigate(`/post/${item.postId._id}${commentId ? `?comment=${commentId}` : ""}`);
+    } else if (item.type === "friend_request") navigate("/friends");
+    else if (["friend_accept", "friend_reject"].includes(item.type) && senderId) navigate(`/profile/${senderId}`);
+    else if (item.type === "message") navigate("/messages");
+  }
+
   function openLiveToast(toast) {
     setLiveToast(null);
+    if (toast.notification) return openNotification(toast.notification);
     if (toast.kind === "message" && toast.conversationId) {
       navigate("/messages", { state: { openConversationId: toast.conversationId } });
     } else {
@@ -325,7 +370,7 @@ function AppLayout() {
           <NavLink className="header-icon-link" to="/messages" aria-label="Tin nhắn" title="Tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>{messageCount > 0 && <span className="header-badge">{messageCount > 99 ? "99+" : messageCount}</span>}</NavLink>
           <div className="notification-wrap">
             <button className="header-icon-link notification-button" type="button" aria-label="Thông báo" aria-expanded={notificationOpen} onClick={toggleNotifications}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{notifications.some((item) => !item.isRead) && <span className="notification-dot" />}</button>
-            {notificationOpen && <div className="notification-panel"><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.length && <p>Chưa có thông báo nào.</p>}{notifications.map((item) => <button className={"notification-item " + (item.isRead ? "read" : "unread")} key={item._id} type="button" onClick={() => markRead(item._id)}><strong>{item.senderId?.username || "Người dùng"}</strong>{" "}{notificationText(item.type, item.reaction, item.commentId)}</button>)}</div>}
+            {notificationOpen && <div className="notification-panel"><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.length && <p>Chưa có thông báo nào.</p>}{notifications.map((item) => <NotificationItem item={item} key={item._id} onOpen={openNotification} />)}</div>}
           </div>
           <div className="profile-menu-wrap">
             <button className="profile-menu-trigger" type="button" aria-label="Mở menu tài khoản" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>

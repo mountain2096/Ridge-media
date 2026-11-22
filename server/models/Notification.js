@@ -65,10 +65,16 @@ notificationSchema.post("save", function (doc) {
     void (async () => {
         try {
             const User = require("./User");
+            const Post = require("./Post");
+            const Comment = require("./Comment");
             const { emitToUser } = require("../utils/realtime");
             const sender = await User.findById(doc.senderId).select("username profilePicture").lean();
+            const [post, comment] = await Promise.all([
+                doc.postId ? Post.findOne({ _id: doc.postId, status: "active" }).select("content image video originalPostId status").lean() : null,
+                doc.commentId ? Comment.findOne({ _id: doc.commentId, status: "active" }).select("content").lean() : null,
+            ]);
             emitToUser(doc.recipientId, "notification:new", {
-                notification: { ...doc.toObject(), senderId: sender || doc.senderId },
+                notification: { ...doc.toObject(), senderId: sender || doc.senderId, postId: post, commentId: comment },
             });
         } catch (error) {
             console.error("Could not push notification:", error.message);
