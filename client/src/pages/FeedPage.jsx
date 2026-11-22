@@ -15,6 +15,7 @@ import ContactsPanel from "../components/feed/ContactsPanel.jsx";
 import FriendsView from "../components/feed/FriendsView.jsx";
 import ConnectionsView from "../components/feed/ConnectionsView.jsx";
 import StoryStrip from "../components/feed/StoryStrip.jsx";
+import LoadMoreSentinel from "../components/feed/LoadMoreSentinel.jsx";
 import PostComposer from "../components/feed/PostComposer.jsx";
 import StoryComposer from "../components/StoryComposer.jsx";
 import StoryViewer from "../components/StoryViewer.jsx";
@@ -454,6 +455,7 @@ function FeedPage({ section = "feed" }){
     }
 
     function handleLoadMorePosts() {
+      if (isLoading || isLoadingMorePosts) return;
       setIsLoadingMorePosts(true);
       setFeedPage((currentPage) => currentPage + 1);
     }
@@ -967,11 +969,6 @@ function FeedPage({ section = "feed" }){
 {!isLoading && !error && displayedPosts.length === 0 && (
   <p>{activeSection === "saved" ? "Bạn chưa lưu bài viết nào." : activeSection === "activity" ? "Bạn chưa đăng bài viết nào." : activeSection === "reels" ? "Chưa có Reels nào. Khi đăng bài, thêm đường dẫn video MP4 để bài xuất hiện tại đây." : "Chưa có bài viết nào."}</p>
 )}
-{!isLoading && !error && activeSection === "feed" && hasMorePosts && (
-  <button className="create-post-button" type="button" onClick={handleLoadMorePosts} disabled={isLoadingMorePosts}>
-    {isLoadingMorePosts ? "Đang tải..." : "Tải thêm bài viết"}
-  </button>
-)}
 {likeError && (
   <p className="feedback-message error">{likeError}</p>
 )}
@@ -1027,6 +1024,16 @@ function FeedPage({ section = "feed" }){
   onReportComment={(item) => handleReport('comment', item._id)}
   onImageError={(item) => setFailedImagePostIds((ids) => ids.includes(item._id) ? ids : [...ids, item._id])}
 />)}
+{isLoadingMorePosts && <p role="status">Đang tải...</p>}
+{!isLoading && !error && activeSection === "feed" && hasMorePosts && (
+  typeof IntersectionObserver === "undefined" ? (
+    <button className="create-post-button" type="button" onClick={handleLoadMorePosts} disabled={isLoadingMorePosts}>
+      Tải thêm bài viết
+    </button>
+  ) : (
+    <LoadMoreSentinel onVisible={handleLoadMorePosts} disabled={isLoadingMorePosts} />
+  )
+)}
                   </>
                 )}
                 </section>
