@@ -8,6 +8,12 @@ const errorResponse = require("../utils/errorResponse");
 const validatePassword = (password) => typeof password === "string" && password.length >= 8 &&
     /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
 
+const signAuthToken = (user) => jwt.sign({
+    id: user._id,
+    isAdmin: user.isAdmin,
+    tv: user.tokenVersion || 0,
+}, process.env.JWT_SECRET, { expiresIn: "7d" });
+
 const transport = nodemailer.createTransport({
     service: "gmail",
     auth:{
@@ -107,14 +113,7 @@ const login = async(req,res) =>{
                 message: "Tài khoản của bạn hiện đã bị vô hiệu hóa"
             });
         }
-        const token = jwt.sign({
-            id:user._id,
-            isAdmin: user.isAdmin,
-            tv: user.tokenVersion || 0,
-        },process.env.JWT_SECRET,
-        {
-            expiresIn:"7d",
-        })
+        const token = signAuthToken(user);
 
         res.status(200).json({
             message:"Đăng nhập thành công!",
@@ -263,10 +262,11 @@ const changePassword = async (req, res) => {
             return res.status(401).json({ message: "Mật khẩu hiện tại không đúng!" });
         }
         user.password = await bcrypt.hash(newPassword, 10);
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
         await user.save();
-        return res.status(200).json({ message: "Đổi mật khẩu thành công!" });
+        return res.status(200).json({ message: "Đổi mật khẩu thành công!", token: signAuthToken(user) });
     } catch (error) {
         return errorResponse(res, error);
     }

@@ -63,9 +63,12 @@ test("login uses the same unauthorized status for unknown email", async () => {
 
 test("change password checks the current password and stores a new hash", async () => {
     const originalFind = User.findById;
+    process.env.JWT_SECRET = "share-auth-test-secret";
     const user = {
         _id: "user",
         password: await bcrypt.hash("CurrentPass1", 4),
+        tokenVersion: 0,
+        isAdmin: false,
         resetPasswordToken: "old-token",
         resetPasswordExpires: new Date(),
         save: async () => {},

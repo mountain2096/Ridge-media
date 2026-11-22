@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const protect = require("../middlewares/protect");
-const { login, logout } = require("../controllers/authControllers");
+const { login, logout, changePassword } = require("../controllers/authControllers");
 const { authenticateSocket } = require("../socket");
 
 const SECRET = "token-revocation-test-secret";
@@ -112,5 +112,56 @@ test("login signs the user's tokenVersion", async () => {
     } finally {
         User.findOne = originalFindOne;
         bcrypt.compare = originalCompare;
+    }
+});
+
+test("changing password revokes old tokens and returns a current token", async () => {
+    const originalFindById = User.findById;
+    const originalCompare = bcrypt.compare;
+    const originalHash = bcrypt.hash;
+    process.env.JWT_SECRET = SECRET;
+    const user = {
+        _id: USER_ID, password: "old-hash", tokenVersion: 2, isAdmin: true,
+        select: async () => user,
+        save: async () => {},
+    };
+    User.findById = (id) => id === USER_ID ? user : null;
+    bcrypt.compare = async (password, hash) => password === "CurrentPass1" && hash === "old-hash";
+    bcrypt.hash = async () => "new-hash";
+
+    try {
+        const denied = response();
+        await changePassword({ body: {
+            currentPassword: "wrong", newPassword: "NewPassword2", confirmPassword: "NewPassword2",
+        }, user: { _id: USER_ID } }, denied);
+        assert.equal(denied.statusCode, 401);
+        assert.equal(user.tokenVersion, 2);
+        assert.equal("token" in denied.body, false);
+
+        const res = response();
+        await changePassword({ body: {
+            currentPassword: "CurrentPass1", newPassword: "NewPassword2", confirmPassword: "NewPassword2",
+        }, user: { _id: USER_ID } }, res);
+        assert.equal(res.statusCode, 200);
+        assert.equal(user.tokenVersion, 3);
+        const claims = jwt.verify(res.body.token, SECRET);
+        assert.equal(claims.id, USER_ID);
+        assert.equal(claims.tv, 3);
+        assert.equal(claims.isAdmin, true);
+
+        for (const [token, expectedStatus] of [
+            [jwt.sign({ id: USER_ID, tv: 2 }, SECRET), 401],
+            [res.body.token, 200],
+        ]) {
+            const checked = response();
+            let continued = false;
+            await protect({ headers: { authorization: `Bearer ${token}` } }, checked, () => { continued = true; });
+            assert.equal(checked.statusCode, expectedStatus);
+            assert.equal(continued, expectedStatus === 200);
+        }
+    } finally {
+        User.findById = originalFindById;
+        bcrypt.compare = originalCompare;
+        bcrypt.hash = originalHash;
     }
 });
