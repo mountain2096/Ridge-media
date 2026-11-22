@@ -7,6 +7,7 @@ import Toast from "../components/Toast.jsx";
 import PostCard from "../components/PostCard.jsx";
 import MediaPicker from "../components/MediaPicker.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
+import { mergeSavedPost } from "../lib/mergeSavedPost.js";
 import "../newsfeed.css";
 import "../profile.css";
 
@@ -249,7 +250,7 @@ function ProfilePage({ profileId, embedded = false }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể cập nhật bài viết.");
       setPosts((current) => current.map((post) => post._id === postId
-        ? { ...post, content: data.post.content }
+        ? mergeSavedPost(post, data.post)
         : post));
       setEditingPostId(null);
       setEditingPostContent("");

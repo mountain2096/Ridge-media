@@ -6,6 +6,7 @@ import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import { API_BASE } from "../lib/api.js";
 import { sendReaction } from "../lib/reactions.js";
+import { mergeSavedPost } from "../lib/mergeSavedPost.js";
 import { useConfirm } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
@@ -380,7 +381,7 @@ function FeedPage({ section = "feed" }){
         }
 
         setPosts((currentPosts) => currentPosts.map((post) =>
-          post._id === postId ? { ...post, ...data.post } : post
+          post._id === postId ? mergeSavedPost(post, data.post) : post
         ));
         setEditingPostId(null);
         setEditingPostContent("");
