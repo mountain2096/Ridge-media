@@ -132,8 +132,9 @@ function AuthPage() {
 
 function RequireAuth() {
   const token = localStorage.getItem("token");
+  const context = useOutletContext();
 
-  return token ? <Outlet /> : <Navigate to="/" replace />;
+  return token ? <Outlet context={context} /> : <Navigate to="/" replace />;
 }
 
 function AuthRoute(){
