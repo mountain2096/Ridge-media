@@ -100,6 +100,7 @@ Known environment issue from the last local run: starting the API attempted to c
 
 - On Windows PowerShell, `npm` may be blocked by execution policy; use `npm.cmd` instead (e.g. `npm.cmd run lint --prefix client`).
 - Only read and edit files needed for the task; do not scan the whole repo.
+- Playwright screenshots, traces and other temporary output must be saved under $env:TEMP, never inside the repository.
 - While iterating, run only the relevant test file (`node --test server/test/<file>.test.js`). Run the full `node --test`, and client lint/build, once at the end. Skip client lint/build if only the backend changed.
 - Keep final replies short: files changed, test counts, anything that needs my decision.
 - docs/STATUS.md is an older snapshot (2026-11-20, branch `feat/ui-redesign`, 16 tests); verify current status against code and `git log`.
