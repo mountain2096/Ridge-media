@@ -380,7 +380,7 @@ function FeedPage({ section = "feed" }){
         }
 
         setPosts((currentPosts) => currentPosts.map((post) =>
-          post._id === postId ? { ...post, content: data.post.content } : post
+          post._id === postId ? { ...post, ...data.post } : post
         ));
         setEditingPostId(null);
         setEditingPostContent("");

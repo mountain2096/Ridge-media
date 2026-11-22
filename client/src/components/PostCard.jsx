@@ -96,7 +96,7 @@ function PostCard({
           <div className="post-author-info">
             <div className="post-name-row"><Link className="profile-name-link" to={authorId ? `/profile/${authorId}` : "#"}>{username}</Link>{isShare && <span className="post-share-label">đã chia sẻ một bài viết</span>}</div>
             <span className="post-meta">
-              <span>Ridge</span><span aria-hidden="true">·</span><time dateTime={post.createdAt || undefined} title={fullDate}>{postDate}</time><span aria-hidden="true">·</span>
+              <span>Ridge</span><span aria-hidden="true">·</span><time dateTime={post.createdAt || undefined} title={fullDate}>{postDate}</time>{!isShare && post.editedAt && <><span aria-hidden="true">·</span><time title={new Date(post.editedAt).toLocaleString("vi-VN")}>Đã chỉnh sửa</time></>}<span aria-hidden="true">·</span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0-18" /></svg>
               <span>{visibilityLabel}</span>
             </span>
