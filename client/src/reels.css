@@ -72,8 +72,10 @@
 .reel-state { display: grid; min-height: 100%; place-content: center; justify-items: center; gap: 12px; padding: 24px; color: #fff; text-align: center; }
 .reel-state p { max-width: 460px; margin: 0; }
 .reel-state button { min-width: 100px; min-height: 44px; border: 1px solid #fff; border-radius: 22px; background: transparent; color: #fff; cursor: pointer; }
+.reel-page-error { position: absolute; right: 16px; bottom: 16px; left: 16px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 14px; border-radius: 10px; background: #7f1d1d; color: #fff; }
+.reel-page-error button { min-width: 100px; min-height: 44px; border: 1px solid #fff; border-radius: 22px; background: transparent; color: #fff; cursor: pointer; }
 .reel-error { position: absolute; top: 12px; left: 50%; max-width: calc(100% - 24px); margin: 0; padding: 10px 14px; transform: translateX(-50%); border-radius: 10px; background: #7f1d1d; color: #fff; }
-.reel-item button:focus-visible, .reel-author a:focus-visible, .reel-state button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.reel-item button:focus-visible, .reel-author a:focus-visible, .reel-state button:focus-visible, .reel-page-error button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
 @media (max-width: 900px) {
   .reels-page { left: 0; }

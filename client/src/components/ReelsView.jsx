@@ -66,8 +66,8 @@ function ReelsView() {
   }, [posts]);
 
   useEffect(() => {
-    if (posts.length && activeIndex >= posts.length - 2 && page < pages && !pageRequest.current && !loading) loadPage(page + 1);
-  }, [activeIndex, loadPage, loading, page, pages, posts.length]);
+    if (posts.length && activeIndex >= posts.length - 2 && page < pages && !pageRequest.current && !loading && !error) loadPage(page + 1);
+  }, [activeIndex, error, loadPage, loading, page, pages, posts.length]);
 
   useEffect(() => {
     const header = document.querySelector(".home-topbar");
@@ -94,7 +94,7 @@ function ReelsView() {
     const direction = ["ArrowDown", "PageDown"].includes(event.key) ? 1 : ["ArrowUp", "PageUp"].includes(event.key) ? -1 : 0;
     if (!direction) return;
     event.preventDefault();
-    containerRef.current?.children[Math.max(0, Math.min(posts.length - 1, activeIndex + direction))]?.scrollIntoView({ behavior: "smooth" });
+    containerRef.current?.querySelectorAll(".reel-item")[Math.max(0, Math.min(posts.length - 1, activeIndex + direction))]?.scrollIntoView({ behavior: "smooth" });
   }
 
   async function handleReact(post, type) {
@@ -111,9 +111,9 @@ function ReelsView() {
   return (
     <section className="reels-page" aria-label="Reels">
       <div className="reels-container" ref={containerRef} tabIndex={0} onKeyDown={handleKeyDown} aria-label="Danh sách Reels">
-        {loading && posts.length === 0 && <p className="reels-state">Đang tải Reels...</p>}
-        {error && <div className="reels-state"><p>{error || "Không thể tải Reels."}</p><button type="button" onClick={() => loadPage(failedPage)}>Thử lại</button></div>}
-        {!loading && !error && posts.length === 0 && <p className="reels-state">Chưa có Reels nào. Hãy đăng một bài viết kèm video để bài xuất hiện tại đây.</p>}
+        {loading && posts.length === 0 && <p className="reel-state">Đang tải Reels...</p>}
+        {error && posts.length === 0 && <div className="reel-state"><p>{error || "Không thể tải Reels."}</p><button type="button" onClick={() => loadPage(failedPage)}>Thử lại</button></div>}
+        {!loading && !error && posts.length === 0 && <p className="reel-state">Chưa có Reels nào. Hãy đăng một bài viết kèm video để bài xuất hiện tại đây.</p>}
         {posts.map((post, index) => {
           const authorId = post.authorId?._id;
           const summary = summarizeReactions(mergeLegacyLikes(post.reactions, post.likes), currentUser?._id);
@@ -137,8 +137,9 @@ function ReelsView() {
             </div>
           </article>;
         })}
-        {reactionError && <p className="reel-error" role="alert">{reactionError}</p>}
       </div>
+      {error && posts.length > 0 && <div className="reel-page-error" role="alert"><span>{error || "Không thể tải Reels."}</span><button type="button" onClick={() => loadPage(failedPage)}>Thử lại</button></div>}
+      {reactionError && <p className="reel-error" role="alert">{reactionError}</p>}
     </section>
   );
 }
