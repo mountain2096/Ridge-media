@@ -44,6 +44,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 20: corrected Reels container sizing and viewport offsets for the full-width mobile bar and the 601–900px left rail; filtered unavailable or URL-less videos. Client lint/build passed. Playwright used mocked API data at 1440x900, 820x1100, and 390x844: each Reels area filled the space below the header/sidebar, excluded both unusable mock posts, and opened its comments panel. Screenshots are under `%TEMP%`: `ridge-20-1440x900.png`, `ridge-20-1440x900-comments.png`, `ridge-20-820x1100.png`, `ridge-20-820x1100-comments.png`, `ridge-20-390x844.png`, and `ridge-20-390x844-comments.png`.
 - Round 19: focused post-access tests passed; full `node --test` passed 118 tests. Backend-only; not verified against live MongoDB.
 - Settings initial-state fix: ProfileSettings mounts after `currentUser._id` loads and remounts for a changed user ID. Client lint/build passed; direct `/settings` reload was not browser-verified.
+- Responsive navigation fix: sidebar labels and titles were added; narrow top bar search sizing and friends-list action wrapping were checked with mocked API responses at 820x1100, 600x900, and 390x844.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -90,10 +91,12 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 20 | Fix Reels page sizing and responsive top/left offsets; skip unavailable or URL-less video posts | Client lint/build passed; mocked API Playwright layout and comments-panel checks at 1440x900, 820x1100, and 390x844 | `de6a86a` |
 | 19 | Centralize post visibility checks and enforce them for post reactions, saves, and comment access; hide comments by blocked users | 118 tests passed; client untouched; not verified against live MongoDB | pending |
 | 19 | Wait for `currentUser._id` before mounting profile settings and key the form by user ID | Client lint and build passed; direct `/settings` reload not browser-verified | pending |
+| 19 | Add responsive sidebar labels/titles and fix narrow search and friends-list action layout | Client lint/build passed; mocked API Playwright checks at 820x1100, 600x900, and 390x844 | pending |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
 Post visibility checks now cover direct post reads, reactions, saves, comments, and comment reads (Round 19).
+Responsive feed, friends, and messages layouts were checked at the requested viewports in Round 19.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
