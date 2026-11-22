@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import CommentItem from "./CommentItem.jsx";
 import ReactionButton from "./ReactionButton.jsx";
 import MentionInput from "./MentionInput.jsx";
-import ReactionListDialog from "./ReactionListDialog.jsx";
 import "../comments.css";
 import { mergeLegacyLikes, summarizeReactions } from "../lib/reactions.js";
 
@@ -18,7 +17,6 @@ function PostCard({
   onCancelCommentEdit, onUpdateComment, onDeleteComment, onReportComment, onImageError,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [reactionsOpen, setReactionsOpen] = useState(false);
   const [reactionPopped, setReactionPopped] = useState(false);
   const menuRef = useRef(null);
   const commentsRef = useRef(null);
@@ -40,8 +38,7 @@ function PostCard({
   const visibilityLabel = post.privacy === "private" ? "Chỉ mình tôi" : post.privacy === "friends" ? "Bạn bè" : "Mọi người";
   const ownsPost = Boolean(post.isMine);
   const reactionSummary = summarizeReactions(mergeLegacyLikes(post.reactions, post.likes), currentUser?._id);
-  const myReaction = currentUser?._id ? reactionSummary.mine : (isLiked ? "like" : null);
-  const reactionNames = [...new Set((post.reactions || []).map((item) => item.userId?.username).filter(Boolean))];
+  const myReaction = reactionSummary.mine;
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -145,10 +142,6 @@ function PostCard({
       </form> : visiblePost?.content && <p className={hasMedia ? "post-caption" : "post-text"}>{hasMedia && <><strong>{username}</strong>{" "}</>}{visiblePost.content}</p>}
       </>}
 
-      {reactionSummary.total > 0 && <div className="ridge-post-reactions"><button className="ridge-react-summary" type="button" aria-label={`${reactionSummary.total} lượt thả cảm xúc`} onClick={() => setReactionsOpen(true)}>
-        <span className="ridge-react-stack" aria-hidden="true"><span className="ridge-reaction-heart"><svg viewBox="0 0 24 24"><path d="M20.8 8.7c0 5.3-8.8 10.1-8.8 10.1S3.2 14 3.2 8.7A4.2 4.2 0 0 1 12 6.8a4.2 4.2 0 0 1 8.8 1.9Z" /></svg></span><span className="ridge-reaction-like"><svg viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2 3l-.7 3H19a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 18 20H7z" /></svg></span></span>
-        <span>{reactionNames.length ? `${reactionNames.slice(0, 2).join(", ")}${reactionNames.length > 2 ? ` và ${reactionSummary.total - 2} người khác` : ""}` : `${reactionSummary.total} lượt thả cảm xúc`}</span>
-      </button></div>}
       <div className="post-actions">
         <div className="post-action-group">
           {onReact ? <ReactionButton
@@ -161,7 +154,6 @@ function PostCard({
           <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => onToggleComments?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z" /></svg><span>Bình luận{post.commentsCount > 0 ? ` ${post.commentsCount}` : ""}</span></button>
           <button className="post-action-button" type="button" disabled={isSharing} onClick={() => onShare?.(post)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 11 14M22 3l-7 18-4-7-7-4z" /></svg><span>{isSharing ? "Đang chia sẻ" : "Chia sẻ"}</span></button>
         </div>
-        <button className={`post-action-button ${post.isSaved ? "saved" : ""}`} type="button" aria-label={post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"} aria-pressed={Boolean(post.isSaved)} onClick={() => onToggleSaved?.(post, Boolean(post.isSaved))}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" /></svg></button>
       </div>
 
       {commentsOpen && <div className="post-comments profile-comments ridge-comments-list" ref={commentsRef}>
@@ -194,7 +186,6 @@ function PostCard({
           <button type="submit" aria-label="Gửi bình luận" disabled={isSendingComment}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z" /></svg></button>
         </form>
       </div>}
-      {reactionsOpen && <ReactionListDialog path={`/api/post/${post._id}/reactions`} onClose={() => setReactionsOpen(false)} />}
     </article>
   );
 }

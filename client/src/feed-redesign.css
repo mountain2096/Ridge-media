@@ -138,14 +138,13 @@ body:has(.home-layout) { background: var(--news-bg); }
 .home-layout .ridge-reaction-heart { background: var(--news-like); }
 .home-layout .ridge-reaction-like { background: var(--news-accent); }
 .home-layout .ridge-react-stack svg { width: 11px; height: 11px; fill: currentColor; stroke: none; }
-.home-layout .post-actions { justify-content: stretch; gap: 4px; margin: 0; padding: 4px 0; border-top: 1px solid #EEF0F7; }
+.home-layout .post-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 4px 0; border-top: 1px solid #EEF0F7; }
 .home-layout .post-action-group { display: contents; }
 .home-layout .post-action-button, .home-layout .ridge-react-main.post-action-button { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 8px; border-radius: 12px; font-size: 14px; }
 .home-layout .post-action-button:hover { background: var(--news-bg); }
 .home-layout .post-action-button:active { transform: scale(.97); }
 .home-layout .post-action-button.liked, .home-layout .post-action-button.liked svg, .home-layout .ridge-react-main.has-reaction { color: var(--news-accent); font-weight: 600; }
 .home-layout .post-action-button.liked svg { fill: currentColor; }
-.home-layout .post-actions > .post-action-button { flex: 0 0 44px; width: 44px; }
 .home-layout .ridge-reaction-popped { display: inline-block; animation: ridge-reaction-pop 220ms ease-out; }
 @keyframes ridge-reaction-pop { 50% { transform: scale(1.28); } }
 @media (prefers-reduced-motion: reduce) { .home-layout .post-action-button:active { transform: none; } .home-layout .ridge-reaction-popped { animation: none; } }

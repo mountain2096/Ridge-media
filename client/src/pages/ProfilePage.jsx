@@ -8,6 +8,7 @@ import PostCard from "../components/PostCard.jsx";
 import MediaPicker from "../components/MediaPicker.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import { mergeSavedPost } from "../lib/mergeSavedPost.js";
+import { sendReaction } from "../lib/reactions.js";
 import "../newsfeed.css";
 import "../profile.css";
 
@@ -183,18 +184,12 @@ function ProfilePage({ profileId, embedded = false }) {
     }
   }
 
-  async function handleLike(post) {
+  async function handleReactPost(post, type) {
     setPostActionError("");
     try {
-      const liked = Boolean(post.isLiked);
-      const response = await fetch(`${API}/post/${post._id}/like`, {
-        method: liked ? "DELETE" : "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Không thể cập nhật lượt thích.");
+      const data = await sendReaction(`/api/post/${post._id}/reaction`, type);
       setPosts((current) => current.map((item) => item._id === post._id
-        ? { ...item, isLiked: !liked, likes: data.likes }
+        ? { ...item, reactions: data.reactions, isLiked: Boolean(type), likes: data.likes }
         : item));
     } catch (requestError) {
       setPostActionError(requestError.message);
@@ -662,7 +657,7 @@ function ProfilePage({ profileId, embedded = false }) {
   editingCommentId={editingCommentId}
   editingCommentContent={editingCommentContent}
   isUpdatingComment={isUpdatingComment}
-  onLike={handleLike}
+  onReact={handleReactPost}
   onToggleComments={(item) => handleToggleComments(item._id)}
   onShare={(item) => handleShare(item._id)}
   onToggleSaved={(item, saved) => handleToggleSavedPost(item._id, saved)}

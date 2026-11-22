@@ -48,6 +48,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Settings initial-state fix: ProfileSettings mounts after `currentUser._id` loads and remounts for a changed user ID. Client lint/build passed; direct `/settings` reload was not browser-verified.
 - Responsive navigation fix: sidebar labels and titles were added; narrow top bar search sizing and friends-list action wrapping were checked with mocked API responses at 820x1100, 600x900, and 390x844.
 - Round 21 integration: full `node --test` passed 118 tests; client lint and build passed. `/reels` route and navigation link are present; no browser verification was run for the combined branch.
+- Round 23 post-card actions: full `node --test` passed 118 tests; client lint/build passed. Shared feed/profile cards now use the same reaction picker, show counts in the three action buttons, and omit the separate reaction summary and action-bar save button. Composer CSS already had matching 16px padding (14px on mobile), so no spacing override was needed; no browser verification was run.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -96,6 +97,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 19 | Wait for `currentUser._id` before mounting profile settings and key the form by user ID | Client lint and build passed; direct `/settings` reload not browser-verified | pending |
 | 19 | Add responsive sidebar labels/titles and fix narrow search and friends-list action layout | Client lint/build passed; mocked API Playwright checks at 820x1100, 600x900, and 390x844 | pending |
 | 21 | Integrate Reels view, post access checks, settings initial state, and responsive navigation | `node --test`: 118 passed; client lint and build passed; Reels route and NavLink confirmed in source | `37f2fdc` |
+| 23 | Align shared feed/profile post reactions and reduce action bar to Reaction, Comment, Share; remove extra reaction row and save action | `node --test`: 118 passed; client lint/build passed; no browser verification | pending |
 | 22 | Feed redesign using `feed-redesign.css`, Be Vietnam Pro, and `docs/design/feed-redesign-reference.html`; updated feed/guest cards, privacy icons, reaction summaries/actions, post menu, and comments/reply threads | Client lint/build passed; mocked API Playwright screenshots visually inspected at 1440px for two replies, a long reply, and the reference; no live API/database | this commit |
 
 ## 8. Possible next work (project owner chooses)
@@ -104,6 +106,7 @@ Round 22 keeps post API/data behavior intact and updates the shared feed/profile
 Round 22 comment styling keeps the existing two-level rendering, mention behavior, reactions, and menus; thread geometry was visually checked against the static reference.
 Post visibility checks now cover direct post reads, reactions, saves, comments, and comment reads (Round 19).
 Responsive feed, friends, and messages layouts were checked at the requested viewports in Round 19.
+Post action spacing and the profile reaction picker should be checked manually in the browser; the composer padding already matches on all sides in its active CSS.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
