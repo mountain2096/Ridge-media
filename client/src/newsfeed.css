@@ -666,21 +666,6 @@
   background: #3F6C99;
 }
 
-.stories-card .story-add {
-  position: absolute;
-  right: -4px;
-  bottom: -4px;
-  display: grid;
-  width: 26px;
-  height: 26px;
-  place-items: center;
-  border: 2px solid var(--news-surface);
-  border-radius: 50%;
-  background: var(--news-accent);
-  color: var(--news-surface);
-  font-size: 20px;
-  line-height: 1;
-}
 
 .stories-card .story-name {
   display: block;
