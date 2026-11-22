@@ -47,6 +47,9 @@ const getPosts = async (req,res) =>{
         if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > 50) {
             return res.status(400).json({ message: "Tham số phân trang không hợp lệ!" });
         }
+        if (req.query.media !== undefined && req.query.media !== "video") {
+            return res.status(400).json({ message: "Tham số phân trang không hợp lệ!" });
+        }
 
         const blockedByCurrentUser = req.user.blockList || [];
         const usersWhoBlockedCurrentUser = await User.find({ blockList: req.user._id }).select("_id");
@@ -64,6 +67,7 @@ const getPosts = async (req,res) =>{
             authorId: { $nin: blockedUserIds },
             $or: visibleByPrivacy,
         };
+        if (req.query.media === "video") filter.video = { $nin: ["", null] };
         if (req.query.authorId !== undefined) {
             if (typeof req.query.authorId !== "string" || !/^[a-f\d]{24}$/i.test(req.query.authorId)) {
                 return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
