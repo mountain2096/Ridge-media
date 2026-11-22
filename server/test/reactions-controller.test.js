@@ -7,7 +7,7 @@ const Message = require("../models/Message");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
-const { reactToPost, reactToComment, reactToMessage } = require("../controllers/reactionControllers");
+const { reactToPost, getPostReactions, reactToComment, reactToMessage } = require("../controllers/reactionControllers");
 const { setIO } = require("../utils/realtime");
 
 const ME = "64b000000000000000000001";
@@ -28,7 +28,7 @@ function response() {
 function stubs() {
     const original = {
         postFind: Post.findOne, commentFind: Comment.findOne, messageFind: Message.findOne,
-        conversationFind: Conversation.findById, userFind: User.findById, notificationCreate: Notification.create,
+        conversationFind: Conversation.findById, userFind: User.findById, usersFind: User.find, notificationCreate: Notification.create,
     };
     const notifications = [];
     Notification.create = async (data) => { notifications.push(data); return data; };
@@ -38,7 +38,7 @@ function stubs() {
         restore() {
             Post.findOne = original.postFind; Comment.findOne = original.commentFind;
             Message.findOne = original.messageFind; Conversation.findById = original.conversationFind;
-            User.findById = original.userFind; Notification.create = original.notificationCreate;
+            User.findById = original.userFind; User.find = original.usersFind; Notification.create = original.notificationCreate;
             setIO(null);
         },
     };
@@ -95,6 +95,35 @@ test("post: invalid type is rejected and an old like is mapped to Like", async (
         assert.deepEqual(post.reactions, [{ userId: ME, reaction: "wow" }]);
         // Switching from an old like is not a new reaction: no notification.
         assert.equal(s.notifications.length, 0);
+    } finally { s.restore(); }
+});
+
+test("post reaction list: hidden posts and invalid filters fail; visible list is filtered and paged", async () => {
+    const s = stubs();
+    const post = fakePost({
+        reactions: [{ userId: ME, reaction: "love" }, { userId: AUTHOR, reaction: "wow" }, { userId: "64b000000000000000000003", reaction: "sad" }],
+        likes: ["64b000000000000000000004"],
+    });
+    Post.findOne = async () => post;
+    const people = [
+        { _id: ME, username: "me", profilePicture: "me.png", blockList: [] },
+        { _id: AUTHOR, username: "author", profilePicture: "author.png", blockList: [] },
+        { _id: "64b000000000000000000003", username: "locked", isLocked: true, blockList: [] },
+        { _id: "64b000000000000000000004", username: "blocked-by-me", blockList: [] },
+    ];
+    User.find = () => ({ select: async () => people });
+    const request = (query = {}) => getPostReactions({ params: { id: POST_ID }, query, user: { _id: ME, blockList: ["64b000000000000000000004"], friend: [] } }, response());
+    try {
+        Post.findOne = async () => fakePost({ privacy: "private" });
+        assert.equal((await request()).statusCode, 404);
+        Post.findOne = async () => post;
+        assert.equal((await request({ type: "nope" })).statusCode, 400);
+        const res = await request({ page: "1", limit: "1" });
+        assert.equal(res.statusCode, 200);
+        assert.deepEqual(res.body.counts, { like: 0, love: 1, haha: 0, wow: 1, sad: 0, angry: 0 });
+        assert.equal(res.body.total, 2);
+        assert.equal(res.body.items[0].user.username, "me");
+        assert.deepEqual(Object.keys(res.body.items[0].user).sort(), ["_id", "profilePicture", "username"]);
     } finally { s.restore(); }
 });
 

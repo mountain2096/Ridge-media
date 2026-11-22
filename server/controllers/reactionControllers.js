@@ -6,7 +6,7 @@ const User = require("../models/User");
 const Notification = require("../models/Notification");
 const errorResponse = require("../utils/errorResponse");
 const { emitToUser } = require("../utils/realtime");
-const { isReactionType, withLegacyLikes, applyReaction, idOf } = require("../utils/reactions");
+const { isReactionType, withLegacyLikes, applyReaction, listReactions, REACTION_TYPES, idOf } = require("../utils/reactions");
 
 const plain = (reactions = []) => reactions.map((item) => ({ userId: item.userId, reaction: item.reaction }));
 
@@ -66,6 +66,32 @@ const reactToPost = async (req, res) => {
             likes: post.likes,
             myReaction: reaction,
         });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
+        return errorResponse(res, error);
+    }
+};
+
+const getPostReactions = async (req, res) => {
+    try {
+        const type = req.query.type;
+        if (type !== undefined && !isReactionType(type)) return badType(res);
+        const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+        const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 30));
+        const post = await loadReactablePost(req, req.params.id);
+        if (!post) return res.status(404).json({ message: "Bài viết không tồn tại!" });
+        const reactions = withLegacyLikes(post.reactions, post.likes);
+        const ids = [...new Set(reactions.map((item) => idOf(item.userId)))];
+        const users = await User.find({ _id: { $in: ids } }).select("username profilePicture isLocked blockList");
+        const byId = new Map(users.map((user) => [idOf(user._id), user]));
+        const blockedIds = users.filter((user) => blockedEitherWay(req.user, user)).map((user) => user._id);
+        const populated = reactions.map((item) => {
+            const user = byId.get(idOf(item.userId));
+            return user && { ...item, userId: { _id: user._id, username: user.username, profilePicture: user.profilePicture, isLocked: user.isLocked } };
+        }).filter(Boolean);
+        const result = listReactions(populated, { viewerId: req.user._id, blockedIds, type, page, limit });
+        result.counts = Object.fromEntries(REACTION_TYPES.map((reactionType) => [reactionType, result.counts[reactionType] || 0]));
+        return res.json(result);
     } catch (error) {
         if (error.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
         return errorResponse(res, error);
@@ -145,4 +171,4 @@ const reactToMessage = async (req, res) => {
     }
 };
 
-module.exports = { reactToPost, reactToComment, reactToMessage };
+module.exports = { reactToPost, getPostReactions, reactToComment, reactToMessage };

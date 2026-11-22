@@ -49,4 +49,23 @@ function countReactions(reactions = []) {
     return { counts, total: Object.values(counts).reduce((sum, value) => sum + value, 0) };
 }
 
-module.exports = { REACTION_TYPES, isReactionType, withLegacyLikes, applyReaction, countReactions, idOf };
+function listReactions(reactions = [], { viewerId, blockedIds = [], type, page = 1, limit = 30 } = {}) {
+    const blocked = new Set(blockedIds.map(idOf));
+    const visible = (reactions || []).filter((item) => {
+        const user = item.userId;
+        return user && (idOf(user) === idOf(viewerId) || (!user.isLocked && !blocked.has(idOf(user))));
+    });
+    const { counts } = countReactions(visible);
+    const filtered = type ? visible.filter((item) => item.reaction === type) : visible;
+    const total = filtered.length;
+    const pages = Math.ceil(total / limit);
+    return {
+        counts, total,
+        items: filtered.slice((page - 1) * limit, page * limit).map(({ userId, reaction }) => ({
+            user: { _id: userId._id, username: userId.username, profilePicture: userId.profilePicture }, reaction,
+        })),
+        pagination: { page, limit, pages },
+    };
+}
+
+module.exports = { REACTION_TYPES, isReactionType, withLegacyLikes, applyReaction, countReactions, listReactions, idOf };

@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
-    REACTION_TYPES, isReactionType, withLegacyLikes, applyReaction, countReactions,
+    REACTION_TYPES, isReactionType, withLegacyLikes, applyReaction, countReactions, listReactions,
 } = require("../utils/reactions");
 
 test("only the six known reaction types are accepted", () => {
@@ -11,6 +11,22 @@ test("only the six known reaction types are accepted", () => {
     for (const bad of ["", "LIKE", "heart", null, undefined, 1, {}, ["like"]]) {
         assert.equal(isReactionType(bad), false);
     }
+});
+
+test("listReactions filters locked and blocked users, keeps viewer, and counts before paging", () => {
+    const reactions = [
+        { userId: { _id: "me", isLocked: true }, reaction: "love" },
+        { userId: { _id: "blocked", isLocked: false }, reaction: "like" },
+        { userId: { _id: "locked", isLocked: true }, reaction: "sad" },
+        { userId: { _id: "u2", username: "Two" }, reaction: "like" },
+        { userId: { _id: "u3", username: "Three" }, reaction: "wow" },
+    ];
+    const result = listReactions(reactions, { viewerId: "me", blockedIds: ["blocked"], page: 2, limit: 1 });
+    assert.deepEqual(result.counts, { like: 1, love: 1, haha: 0, wow: 1, sad: 0, angry: 0 });
+    assert.equal(result.total, 3);
+    assert.deepEqual(result.pagination, { page: 2, limit: 1, pages: 3 });
+    assert.deepEqual(result.items, [{ user: { _id: "u2", username: "Two", profilePicture: undefined }, reaction: "like" }]);
+    assert.equal(listReactions(reactions, { type: "like", viewerId: "me", blockedIds: ["blocked"] }).total, 1);
 });
 
 test("applyReaction sets, switches and removes one reaction per user", () => {
