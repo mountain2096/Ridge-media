@@ -24,6 +24,7 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
   const videoRef = useRef(null);
   const confirm = useConfirm();
   const story = activeGroup?.items?.[activeIndex];
+  const shouldAutoAdvance = Boolean(story && !paused && story.mediaType !== "video");
   const isOwner = activeGroup?.author?._id === currentUserId;
   const duration = story?.mediaType === "video" ? videoDuration : 5;
   const advance = useCallback((direction) => {
@@ -35,14 +36,16 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
     } else if (activeIndex > 0) onChange(activeGroup, activeIndex - 1);
     else if (groups[index - 1]) onChange(groups[index - 1], groups[index - 1].items.length - 1);
   }, [activeGroup, activeIndex, groups, onChange, onClose]);
+  const advanceRef = useRef(advance);
+  useEffect(() => { advanceRef.current = advance; }, [advance]);
 
   useModalBehavior(Boolean(story) && !confirmingDelete, false, onClose, closeRef, dialogRef);
 
   useEffect(() => {
-    if (!story || paused || story.mediaType === "video") return undefined;
-    const timeout = window.setTimeout(() => advance(1), duration * 1000);
+    if (!shouldAutoAdvance) return undefined;
+    const timeout = window.setTimeout(() => advanceRef.current(1), duration * 1000);
     return () => window.clearTimeout(timeout);
-  }, [story, paused, duration, advance]);
+  }, [story?._id, shouldAutoAdvance, duration]);
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -86,7 +89,7 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
 
   const authorName = activeGroup.author?.username || "Người dùng";
   const content = (
-    <div className="story-viewer-backdrop" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onPointerDown={() => setPaused(true)} onPointerUp={() => setPaused(false)}>
+    <div className="story-viewer-backdrop" onPointerDown={() => setPaused(true)} onPointerUp={() => setPaused(false)} onPointerCancel={() => setPaused(false)}>
       <section className="story-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="story-viewer-title" ref={dialogRef} tabIndex={-1}>
         <div className="story-progress-list" aria-label="Tiến trình story">
           {activeGroup.items.map((item, index) => <span className="story-progress-track" key={item._id}>
@@ -121,9 +124,7 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
           ref={videoRef}
           src={story.mediaUrl}
           autoPlay
-          controls
           onLoadedMetadata={(event) => setVideoDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 5)}
-          onPause={() => setPaused(true)}
           onPlay={() => setPaused(false)}
           onEnded={() => advance(1)}
         /> : <img key={story._id} className="story-viewer-media" src={story.mediaUrl} alt={`Story của ${authorName}`} />}

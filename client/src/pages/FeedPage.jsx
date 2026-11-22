@@ -614,11 +614,11 @@ function FeedPage({ section = "feed" }){
         if (!response.ok) {
           throw new Error(data.message || "Không thể đăng story.");
         }
+        setStories((current) => [...current.filter((story) => story._id !== data.story._id), data.story]);
         setStoryFile(null);
         form.reset();
         setIsStoryComposerOpen(false);
         setStoryToast(data.message);
-        setStoryReloadKey((value) => value + 1);
       } catch (requestError) {
         setStoryFeedback(requestError.message);
       } finally {

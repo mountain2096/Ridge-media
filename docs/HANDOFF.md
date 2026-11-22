@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Story viewer/strip: `node --test` passed 118 tests; client lint and build passed. Viewer timer survives parent renders, pause is tied to pointer hold, and newly created plus own stories appear in 112×176 strip cards. No backend behavior changed; not browser-verified.
 - Round 22 feed-card redesign: client lint/build passed; mocked API Playwright at 1440px rendered both reacted and zero-reaction posts. App and reference screenshots were saved to `%TEMP%` and visually compared; live API/database were not used.
 - Round 22 comments pass: client lint/build passed; mocked API Playwright screenshots at 1440px show a thread with two replies and a long multi-line reply. The app screenshots and `feed-redesign-reference.html` screenshot are saved under `%TEMP%` (`ridge-round22-comments-two-replies.png`, `ridge-round22-comments-long-reply.png`, `ridge-round22-feed-reference.png`). No live API/database was used.
 - The project owner manually checked the reaction list dialog in a browser after the load-more fix.
@@ -99,6 +100,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 21 | Integrate Reels view, post access checks, settings initial state, and responsive navigation | `node --test`: 118 passed; client lint and build passed; Reels route and NavLink confirmed in source | `37f2fdc` |
 | 23 | Align shared feed/profile post reactions and reduce action bar to Reaction, Comment, Share; remove extra reaction row and save action | `node --test`: 118 passed; client lint/build passed; no browser verification | pending |
 | 22 | Feed redesign using `feed-redesign.css`, Be Vietnam Pro, and `docs/design/feed-redesign-reference.html`; updated feed/guest cards, privacy icons, reaction summaries/actions, post menu, and comments/reply threads | Client lint/build passed; mocked API Playwright screenshots visually inspected at 1440px for two replies, a long reply, and the reference; no live API/database | this commit |
+| 24 | Keep story playback running across renders and show newly posted and own stories in the media-preview strip | 118 backend tests; client lint/build passed; no backend behavior changed; not browser-verified | pending |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
@@ -107,6 +109,7 @@ Round 22 comment styling keeps the existing two-level rendering, mention behavio
 Post visibility checks now cover direct post reads, reactions, saves, comments, and comment reads (Round 19).
 Responsive feed, friends, and messages layouts were checked at the requested viewports in Round 19.
 Post action spacing and the profile reaction picker should be checked manually in the browser; the composer padding already matches on all sides in its active CSS.
+Story strip and playback fixes were statically reviewed; no API, Vite, or database was started.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.

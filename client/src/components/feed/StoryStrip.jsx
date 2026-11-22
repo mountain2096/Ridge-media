@@ -18,9 +18,7 @@ export default function StoryStrip({ currentUser, myStoryGroup, storyGroups, sto
           </span>
           <span className="story-name">Tạo tin</span>
         </div>
-        {storyGroups
-          .filter((group) => group.author._id !== currentUser?._id)
-          .map((group) => (
+        {storyGroups.map((group) => (
             <button
               className="story-item story-item-friend"
               key={group.author._id}
@@ -36,6 +34,9 @@ export default function StoryStrip({ currentUser, myStoryGroup, storyGroups, sto
                   ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
                 </span>
               </span>
+              {group.items.at(-1)?.mediaType === "video"
+                ? <video className="story-card-preview" src={group.items.at(-1).mediaUrl} muted playsInline autoPlay />
+                : group.items.at(-1)?.mediaType === "image" && <img className="story-card-preview" src={group.items.at(-1).mediaUrl} alt="" />}
               <span className="story-name">{group.author.username}</span>
             </button>
           ))}
