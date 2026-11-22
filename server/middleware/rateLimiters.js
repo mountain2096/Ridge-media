@@ -17,6 +17,7 @@ function createRateLimiters(overrides = {}) {
         register: createLimiter("register", 60 * 60 * 1000, 20),
         forgotPassword: createLimiter("forgotPassword", 15 * 60 * 1000, 5),
         resetPassword: createLimiter("resetPassword", 15 * 60 * 1000, 10),
+        publicRead: createLimiter("publicRead", 60 * 1000, 120),
     };
 }
 

@@ -17,6 +17,7 @@ const storyRoutes = require("./routes/story");
 const uploadRoutes = require("./routes/upload");
 const reportRoutes = require("./routes/report");
 const adminRoutes = require("./routes/admin");
+const publicRoutes = require("./routes/public");
 
 const app = express();
 
@@ -69,6 +70,7 @@ app.use("/api/story", storyRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/report", reportRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/public", publicRoutes);
 
 app.get("/", (req,res) =>{
     res.json({message:"Ridge API is running!"})    
