@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 9 (branch `feat/guest-ui`).
+> Last updated: 2026-11-22, after Round 10 (branch `fix/guest-routes-layout`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-Branch chain (each branch created from the previous one): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → `test/reaction-list-coverage` → `feat/jwt-revocation` → `fix/client-401-signout` → `feat/guest-public-api` → **`feat/guest-ui`** (current). Branch `docs/agents-branch-sync` was created from `feat/edited-post-label`; the test branch was created from that branch; this feature branch was created from the test branch. `fix/client-401-signout` was created from `feat/jwt-revocation`. Create each new feature branch from the nearest preceding branch. Push normally; never use `--force`. No PR has been verified.
+Branch chain (each branch created from the previous one): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → `test/reaction-list-coverage` → `feat/jwt-revocation` → `fix/client-401-signout` → `feat/guest-public-api` → `feat/guest-ui` → **`fix/guest-routes-layout`** (current). Branch `docs/agents-branch-sync` was created from `feat/edited-post-label`; the test branch was created from that branch; the `feat/guest-public-api` branch was created from `fix/client-401-signout`; `feat/guest-ui` was created from that branch; this feature branch was created from `feat/guest-ui`. Create each new feature branch from the nearest preceding branch. Push normally; never use `--force`. No PR has been verified.
 
 ## 3. Features verified in code
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); public read-only API and guest UI for profiles and feeds (`/api/public/*`); public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
@@ -24,13 +24,14 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 7: client lint and build passed. The project owner manually confirmed in two tabs that logging out in one tab makes the other tab's token invalid. The new automatic sign-out on 401 has not yet been verified in a browser.
 - Round 8: `node --test` passed 112 tests (up from 107); client was not touched; public endpoints were not verified against a live MongoDB instance.
 - Round 9: client lint and build passed; guest UI was not verified in a browser or against a live MongoDB instance.
+- Round 10: client lint and build passed; route behavior was verified by reading the route tree only, not in a browser.
 
 ## 5. Workflow (three parties)
-- **Project owner**: manually test, choose features, and run `git push` themselves.
-- **Claude (chat)**: read the repo on GitHub, break work into small tasks, write prompts for Codex, review diffs after the owner pushes, and update this file. Claude can only read the pushed version and cannot write.
+- **Project owner**: manually test and choose features.
+- **Claude (chat)**: read the repo on GitHub, break work into small tasks, write prompts for Codex, review the diff after Codex pushes, and update this file. Claude can only read the pushed version and cannot write.
 - **Codex CLI (Ponytail plugin, Full level)**: code, lint, build, and test.
-- One-feature workflow: open `codex` → `/new` → select "Use current Git worktree" → paste the prompt (Codex creates the branch) → Codex makes a small commit, without pushing → project owner manually tests and runs `git push -u origin <branch>` → Claude reviews the diff → update the handoff.
-- Codex prompt rules: name the files to change; use `git add <specific file>`, never `git add .`; do not push or delete files (move only); run focused tests while iterating and the full checks at the end; report in about 12 lines or fewer.
+- One-feature workflow: open `codex` → `/new` → select "Use current Git worktree" → paste the prompt (Codex creates the branch) → Codex makes a small commit and pushes its feature branch with `git push -u origin <branch>` → project owner manually tests → Claude reviews the pushed diff → update the handoff.
+- Codex prompt rules: name the files to change; use `git add <specific file>`, never `git add .`; push the branch normally at the end; never force-push or delete files (move only); run focused tests while iterating and the full checks at the end; report in about 12 lines or fewer.
 
 ## 6. Known limitations
 Only `AppLayout`'s profile load and heartbeat handle 401 responses. Other fetch calls still show errors until the next heartbeat, at most 60 seconds later or when the tab regains focus.
