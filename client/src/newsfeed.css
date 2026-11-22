@@ -924,6 +924,10 @@
   stroke-linejoin: round;
 }
 
+.post-author-info .post-meta > svg { width: 14px; height: 14px; flex: none; align-self: center; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.post-reaction-empty { display: inline-flex; align-items: center; gap: 6px; color: var(--news-muted); font-size: 13px; }
+.post-reaction-empty svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
 .post-menu-wrap {
   position: relative;
   flex: none;

@@ -8,12 +8,13 @@ export default function GuestPostCard({ post }) {
   const date = (value) => value ? new Date(value).toLocaleDateString("vi-VN", { day: "numeric", month: "short" }) : "Mới đăng";
   const media = shared ? original : post;
   const hasMedia = Boolean(media?.image || media?.video);
+  const privacyLabel = post.privacy === "private" ? "Chỉ mình tôi" : post.privacy === "friends" ? "Bạn bè" : "Mọi người";
 
   return <article className="post-card card guest-post-card">
     <header className="post-header"><div className="post-author">
       <Link className="post-avatar" to={`/profile/${post.authorId?._id || post.authorId}`}>{post.authorId?.profilePicture ? <img src={post.authorId.profilePicture} alt="" /> : username.charAt(0).toUpperCase()}</Link>
       <div className="post-author-info"><div className="post-name-row"><Link className="profile-name-link" to={`/profile/${post.authorId?._id || post.authorId}`}>{username}</Link>{shared && <span className="post-share-label">đã chia sẻ một bài viết</span>}</div>
-        <span className="post-meta"><span>Ridge</span><span aria-hidden="true">·</span><time dateTime={post.createdAt || undefined}>{date(post.createdAt)}</time>{!shared && post.editedAt && <><span aria-hidden="true">·</span><span>Đã chỉnh sửa</span></>}</span>
+        <span className="post-meta"><span>Ridge</span><span aria-hidden="true">·</span><time dateTime={post.createdAt || undefined}>{date(post.createdAt)}</time>{!shared && post.editedAt && <><span aria-hidden="true">·</span><span>Đã chỉnh sửa</span></>}<span aria-hidden="true">·</span><svg viewBox="0 0 24 24" aria-hidden="true">{post.privacy === "private" ? <><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 1 1 8 0v3" /></> : post.privacy === "friends" ? <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></> : <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>}</svg><span>{privacyLabel}</span></span>
       </div>
     </div></header>
     {!shared && post.video && <video className="post-video" src={post.video} controls preload="metadata" />}

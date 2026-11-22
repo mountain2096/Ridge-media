@@ -97,7 +97,7 @@ function PostCard({
             <div className="post-name-row"><Link className="profile-name-link" to={authorId ? `/profile/${authorId}` : "#"}>{username}</Link>{isShare && <span className="post-share-label">đã chia sẻ một bài viết</span>}</div>
             <span className="post-meta">
               <span>Ridge</span><span aria-hidden="true">·</span><time dateTime={post.createdAt || undefined} title={fullDate}>{postDate}</time>{!isShare && post.editedAt && <><span aria-hidden="true">·</span><time title={new Date(post.editedAt).toLocaleString("vi-VN")}>Đã chỉnh sửa</time></>}<span aria-hidden="true">·</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0-18" /></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true">{post.privacy === "private" ? <><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 1 1 8 0v3" /></> : post.privacy === "friends" ? <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></> : <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>}</svg>
               <span>{visibilityLabel}</span>
             </span>
           </div>
