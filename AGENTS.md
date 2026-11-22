@@ -51,7 +51,7 @@ The names in `.env.example` are `PORT`, `MONGO_URI`, `JWT_SECRET`, `EMAIL_USER`,
 ## Work rules
 
 - Current task branch: check `git branch --show-current` and docs/HANDOFF.md section 2.
-- Each feature gets a new branch created from the nearest previous branch; the branch chain is in docs/HANDOFF.md section 2.
+- Each feature gets a new branch created from main (the earlier branch chain was merged by PR #3 on 2026-11-22).
 - Keep changes focused and make small commits with descriptive messages.
 - Run client lint and build before committing UI/client changes. Run the relevant backend tests when changing server behavior.
 - Never commit `.env`, API keys, passwords, or tokens. Do not run `git push --force`.

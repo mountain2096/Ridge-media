@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 16 (branch `refactor/feed-composer-stories`).
+> Last updated: 2026-11-22, after Round 17 (branch `feat/infinite-scroll`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,9 +10,10 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-Branch chain (each branch created from the previous one): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → `test/reaction-list-coverage` → `feat/jwt-revocation` → `fix/client-401-signout` → `feat/guest-public-api` → `feat/guest-ui` → `fix/guest-routes-layout` → `fix/guest-profile-only` → `fix/require-auth-context` → `feat/change-password-revocation` → `docs/handoff-cleanup` -> **`refactor/feed-page-views`** -> **`refactor/feed-composer-stories`** (current). Branch `docs/agents-branch-sync` was created from `feat/edited-post-label`; the test branch was created from that branch; the `feat/guest-public-api` branch was created from `fix/client-401-signout`; `feat/guest-ui` was created from that branch; `fix/guest-routes-layout` was created from `feat/guest-ui`; `fix/guest-profile-only` was created from `fix/guest-routes-layout`; `fix/require-auth-context` was created from `fix/guest-profile-only`; `feat/change-password-revocation` was created from `fix/require-auth-context`; `docs/handoff-cleanup` was created from `feat/change-password-revocation`. Create each new feature branch from the nearest preceding branch. Push normally; never use `--force`. Branch `refactor/feed-composer-stories` was created from `refactor/feed-page-views`. No PR has been verified.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). New branches are created from main. Current branch: `feat/infinite-scroll`.
 
 ## 3. Features verified in code
+Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
@@ -31,6 +32,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 14: docs-only change; tests, lint, and build not run.
 - Round 15: client lint and build passed; `node --test` passed all 114 tests. Friends, connections, and feed right-column UI were not verified in a browser.
 - Round 16: `node --test` passed all 114 tests; client lint and build passed. Story strip and post composer were not verified in a browser.
+- Round 17: `node --test` passed all 114 tests; client lint and build passed. Infinite scroll was not verified in a browser.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -43,6 +45,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 Only `AppLayout`'s profile load and heartbeat handle 401 responses. Other fetch calls still show errors until the next heartbeat, at most 60 seconds later or when the tab regains focus.
 
 General: realtime currently runs in a single process (a Redis adapter is needed to scale); read receipts apply only to two-person conversations; logout invalidates all of the user's devices; Socket.IO checks `tokenVersion` only at the handshake (`server/socket.js`), so a socket already open on another device stays connected after logout, password change, or password reset until it reconnects; guests will not see stories, comments, or reaction lists by design; the public feed endpoint was removed; the guest login gate is a client-side nudge only and can be bypassed by calling `/api/public/*` directly; guest views duplicate some `PostCard` markup, so UI changes there may need mirroring in `GuestPostCard`; a stale guest token routes through `AppLayout` and signs the user out to the login screen; posts edited before this change have no edited label because they lack `editedAt`; like notifications are not grouped; comment replies are limited to two levels; stickers are not uploaded or animated; `FeedPage.jsx` is 1,048 lines.
+Infinite scroll uses IntersectionObserver; if a page request fails the feed shows the error and hides the posts, as before.
 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
@@ -66,9 +69,10 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 14 | Cleaned up HANDOFF (stale paragraph removed, Round 10 row, Socket.IO limitation, next-work list) | docs only; no tests run | `fb65041` |
 | 15 | Extracted FriendPresence, ContactsPanel, FriendsView, and ConnectionsView from FeedPage | 114 tests passed; client lint/build passed; friends, connections, and feed right column not verified in a browser | `3e1de62`, `a740a45`, `8dfc6a7`, `a7ce940`, `7302c67` |
 | 16 | Re-indented extracted views; extracted and wired StoryStrip and PostComposer | 114 tests passed; client lint/build passed; story strip and composer not verified in a browser | `be2a44b`, `d35083f`, `b5b58e6`, `35ec3cc`, `9ee0488` |
+| 17 | Load more feed posts on scroll with an IntersectionObserver sentinel and button fallback | 114 tests passed; client lint/build passed; not verified in a browser | `956ca21`, `25e5a83` |
 
 ## 8. Possible next work (project owner chooses)
-Infinite scroll instead of the "Tải thêm bài viết" button; split `FeedPage.jsx` in stages (Round 15: presentational views, done; Round 16: story strip and composer (done); Round 17+: hooks); server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes.
+Split `FeedPage.jsx` in stages (Round 15: presentational views, done; Round 16: story strip and composer (done); Round 17+: hooks); server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
