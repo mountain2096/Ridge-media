@@ -61,7 +61,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 11 | Restrict guest access to profiles, remove public feed endpoint, and add blocking login gate after 8 seconds | 113 tests; lint/build passed; not verified in a browser or against live MongoDB | `2a4195a`, `bbf10f5` |
 | 12 | Forward AppLayout outlet context through RequireAuth | Client lint and build passed; not verified in a browser | `df41f56` |
 | 13 | Revoke other sessions on password change and keep the current device signed in | 114 tests passed; lint/build passed; two-tab browser flow not verified | `559343c`, `b717b31` |
-| 14 | Cleaned up HANDOFF (stale paragraph removed, Round 10 row, Socket.IO limitation, next-work list) | docs only; no tests run | pending |
+| 14 | Cleaned up HANDOFF (stale paragraph removed, Round 10 row, Socket.IO limitation, next-work list) | docs only; no tests run | `fb65041` |
 
 ## 8. Possible next work (project owner chooses)
 Infinite scroll instead of the "Tải thêm bài viết" button; split `FeedPage.jsx` in stages (Round 15: presentational views; Round 16: story strip and composer; Round 17+: hooks); server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes.
