@@ -19,7 +19,6 @@ import StoryViewer from "../components/StoryViewer.jsx";
 import "../newsfeed.css";
 import "../stories.css";
 
-
 function FeedPage({ section = "feed" }){
     const confirmAction = useConfirm();
     const navigate = useNavigate();
