@@ -81,6 +81,7 @@ function reactionListOptions(req, res) {
 }
 
 async function sendReactionList(req, res, reactions, { type, page, limit }) {
+        reactions = plain(reactions);
         const ids = [...new Set(reactions.map((item) => idOf(item.userId)))];
         const users = await User.find({ _id: { $in: ids } }).select("username profilePicture isLocked blockList");
         const byId = new Map(users.map((user) => [idOf(user._id), user]));

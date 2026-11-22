@@ -16,7 +16,7 @@ Chuỗi nhánh (mỗi nhánh tạo từ nhánh trước): `main` → `fix/audit-
 Đăng ký/đăng nhập JWT, quên/đổi mật khẩu (chính sách ≥8 ký tự); trang cá nhân (`/profile/:id`, `ProfilePage.jsx`); bài viết (public/friends/private, sửa, xóa mềm, chia sẻ, lưu); feed phân trang 20 bài + nút "Tải thêm bài viết"; reaction 6 loại cho bài/bình luận/tin nhắn; **reaction lists for posts and comments** (mới); trả lời bình luận 1 cấp + @mention; story; kết bạn, chặn, tìm người dùng; nhắn tin realtime (typing, "Đã xem"), emoji + nhãn dán; thông báo realtime (Socket.IO); báo cáo + trang Admin (thống kê, hàng đợi kiểm duyệt có điểm ưu tiên); rate limit, CORS allowlist, kiểm tra URL media; script seed dữ liệu demo.
 
 ## 4. Test status (update each round)
-- `node --test`: 95 passed, 0 failed.
+- `node --test`: 96 passed, 0 failed.
 - `npm run lint --prefix client`: passed.
 - `npm run build --prefix client`: passed.
 - No browser or live MongoDB verification was run this round.
@@ -41,7 +41,7 @@ Done this round: reaction lists now cover comments as well as posts; tab changes
 | 0 | Claude reviewed repository, branch and baseline | Baseline: 92 tests, lint and build passed | `e64c605` |
 | 1 | Cleaned worktree and updated project guide/status | Clean; pushed | `8c2b008` |
 | 2 | Post reaction list API, dialog and docs | 94 tests passed; lint/build passed; visually checked | `a0f8adc`, `6a56d8c`, `da637c2` |
-| 3 | Comment reaction list API and UI; documented both endpoints | 95 tests passed; lint/build passed | `c010ab8`, `a28a27c`, `8fa86f1` |
+| 3 | Comment reaction list API and UI; fixed Mongoose subdocument normalization with real-document regression coverage; documented both endpoints | 96 tests passed; lint/build passed | `c010ab8`, `a28a27c`, `8fa86f1` |
 
 ## 8. Next candidates (owner chooses)
 Infinite scrolling instead of the "Load more" button; guest profiles; JWT revocation on logout; edited-post labels; splitting `FeedPage.jsx`; remaining test gaps listed in section 6.

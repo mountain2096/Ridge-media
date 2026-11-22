@@ -207,6 +207,29 @@ test("comment reaction list: missing or hidden comments fail and visible list fi
     } finally { s.restore(); }
 });
 
+test("post and comment reaction lists preserve fields from Mongoose subdocuments", async () => {
+    const s = stubs();
+    const post = new Post({ _id: POST_ID, authorId: AUTHOR, content: "post", reactions: [{ userId: ME, reaction: "love" }] });
+    const comment = new Comment({ _id: COMMENT_ID, authorId: AUTHOR, postId: POST_ID, content: "comment", reactions: [{ userId: ME, reaction: "love" }] });
+    Post.findOne = async () => post;
+    Comment.findOne = async () => comment;
+    User.find = () => ({ select: async () => [{ _id: ME, username: "me", profilePicture: "me.png", blockList: [] }] });
+    const user = { _id: ME, blockList: [], friend: [] };
+    const request = (handler, id) => {
+        const res = response();
+        return handler({ params: { id }, query: {}, user }, res).then(() => res);
+    };
+    try {
+        for (const [handler, id] of [[getPostReactions, POST_ID], [getCommentReactions, COMMENT_ID]]) {
+            const res = await request(handler, id);
+            assert.equal(res.statusCode, 200);
+            assert.equal(res.body.counts.love, 1);
+            assert.equal(res.body.total, 1);
+            assert.equal(res.body.items[0].reaction, "love");
+        }
+    } finally { s.restore(); }
+});
+
 test("message: reaction is pushed to both people instantly", async () => {
     const s = stubs();
     const emitted = [];
