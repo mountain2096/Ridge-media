@@ -194,6 +194,10 @@
   outline-offset: 2px;
 }
 
+.user-search-wrap { padding: 0; background: transparent; border: 0; border-radius: 0; }
+.user-search-wrap .news-search { flex: 1 1 auto; border: 0; background: var(--news-bg); }
+.user-search-wrap .news-search input { padding: 0; background: transparent; }
+
 .news-search svg,
 .notification-button svg {
   flex: none;

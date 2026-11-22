@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Current branch: `integrate/reels-and-fixes`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 UI polish is on `ui/feed-polish`, branched from `origin/main` at `42a11e4`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -46,6 +46,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Settings initial-state fix: ProfileSettings mounts after `currentUser._id` loads and remounts for a changed user ID. Client lint/build passed; direct `/settings` reload was not browser-verified.
 - Responsive navigation fix: sidebar labels and titles were added; narrow top bar search sizing and friends-list action wrapping were checked with mocked API responses at 820x1100, 600x900, and 390x844.
 - Round 21 integration: full `node --test` passed 118 tests; client lint and build passed. `/reels` route and navigation link are present; no browser verification was run for the combined branch.
+- Round 22: client lint and build passed. Chromium was available at 1440px, but the local demo API mock returned malformed JSON and an invalid token was cleared by the app; requested 1440px/375px logged-in browser checks and before/after screenshot comparisons were not completed. No API/database data was changed.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -94,6 +95,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 19 | Wait for `currentUser._id` before mounting profile settings and key the form by user ID | Client lint and build passed; direct `/settings` reload not browser-verified | pending |
 | 19 | Add responsive sidebar labels/titles and fix narrow search and friends-list action layout | Client lint/build passed; mocked API Playwright checks at 820x1100, 600x900, and 390x844 | pending |
 | 21 | Integrate Reels view, post access checks, settings initial state, and responsive navigation | `node --test`: 118 passed; client lint and build passed; Reels route and NavLink confirmed in source | `37f2fdc` |
+| 22 | Polish feed privacy dropdown, story add badge, search pill, visibility icons, empty reaction summary, action feedback, and reply thread line | Client lint/build passed; browser screenshots requested but not verified because local mock/auth setup failed; API/database unchanged | pending |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
