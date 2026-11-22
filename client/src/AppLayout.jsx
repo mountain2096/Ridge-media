@@ -272,6 +272,14 @@ function AppLayout() {
     stopHeartbeatRef.current();
     disconnectSocket();
     try {
+      fetch(`${API_BASE}/api/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).catch(() => {});
+    } catch {
+      // Continue local logout if the request cannot be started.
+    }
+    try {
       if (currentUser?._id) {
         localStorage.removeItem(`ridge:recent-searches:${currentUser._id}`);
       } else {
