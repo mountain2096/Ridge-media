@@ -1,0 +1,723 @@
+.ridge-admin-page {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 20px;
+  color: var(--news-ink, #0f172a);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.ridge-admin-page,
+.ridge-admin-page * {
+  box-sizing: border-box;
+}
+
+.ridge-admin-page button:focus-visible {
+  outline: 2px solid var(--news-accent, #2f4be0);
+  outline-offset: 2px;
+}
+
+.ridge-admin-page .ridge-admin-title {
+  margin: 0;
+  color: var(--news-ink, #0f172a);
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.ridge-admin-page .ridge-admin-card {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: var(--news-radius-card, 16px);
+  background: var(--news-surface, #fff);
+  box-shadow: 0 2px 8px rgb(15 23 42 / 3%);
+}
+
+.ridge-admin-card-header {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--news-border, #e6e8ef);
+}
+
+.ridge-admin-card-header h2 {
+  margin: 0;
+  color: var(--news-ink, #0f172a);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.ridge-admin-users {
+  display: flex;
+  flex-direction: column;
+}
+
+.ridge-admin-page .ridge-admin-user-row {
+  display: flex;
+  min-width: 0;
+  min-height: 74px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 13px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--news-border, #e6e8ef);
+}
+
+.ridge-admin-user-row:last-child {
+  border-bottom: 0;
+}
+
+.ridge-admin-avatar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--news-hover, #eef0f7);
+  color: var(--news-nav, #3a4358);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ridge-admin-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ridge-admin-user-info {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ridge-admin-user-name,
+.ridge-admin-user-email {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ridge-admin-user-name {
+  color: var(--news-ink, #0f172a);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.ridge-admin-user-email {
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+}
+
+.ridge-admin-badge {
+  display: inline-flex;
+  min-height: 26px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 999px;
+  background: var(--news-field, #f8f9fc);
+  color: var(--news-nav, #3a4358);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.ridge-admin-badge-locked {
+  border-color: #f1c6c3;
+  background: #fff7f6;
+  color: var(--news-danger, #b42318);
+}
+
+.ridge-admin-status-pending {
+  border-color: #f2d49c;
+  background: #fff9e9;
+  color: #78550c;
+}
+
+.ridge-admin-status-reviewed {
+  border-color: #c9d2f8;
+  background: #f3f5ff;
+  color: #2d3da0;
+}
+
+.ridge-admin-status-actioned {
+  border-color: #b8e2c2;
+  background: #f3fbf4;
+  color: #176b35;
+}
+
+.ridge-admin-page .ridge-admin-action {
+  display: inline-flex;
+  min-height: 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.ridge-admin-page .ridge-admin-action.is-danger {
+  border-color: var(--news-danger, #b42318);
+  background: var(--news-danger, #b42318);
+  color: #fff;
+}
+
+.ridge-admin-page .ridge-admin-action.is-danger:hover {
+  background: #941b13;
+}
+
+.ridge-admin-page .ridge-admin-action.is-neutral {
+  border-color: var(--news-border, #e6e8ef);
+  background: var(--news-field, #f8f9fc);
+  color: var(--news-nav, #3a4358);
+}
+
+.ridge-admin-page .ridge-admin-action.is-neutral:hover {
+  border-color: #cdd2df;
+  background: var(--news-hover, #eef0f7);
+}
+
+.ridge-admin-reports {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.ridge-admin-report {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 13px;
+  background: var(--news-surface, #fff);
+}
+
+.ridge-admin-report-top {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ridge-admin-report-type {
+  min-width: 0;
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.ridge-admin-report-reason {
+  margin: 12px 0 5px;
+  color: var(--news-ink, #0f172a);
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ridge-admin-report-description {
+  margin: 0;
+  color: var(--news-muted, #5b6478);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ridge-admin-report-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--news-border, #e6e8ef);
+}
+
+.ridge-admin-report-meta > span,
+.ridge-admin-report-meta > time {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ridge-admin-report-meta-label {
+  color: var(--news-muted, #5b6478);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ridge-admin-report-meta-value {
+  color: var(--news-ink, #0f172a);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.ridge-admin-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid var(--news-border, #e6e8ef);
+}
+
+.ridge-admin-page .ridge-admin-empty {
+  margin: 0;
+  padding: 18px 20px;
+  color: var(--news-muted, #5b6478);
+  font-size: 14px;
+}
+
+.ridge-admin-page .async-data-state {
+  flex-wrap: wrap;
+}
+
+.ridge-admin-page .async-data-state [role="alert"] {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 540px) {
+  .ridge-admin-page .ridge-admin-user-row {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .ridge-admin-user-info {
+    flex-basis: calc(100% - 58px);
+  }
+
+  .ridge-admin-user-row .ridge-admin-badge {
+    margin-left: 54px;
+  }
+
+  .ridge-admin-user-row .ridge-admin-action {
+    margin-left: auto;
+  }
+
+  .ridge-admin-card-header {
+    padding-inline: 16px;
+  }
+
+  .ridge-admin-reports {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .ridge-admin-report {
+    padding: 13px;
+  }
+}
+
+/* ---- Admin statistics ---- */
+.ridge-admin-page {
+  --stats-users: #2a78d6;
+  --stats-posts: #eb6834;
+  --stats-reports: #1baf7a;
+}
+
+.ridge-admin-tabs,
+.ridge-stats-ranges {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 12px;
+  background: var(--news-surface, #fff);
+}
+
+.ridge-admin-tab,
+.ridge-stats-range {
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--news-muted, #5b6478);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ridge-admin-tab:hover,
+.ridge-stats-range:hover {
+  background: var(--news-hover, #eef0f7);
+}
+
+.ridge-admin-tab.is-selected,
+.ridge-stats-range.is-selected {
+  background: var(--news-accent, #2f4be0);
+  color: #fff;
+}
+
+.ridge-stats,
+.ridge-stats-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ridge-stats-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ridge-stats-body.is-refreshing {
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.ridge-stats-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ridge-stats-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: var(--news-radius-card, 16px);
+  background: var(--news-surface, #fff);
+}
+
+.ridge-stats-tile-value {
+  color: var(--news-ink, #0f172a);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ridge-stats-tile-label {
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+}
+
+.ridge-stats-note {
+  margin: 0;
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+}
+
+.ridge-stats-chart-header {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ridge-stats-chart-total {
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ridge-stats-chart {
+  position: relative;
+  padding: 8px 12px 12px;
+}
+
+.ridge-stats-chart.is-users { --stats-color: var(--stats-users); }
+.ridge-stats-chart.is-posts { --stats-color: var(--stats-posts); }
+.ridge-stats-chart.is-reports { --stats-color: var(--stats-reports); }
+
+.ridge-stats-chart svg {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.ridge-stats-grid {
+  stroke: var(--news-border, #e6e8ef);
+  stroke-width: 1;
+}
+
+.ridge-stats-axis-text,
+.ridge-stats-peak-text {
+  fill: var(--news-muted, #5b6478);
+  font-size: 12px;
+}
+
+.ridge-stats-peak-text {
+  fill: var(--news-ink, #0f172a);
+  font-weight: 700;
+}
+
+.ridge-stats-bar {
+  fill: var(--stats-color);
+}
+
+.ridge-stats-bar.is-active {
+  fill-opacity: 0.75;
+}
+
+.ridge-stats-hit {
+  fill: transparent;
+  outline: none;
+}
+
+.ridge-stats-hit:focus-visible {
+  stroke: var(--news-accent, #2f4be0);
+  stroke-width: 2;
+}
+
+.ridge-stats-tooltip {
+  position: absolute;
+  top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 10px;
+  background: var(--news-surface, #fff);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 12%);
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.ridge-stats-tooltip strong {
+  color: var(--news-ink, #0f172a);
+  font-size: 14px;
+}
+
+.ridge-stats-tooltip span {
+  color: var(--news-muted, #5b6478);
+  font-size: 12px;
+}
+
+.ridge-stats-table-wrap {
+  overflow-x: auto;
+}
+
+.ridge-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ridge-stats-table th,
+.ridge-stats-table td {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--news-border, #e6e8ef);
+  color: var(--news-ink, #0f172a);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ridge-stats-table th:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+
+.ridge-stats-table thead th {
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .ridge-stats-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---- Prioritized moderation queue ---- */
+.ridge-mod,
+.ridge-mod-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ridge-mod.is-refreshing {
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.ridge-mod-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 20px 6px;
+}
+
+.ridge-mod-level {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ridge-mod-level.is-high { background: #fdecea; color: #b42318; }
+.ridge-mod-level.is-medium { background: #fff4db; color: #8a5a00; }
+.ridge-mod-level.is-low { background: var(--news-hover, #eef0f7); color: var(--news-nav, #3a4358); }
+
+.ridge-mod-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-left-width: 4px;
+  border-radius: var(--news-radius-card, 16px);
+  background: var(--news-surface, #fff);
+}
+
+.ridge-mod-item.is-high { border-left-color: #b42318; }
+.ridge-mod-item.is-medium { border-left-color: #d89a00; }
+.ridge-mod-item.is-low { border-left-color: var(--news-border, #e6e8ef); }
+
+.ridge-mod-top,
+.ridge-mod-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.ridge-mod-score {
+  color: var(--news-ink, #0f172a);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.ridge-mod-score small {
+  color: var(--news-muted, #5b6478);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ridge-mod-author,
+.ridge-mod-reasons {
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+}
+
+.ridge-mod-content {
+  margin: 0;
+  color: var(--news-ink, #0f172a);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.ridge-mod-content.is-muted {
+  color: var(--news-muted, #5b6478);
+  font-style: italic;
+}
+
+.ridge-mod-chip {
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--news-field, #f8f9fc);
+  border: 1px solid var(--news-border, #e6e8ef);
+  color: var(--news-ink, #0f172a);
+  font-weight: 600;
+}
+
+.ridge-mod-details summary {
+  min-height: 32px;
+  color: var(--news-accent, #2f4be0);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ridge-mod-rules {
+  padding: 4px 20px 14px;
+}
+
+.ridge-mod-rules ul,
+.ridge-mod-breakdown,
+.ridge-mod-reports {
+  display: flex;
+  margin: 8px 0 0;
+  padding: 0;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--news-ink, #0f172a);
+  font-size: 14px;
+  list-style: none;
+}
+
+.ridge-mod-rules ul {
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.ridge-mod-breakdown-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ridge-mod-breakdown p,
+.ridge-mod-reports p {
+  margin: 2px 0 0;
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+}
+
+.ridge-mod-bar {
+  height: 6px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--news-hover, #eef0f7);
+}
+
+.ridge-mod-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--news-accent, #2f4be0);
+}
+
+@media (max-width: 540px) {
+  .ridge-mod-item {
+    padding: 14px 16px;
+  }
+
+  .ridge-mod-summary,
+  .ridge-mod-rules {
+    padding-inline: 16px;
+  }
+}

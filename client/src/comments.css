@@ -1,0 +1,36 @@
+/* Replies, @mentions and the reply bar under a post's comments. */
+.ridge-replies { display: grid; gap: 6px; margin: 6px 0 0 40px; padding-left: 10px; border-left: 2px solid var(--news-border, #e6e8ef); }
+.ridge-comment-reactions button.ridge-reply-button {
+  width: auto !important; min-width: 0 !important; height: 28px !important; min-height: 0 !important;
+  margin: 0; padding: 0 6px !important; border: 0; border-radius: 6px; background: transparent;
+  color: var(--news-muted, #5b6478); font-size: 12px; font-weight: 600; line-height: 1; cursor: pointer;
+}
+.ridge-comment-reactions button.ridge-reply-button:hover { color: var(--news-accent, #2f4be0); text-decoration: underline; }
+.ridge-comment-reactions .ridge-react-compact button.ridge-react-main {
+  width: auto !important; min-width: 0 !important; height: 28px !important; min-height: 0 !important; padding: 0 6px !important;
+}
+a.ridge-mention { color: var(--news-accent, #2f4be0); font-weight: 600; text-decoration: none; }
+a.ridge-mention:hover { text-decoration: underline; }
+.ridge-reply-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding: 4px 4px 4px 12px;
+  border-radius: 10px; background: var(--news-field, #f8f9fc); color: var(--news-muted, #5b6478); font-size: 13px;
+}
+.ridge-reply-bar button {
+  width: 28px !important; min-width: 0 !important; height: 28px !important; min-height: 0 !important; padding: 0 !important;
+  border: 0; border-radius: 50%; background: transparent; color: inherit; font-size: 16px; line-height: 1; cursor: pointer;
+}
+.ridge-reply-bar button:hover { background: var(--news-hover, #eef0f7); }
+.ridge-mention-wrap { position: relative; display: flex; min-width: 0; flex: 1 1 auto; }
+.ridge-mention-wrap input { flex: 1 1 auto; width: 100%; min-width: 0; box-sizing: border-box; }
+.ridge-mention-list {
+  position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 40; width: min(260px, 100%); margin: 0; padding: 4px; list-style: none;
+  border: 1px solid var(--news-border, #e6e8ef); border-radius: 12px; background: var(--news-surface, #fff); box-shadow: 0 8px 24px rgb(15 23 42 / 16%);
+}
+.ridge-mention-list li { margin: 0; padding: 0; }
+.ridge-mention-list button {
+  display: flex; width: 100%; min-width: 0 !important; min-height: 0 !important; align-items: center; gap: 8px; padding: 6px 8px !important;
+  border: 0; border-radius: 8px; background: transparent; color: var(--news-ink, #0f172a); font: inherit; font-size: 14px; text-align: left; cursor: pointer;
+}
+.ridge-mention-list button:hover, .ridge-mention-list button.active { background: var(--news-hover, #eef0f7); }
+.ridge-mention-avatar { display: grid; flex: 0 0 26px; width: 26px; height: 26px; place-items: center; overflow: hidden; border-radius: 50%; background: #e8ebf5; font-size: 12px; font-weight: 650; }
+.ridge-mention-avatar img { width: 100%; height: 100%; object-fit: cover; }

@@ -5,7 +5,8 @@ const userSchema = new mongoose.Schema(
         username:{
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            unique: true
         },
         email:{
             type: String,
@@ -18,6 +19,7 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        tokenVersion: { type: Number, default: 0 },
         resetPasswordToken:{
             type: String,
             default: null,
@@ -39,9 +41,20 @@ const userSchema = new mongoose.Schema(
             maxlength: 255,
             default:""
         },
+        dateOfBirth: {
+            type: Date,
+            default: null,
+        },
+        lastActiveAt: {
+            type: Date,
+        },
         isAdmin:{
             type: Boolean,
             default: false,
+        },
+        isLocked:{
+            type: Boolean,
+            default: false  
         },
         friend:[
             {

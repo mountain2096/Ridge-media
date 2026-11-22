@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const FriendRequest = require("../models/FriendRequest");
 const Notification = require("../models/Notification");
+const errorResponse = require("../utils/errorResponse");
 
 const sendFriendRequest = async (req, res) =>{
     try{
@@ -33,36 +34,28 @@ const sendFriendRequest = async (req, res) =>{
                 message:"đang nằm trong danh sách chặn!"
             })
         }
-        const alreadyFriends =  req.user.friend.some(
+        const alreadyFriends = req.user.friend.some(
             (id) => id.toString() === receiverId.toString()
-        )
+        ) || receiver.friend.some(
+            (id) => id.toString() === senderId.toString()
+        );
 
         if(alreadyFriends){
-            return res.status(400).json({
-                message:"2 bạn đã là bạn bè!"
+            return res.status(409).json({
+                message:"Hai bạn đã là bạn bè!"
             })
         }
         const existingRequest = await FriendRequest.findOne({
-            senderId,
-            receiverId,
-            status:"pending"
-        })
-
-        if(existingRequest){
-            return res.status(400).json({
-                message:"Bạn đã gửi lời mời kết bạn cho người này!"
-            })
-        }
-
-        const reverseRequest = await FriendRequest.findOne({
-            senderId: receiverId,
-            receiverId: req.user._id,
             status: "pending",
+            $or: [
+                { senderId, receiverId },
+                { senderId: receiverId, receiverId: senderId },
+            ],
         });
 
-        if(reverseRequest){
-            return res.status(400).json({
-                message:"Người này đã gửi lời mời kết bạn cho bạn!"
+        if(existingRequest){
+            return res.status(409).json({
+                message:"Lời mời kết bạn giữa hai người đang chờ xử lý!"
             })
         }
 
@@ -88,26 +81,38 @@ const sendFriendRequest = async (req, res) =>{
             friendRequest
         });
     }catch (error) {
-        res.status(400).json({
-            message: error.message,
-        });
+        if (error.code === 11000) {
+            return res.status(409).json({
+                message: "Lời mời kết bạn giữa hai người đang chờ xử lý!",
+            });
+        }
+        if (error.name === "CastError") return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+        return errorResponse(res, error);
     }
 }
 const getReceivedRequest = async (req, res) =>{
     try{
-        const request = await FriendRequest.find({
+        const requests = await FriendRequest.find({
             receiverId: req.user._id,
             status:"pending"
         }).populate("senderId","username profilePicture")
         .sort({ createdAt: -1});
 
+        const latestRequestBySender = new Map();
+        for (const request of requests) {
+            const senderId = request.senderId?._id?.toString()
+                || request.senderId?.toString()
+                || request._id.toString();
+            if (!latestRequestBySender.has(senderId)) {
+                latestRequestBySender.set(senderId, request);
+            }
+        }
+
         res.status(200).json({
-            request,
+            request: [...latestRequestBySender.values()],
         })
     } catch (err){
-        res.status(500).json({
-            message: err.message,
-        });
+        return errorResponse(res, err);
     }
 }
 const acceptFriendRequest = async (req,res) =>{
@@ -201,7 +206,7 @@ const rejectFriendRequest = async (req, res) =>{
 const getListFriend = async (req, res) =>{
     try{
         const user = await User.findById(req.user._id)
-        .populate("friend", "username profilePicture bio");
+        .populate("friend", "username profilePicture bio lastActiveAt");
 
         if (!user) {
             return res.status(404).json({
@@ -209,15 +214,21 @@ const getListFriend = async (req, res) =>{
             });
         }
 
-        res.status(200).json({
-            friend: user.friend,
-        })
-    } catch (error) {
-        console.error(error);
+        const now = Date.now();
+        const friend = user.friend.filter(Boolean).map((item) => {
+            const data = typeof item.toObject === "function" ? item.toObject() : { ...item };
+            const lastActiveAt = data.lastActiveAt ? new Date(data.lastActiveAt).getTime() : NaN;
+            delete data.lastActiveAt;
+            return {
+                ...data,
+                isOnline: Number.isFinite(lastActiveAt) && lastActiveAt <= now && lastActiveAt >= now - 2 * 60_000,
+            };
+        });
 
-        res.status(400).json({
-        message: error.message,
-    });
+        res.status(200).json({ friend });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+        return errorResponse(res, error);
     }
 }
 const unFriend = async (req, res) =>{

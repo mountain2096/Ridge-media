@@ -1,15 +1,28 @@
 import { useState } from 'react'
-import { Navigate, Route, Routes, useNavigate, Link } from "react-router-dom";
+import { API_BASE } from "./lib/api.js";
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext, Link } from "react-router-dom";
+import AppLayout from "./AppLayout.jsx";
+import GuestLayout from "./components/GuestLayout.jsx";
 import FeedPage from "./pages/FeedPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import GuestProfilePage from "./pages/GuestProfilePage.jsx";
+import MessagesView from "./components/MessagesView.jsx";
+import ProfileSettings from "./components/ProfileSettings.jsx";
+import AdminPanel from "./components/AdminPanel.jsx";
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import './App.css'
+import './auth.css'
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("register");
+  const location = useLocation();
+  const tab = new URLSearchParams(location.search).get("tab");
+  const [activeTab, setActiveTab] = useState(tab === "login" || tab === "register" ? tab : "register");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({type: "", text:""})
 
@@ -37,12 +50,12 @@ function AuthPage() {
 
     const requestBody = 
     activeTab === "register"
-    ? {username, email, password: passwordValue}
+    ? {username, email, password: passwordValue, confirmPassword}
     : {email, password: passwordValue};
 
     try{
       const response = await fetch(
-        `http://localhost:5000${endpoint}`,
+        `${API_BASE}${endpoint}`,
         {
           method: "POST",
           headers:{
@@ -88,128 +101,40 @@ function AuthPage() {
   }
 }
   return (
-    <main className="auth-page">
-      <section className="welcome-panel">
-        <div className="brand">
-          <span className ="brand-icon">R</span>
+    <main className="auth-page ridge-auth-page">
+      <section className="ridge-auth-card" aria-labelledby="auth-title">
+        <div className="ridge-auth-brand" aria-label="Ridge">
+          <span className="ridge-auth-mark" aria-hidden="true">R</span>
           <span>Ridge</span>
         </div>
-
-        <div className ="welcome-message">
-          <h1>WELCOME TO <br /> RIDGE</h1>
-          <p>Connect, share, and discover with our community!</p>
+        <div className="ridge-auth-tabs" role="tablist" aria-label="Tài khoản">
+          <button className={`ridge-auth-tab ${activeTab === "register" ? "is-selected" : ""}`} type="button" role="tab" aria-selected={activeTab === "register"} onClick={() => setActiveTab("register")}>Đăng ký</button>
+          <button className={`ridge-auth-tab ${activeTab === "login" ? "is-selected" : ""}`} type="button" role="tab" aria-selected={activeTab === "login"} onClick={() => setActiveTab("login")}>Đăng nhập</button>
         </div>
-
-        <div className="panel-footer">
-            <div className="avatar-row">
-              <span className="avatar avatar-one">R</span>
-              <span className="avatar avatar-two">I</span>
-              <span className="avatar avatar-three">D</span>
-              <span className="avatar avatar-four">G</span>
-              <span className="avatar avatar-five">E</span>
-            </div>
-          <div className="bottom-brand">Ridge</div>
-        </div>
-      </section>
-
-      <section className="form-panel">
-        <div className="tabs">
-          <button
-            className={`tab ${activeTab === "register" ? "active" : ""}`}
-            type="button"
-            onClick={() => setActiveTab("register")}
-          >
-            Đăng ký
-          </button>
-          <button
-            className={`tab ${activeTab === "login" ? "active" : ""}`}
-            type="button"
-            onClick={() => setActiveTab("login")}
-          >
-            Đăng nhập
-          </button>
-        </div>
-
-        <div className="form-placeholders">
-            <form className="register-form" onSubmit={handleSubmit}>
-            {activeTab === "register" && (
-              <input type="text" name="username" placeholder="Họ và tên" required />
-            )}
-            <input type="email" name="email" placeholder="Email" required/>
-            <input 
-            type="password" 
-            placeholder="Mật khẩu" 
-            name="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            minLength={6}/>
-            {activeTab === "register" && (
-              <input 
-              type="password" 
-              placeholder="Xác nhận mật khẩu" 
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              required
-              minLength={6}/>
-            )}
-
-            <button className="submit-button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Đang xử lý..." : activeTab === "register" ? "Đăng ký" : "Đăng nhập"}
-            </button>
-
-            {activeTab !== "register" && (
-              <Link className="forgot-password" to="/forgot-password">
-                Quên mật khẩu?
-              </Link>
-            )}
-            {feedback.text && (
-              <p className={`feedback-message ${feedback.type}`}>{feedback.text}</p>
-            )}
-            <p className="form-note">
-              {activeTab === "register"
-                ? "Bạn đã có tài khoản? "
-                : "Chưa có tài khoản? "}
-
-              <a
-                href="#"
-                onClick={(event) => {
-                  event.preventDefault();
-                  setActiveTab(activeTab === "register" ? "login" : "register");
-                }}
-              >
-                {activeTab === "register" ? "Đăng nhập ngay" : "Đăng ký ngay"}
-              </a>
-            </p>
-
-            <div className="social-login">
-              <div className="social-divider">
-                <span></span>
-                  <p>
-                    Hoặc {activeTab === "register" ? "đăng ký" : "đăng nhập"} bằng
-                  </p>
-                    <span></span>
-              </div>
-
-              <div className="social-buttons">
-                <button className="social-button google" type="button" disabled title="Đăng nhập Google chưa được cấu hình">G</button>
-                <button className="social-button facebook" type="button" disabled title="Đăng nhập Facebook chưa được cấu hình">f</button>
-                <button className="social-button apple" type="button" disabled title="Đăng nhập Apple chưa được cấu hình">●</button>
-              </div>
-            </div>
-          </form>
-        </div>
+        <h1 className="ridge-auth-title" id="auth-title">{activeTab === "register" ? "Đăng ký" : "Đăng nhập"}</h1>
+        <form className="ridge-auth-form" onSubmit={handleSubmit}>
+          {activeTab === "register" && <div className="ridge-auth-field"><label htmlFor="auth-username">Họ và tên</label><input id="auth-username" type="text" name="username" autoComplete="name" required /></div>}
+          <div className="ridge-auth-field"><label htmlFor="auth-email">Email</label><input id="auth-email" type="email" name="email" autoComplete="email" required /></div>
+          {activeTab === "register" && <p className="ridge-auth-hint">Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.</p>}
+          <div className="ridge-auth-field"><label htmlFor="auth-password">Mật khẩu</label><div className="ridge-auth-password"><input id="auth-password" type={showPassword ? "text" : "password"} name="password" autoComplete={activeTab === "register" ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} required minLength={activeTab === "register" ? 8 : undefined} title={activeTab === "register" ? "Ít nhất 8 ký tự, có chữ hoa, chữ thường và số." : undefined} /><button className="ridge-auth-toggle" type="button" aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowPassword((visible) => !visible)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>
+          {activeTab === "register" && <div className="ridge-auth-field"><label htmlFor="auth-confirm-password">Xác nhận mật khẩu</label><div className="ridge-auth-password"><input id="auth-confirm-password" type={showConfirmPassword ? "text" : "password"} name="confirmPassword" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required minLength={8} /><button className="ridge-auth-toggle" type="button" aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowConfirmPassword((visible) => !visible)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>}
+          <button className="ridge-auth-submit" type="submit" disabled={isSubmitting}>{isSubmitting ? "Đang xử lý..." : activeTab === "register" ? "Đăng ký" : "Đăng nhập"}</button>
+          {activeTab !== "register" && <Link className="ridge-auth-link ridge-auth-forgot" to="/forgot-password">Quên mật khẩu?</Link>}
+          {feedback.text && <p className={`ridge-auth-feedback ${feedback.type}`} role={feedback.type === "error" ? "alert" : "status"} aria-live={feedback.type === "error" ? "assertive" : "polite"}>{feedback.text}</p>}
+          <p className="ridge-auth-note">{activeTab === "register" ? "Bạn đã có tài khoản? " : "Chưa có tài khoản? "}<button className="ridge-auth-link" type="button" onClick={() => setActiveTab(activeTab === "register" ? "login" : "register")}>{activeTab === "register" ? "Đăng nhập ngay" : "Đăng ký ngay"}</button></p>
+          <div className="ridge-auth-social"><div className="ridge-auth-divider"><span /> <p>Hoặc {activeTab === "register" ? "đăng ký" : "đăng nhập"} bằng</p> <span /></div><div className="ridge-auth-social-buttons"><button type="button" disabled title="Đăng nhập Google chưa được cấu hình">G</button><button type="button" disabled title="Đăng nhập Facebook chưa được cấu hình">f</button><button type="button" disabled title="Đăng nhập Apple chưa được cấu hình"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4a4.2 4.2 0 0 0-3.3-1.8c-1.4-.1-2.7.8-3.4.8s-1.8-.8-3-.8a4.4 4.4 0 0 0-3.7 2.3c-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.3 2.9 2.2 1.2-.1 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.3.9-1.3 1.2-2.6 1.2-2.7s-2.5-1-2.6-3.6ZM14.2 6a4.1 4.1 0 0 0 1-3 4.2 4.2 0 0 0-2.7 1.4 3.9 3.9 0 0 0-1 2.9 3.5 3.5 0 0 0 2.7-1.3Z"/></svg></button></div></div>
+        </form>
       </section>
     </main>
   )
 }
 
 
-function ProtectedFeed() {
+function RequireAuth() {
   const token = localStorage.getItem("token");
+  const context = useOutletContext();
 
-  return token ? <FeedPage /> : <Navigate to="/" replace />;
+  return token ? <Outlet context={context} /> : <Navigate to="/" replace />;
 }
 
 function AuthRoute(){
@@ -222,15 +147,56 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<AuthRoute />} />
-      <Route
-        path="/feed"
-        element={<ProtectedFeed/>}
-      />
-      <Route path="/reset-password/:token" element={<ResetPasswordPage></ResetPasswordPage>}></Route>
-      <Route path="/forgot-password" element={<ForgotPasswordPage></ForgotPasswordPage>}></Route>
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route element={<AppOrGuestLayout />}>
+        <Route path="feed" element={<TokenRoute guest={<Navigate to="/" replace />} authenticated={<FeedPage section="feed" />} />} />
+        <Route path="profile/:id" element={<TokenRoute guest={<GuestProfilePage />} authenticated={<ProfilePage embedded />} />} />
+        <Route element={<RequireAuth />}>
+          <Route path="messages" element={<MessagesViewRoute />} />
+          <Route path="friends" element={<FeedPage section="connections" />} />
+          <Route path="saved" element={<FeedPage section="saved" />} />
+          <Route path="settings" element={<ProfileSettingsRoute />} />
+          <Route path="admin" element={<AdminPanelRoute />} />
+          <Route path="reels" element={<FeedPage section="reels" />} />
+          <Route path="activity" element={<FeedPage section="activity" />} />
+        </Route>
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
+}
+
+function AppOrGuestLayout() {
+  return localStorage.getItem("token") ? <AppLayout /> : <GuestLayout />;
+}
+
+function TokenRoute({ guest, authenticated }) {
+  return localStorage.getItem("token") ? authenticated : guest;
+}
+
+function MessagesViewRoute() {
+  const { currentUser } = useOutletContext();
+  const location = useLocation();
+  return <section className="feed-column feed-column-single">
+    <MessagesView currentUser={currentUser} initialConversationId={location.state?.openConversationId} />
+  </section>;
+}
+
+function ProfileSettingsRoute() {
+  const { currentUser, setCurrentUser } = useOutletContext();
+  return <section className="feed-column feed-column-single">
+    <ProfileSettings
+      currentUser={currentUser}
+      onProfileSaved={(savedUser) => setCurrentUser((current) => ({
+        ...current, ...savedUser, _id: savedUser.id || current?._id,
+      }))}
+    />
+  </section>;
+}
+
+function AdminPanelRoute() {
+  return <section className="feed-column feed-column-single"><AdminPanel /></section>;
 }
 
 export default App;

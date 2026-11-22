@@ -1,6 +1,26 @@
+const errorResponse = require("../utils/errorResponse");
 const User = require("../models/User");
 const FriendRequest = require("../models/FriendRequest");
 const Conversation = require("../models/Conversation")
+const validateMediaUrl = require("../utils/validateMediaUrl");
+
+const heartbeat = async (req, res) => {
+    try {
+        const now = new Date();
+        const lastActiveAt = req.user.lastActiveAt ? new Date(req.user.lastActiveAt) : null;
+        if (lastActiveAt && now.getTime() - lastActiveAt.getTime() < 30_000) {
+            return res.status(204).end();
+        }
+
+        await User.updateOne(
+            { _id: req.user._id },
+            { $set: { lastActiveAt: now } }
+        );
+        return res.status(204).end();
+    } catch (error) {
+        return errorResponse(res, error);
+    }
+};
 
 const searchUsers = async (req, res) => {
     try {
@@ -22,6 +42,7 @@ const searchUsers = async (req, res) => {
 
         const users = await User.find({
             _id: { $nin: excludedIds },
+            isLocked: { $ne: true },
             username: { $regex: escapedQuery, $options: "i" },
             blockList: { $ne: req.user._id },
         })
@@ -44,7 +65,7 @@ const searchUsers = async (req, res) => {
             })),
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
@@ -63,9 +84,7 @@ const getMe = async (req,res) =>{
             user,
         })
     } catch(err){
-        res.status(500).json({
-            message: err.message,
-        })
+        return errorResponse(res, err);
     }
 }
 
@@ -78,13 +97,13 @@ const getBlockedUsers = async (req, res) => {
         }
         res.status(200).json({ blockedUsers: user.blockList.filter(Boolean) });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
 const updateMe = async (req, res) =>{
     try{
-        const {username, bio, profilePicture, coverPicture} = req.body;
+        const {username, bio, profilePicture, coverPicture, dateOfBirth} = req.body;
 
         const user = await User.findById(req.user._id);
 
@@ -103,6 +122,19 @@ const updateMe = async (req, res) =>{
         }
         if (coverPicture !== undefined && typeof coverPicture !== "string") {
             return res.status(400).json({ message: "Đường dẫn ảnh bìa không hợp lệ!" });
+        }
+        if (!validateMediaUrl(profilePicture, req)) {
+            return res.status(400).json({ message: "Ảnh đại diện phải là URL hợp lệ từ máy chủ tải lên của chúng tôi." });
+        }
+        if (!validateMediaUrl(coverPicture, req)) {
+            return res.status(400).json({ message: "Ảnh bìa phải là URL hợp lệ từ máy chủ tải lên của chúng tôi." });
+        }
+        if (dateOfBirth !== undefined) {
+            const parsedDate = dateOfBirth === null || dateOfBirth === "" ? null : new Date(dateOfBirth);
+            if (parsedDate && (Number.isNaN(parsedDate.getTime()) || parsedDate > new Date())) {
+                return res.status(400).json({ message: "Ngày sinh không hợp lệ!" });
+            }
+            user.dateOfBirth = parsedDate;
         }
         if (username !== undefined) {
             if (typeof username !== "string" || !username.trim()) {
@@ -145,19 +177,19 @@ const updateMe = async (req, res) =>{
                 profilePicture: user.profilePicture,
                 coverPicture: user.coverPicture,
                 bio: user.bio,
+                dateOfBirth: user.dateOfBirth,
                 isAdmin: user.isAdmin,
             },
         });
     }catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
+        return errorResponse(res, error);
     }
 }
 const getUserById = async (req,res) =>{
     try{
         const user = await User.findById(req.params.id)
-            .select("-password -email -resetPasswordToken -resetPasswordExpires");
+            .select("username profilePicture coverPicture bio createdAt friend blockList")
+            .populate("friend", "username profilePicture");
 
         if(!user){
             return res.status(404).json({
@@ -165,13 +197,40 @@ const getUserById = async (req,res) =>{
             })
         }
 
-        res.status(200).json({
-            user,
-        })
+        const viewerId = req.user._id.toString();
+        const targetId = user._id.toString();
+        const viewerBlockedTarget = (req.user.blockList || []).some((id) => id.toString() === targetId);
+        const targetBlockedViewer = (user.blockList || []).some((id) => id.toString() === viewerId);
+        if (viewerBlockedTarget || targetBlockedViewer) {
+            return res.status(404).json({ message: "Người dùng không tồn tại!" });
+        }
+
+        const [outgoingRequest, incomingRequest] = targetId === viewerId ? [null, null] : await Promise.all([
+            FriendRequest.findOne({ senderId: req.user._id, receiverId: user._id, status: "pending" }).select("_id"),
+            FriendRequest.findOne({ senderId: user._id, receiverId: req.user._id, status: "pending" }).select("_id"),
+        ]);
+        const profile = user.toObject();
+        profile.friendCount = user.friend.length;
+        delete profile.friend;
+        delete profile.blockList;
+        profile.friends = user.friend.filter(Boolean).slice(0, 9).map((friend) => ({
+            _id: friend._id,
+            username: friend.username,
+            profilePicture: friend.profilePicture,
+        }));
+        return res.status(200).json({
+            user: profile,
+            relationship: {
+                isSelf: targetId === viewerId,
+                isFriend: (req.user.friend || []).some((id) => id.toString() === targetId),
+                hasSentRequest: Boolean(outgoingRequest),
+                hasReceivedRequest: Boolean(incomingRequest),
+                incomingRequestId: incomingRequest?._id || null,
+            },
+        });
     } catch(err){
-        res.status(400).json({
-            message: err.message
-        })
+        if (err.name === "CastError") return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+        return errorResponse(res, err);
     }
 }
 const block = async (req, res) =>{
@@ -255,9 +314,7 @@ const block = async (req, res) =>{
             message:"đã chặn người dùng này!",
         })
     } catch(err){
-        return res.status(500).json({
-            message: err.message
-        })
+        return errorResponse(res, err);
     }
 }
 const unblock = async (req, res) => {
@@ -315,13 +372,12 @@ const unblock = async (req, res) => {
             message: "Bo chan thanh cong!"
         });
     } catch (err) {
-        return res.status(500).json({
-            message: err.message
-        });
+        return errorResponse(res, err);
     }
 };
 
 module.exports = {
+    heartbeat,
     searchUsers,
     getMe, 
     getBlockedUsers,

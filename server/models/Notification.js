@@ -20,7 +20,11 @@ const notificationSchema = new mongoose.Schema(
                 "friend_reject",
                 "like",
                 "comment",
-                "message"
+                "message",
+                "share",
+                "reply",
+                "mention",
+                "system"
             ],
             required: true
         },
@@ -39,6 +43,11 @@ const notificationSchema = new mongoose.Schema(
             ref:"Comment",
             default:null
         },
+        reaction:{
+            type: String,
+            enum: ["like", "love", "haha", "wow", "sad", "angry", null],
+            default: null
+        },
         isRead:{
             type: Boolean,
             default: false
@@ -48,6 +57,25 @@ const notificationSchema = new mongoose.Schema(
         timestamps: true
     }
 )
+// Push every new notification to its recipient in realtime. Message
+// notifications are skipped: the messages badge already covers them, and one
+// bell entry per chat message would flood the notification list.
+notificationSchema.post("save", function (doc) {
+    if (doc.type === "message") return;
+    void (async () => {
+        try {
+            const User = require("./User");
+            const { emitToUser } = require("../utils/realtime");
+            const sender = await User.findById(doc.senderId).select("username profilePicture").lean();
+            emitToUser(doc.recipientId, "notification:new", {
+                notification: { ...doc.toObject(), senderId: sender || doc.senderId },
+            });
+        } catch (error) {
+            console.error("Could not push notification:", error.message);
+        }
+    })();
+});
+
 const Notification = mongoose.model("Notification", notificationSchema);
 
 module.exports = Notification;

@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useParams, useNavigate} from "react-router-dom";
+import { API_BASE } from "../lib/api.js";
+import "../auth.css";
 function ResetPasswordPage(){
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [feedback, setFeedback] = useState({type:"", text:""});
     const { token } = useParams();
@@ -21,7 +25,7 @@ function ResetPasswordPage(){
         setIsSubmitting(true);
 try{
         const response = await fetch(
-            `http://localhost:5000/api/auth/reset-password/${token}`,
+            `${API_BASE}/api/auth/reset-password/${token}`,
             {
                 method:"POST",
                 headers:{
@@ -59,65 +63,19 @@ try{
     }
     }
     return (
-        <main className="auth-page">
-            <section className="welcome-panel">
-                <div className="brand">
-                <span className ="brand-icon">R</span>
-                <span>Ridge</span>
-                </div>
-
-                <div className ="welcome-message">
-                <h1>WELCOME TO <br /> RIDGE</h1>
-                <p>Connect, share, and discover with our community!</p>
-                </div>
-
-                <div className="panel-footer">
-                    <div className="avatar-row">
-                    <span className="avatar avatar-one">R</span>
-                    <span className="avatar avatar-two">I</span>
-                    <span className="avatar avatar-three">D</span>
-                    <span className="avatar avatar-four">G</span>
-                    <span className="avatar avatar-five">E</span>
-                    </div>
-                <div className="bottom-brand">Ridge</div>
-                </div>
-            </section>
-
-            <section className="form-panel">
-                <div className="form-placeholders">
-                    <div className="tabs">
-                        <h1>Đặt lại mật khẩu</h1>
-                    </div>
-                    <form className="register-form" onSubmit={handleSubmit}>
-                        <input
-                        type="password"
-                        name="password"
-                        placeholder="Mật khẩu mới"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        minLength={6}
-                        required 
-                        />
-
-                        <input
-                        type="password"
-                        placeholder="Xác nhận mật khẩu mới"
-                        name="confirmPassword"
-                        value={confirmPassword}
-                        onChange={(event) => setConfirmPassword(event.target.value)}
-                        minLength={6}
-                        required></input>
-
-                        <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? "Đang xử lý..." : "Xác nhận"}</button>
-                        {feedback.text && (
-                            <p className={`feedback-message ${feedback.type}`}>
-                                {feedback.text}
-                            </p>
-                        )}
-                    </form>
-                </div>
-            </section>
-        </main>
+      <main className="auth-page ridge-auth-page">
+        <section className="ridge-auth-card" aria-labelledby="reset-title">
+          <div className="ridge-auth-brand" aria-label="Ridge"><span className="ridge-auth-mark" aria-hidden="true">R</span><span>Ridge</span></div>
+          <h1 className="ridge-auth-title" id="reset-title">Đặt lại mật khẩu</h1>
+          <form className="ridge-auth-form" onSubmit={handleSubmit}>
+            <p className="ridge-auth-hint">Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.</p>
+            <div className="ridge-auth-field"><label htmlFor="reset-password">Mật khẩu mới</label><div className="ridge-auth-password"><input id="reset-password" type={showPassword ? "text" : "password"} name="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} required /><button className="ridge-auth-toggle" type="button" aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowPassword((visible) => !visible)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>
+            <div className="ridge-auth-field"><label htmlFor="reset-confirm-password">Xác nhận mật khẩu mới</label><div className="ridge-auth-password"><input id="reset-confirm-password" type={showConfirmPassword ? "text" : "password"} name="confirmPassword" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={8} required /><button className="ridge-auth-toggle" type="button" aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowConfirmPassword((visible) => !visible)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>
+            <button className="ridge-auth-submit" type="submit" disabled={isSubmitting}>{isSubmitting ? "Đang xử lý..." : "Xác nhận"}</button>
+            {feedback.text && <p className={`ridge-auth-feedback ${feedback.type}`} role={feedback.type === "error" ? "alert" : "status"} aria-live={feedback.type === "error" ? "assertive" : "polite"}>{feedback.text}</p>}
+          </form>
+        </section>
+      </main>
     )
 }
 export default ResetPasswordPage;

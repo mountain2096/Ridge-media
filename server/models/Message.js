@@ -21,10 +21,36 @@ const messageSchema = new mongoose.Schema(
             required: true,
         },
 
+        // "sticker" messages keep a readable label in `content` and the sticker id here.
+        type: {
+            type: String,
+            enum: ["text", "sticker"],
+            default: "text",
+        },
+
+        stickerId: {
+            type: String,
+            maxlength: 64,
+            default: null,
+        },
+
         isRead: {
             type: Boolean,
             default: false,
         },
+
+        readAt: {
+            type: Date,
+            default: null,
+        },
+
+        reactions: [
+            {
+                _id: false,
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+                reaction: { type: String, enum: ["like", "love", "haha", "wow", "sad", "angry"], required: true },
+            },
+        ],
     },
     {
         timestamps: true,
