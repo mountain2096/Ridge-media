@@ -431,7 +431,7 @@ function AppLayout() {
         </nav>
       </aside>
       <section className="home-content">
-        <div className={"home-columns " + (isFeed ? "" : "home-columns-single")}><div className="route-motion" key={location.pathname}><Outlet context={outletContext} /></div></div>
+        <div className={"home-columns route-motion " + (isFeed ? "" : "home-columns-single")} key={location.pathname}><Outlet context={outletContext} /></div>
       </section>
       <LiveToast toast={liveToast} onOpen={openLiveToast} onDismiss={() => setLiveToast(null)} />
     </main>
