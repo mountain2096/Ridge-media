@@ -16,7 +16,7 @@ export default function StoryStrip({ currentUser, myStoryGroup, storyGroups, sto
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
             </button>
           </span>
-          <span className="story-name">Tin của bạn</span>
+          <span className="story-name">Tạo tin</span>
         </div>
         {storyGroups
           .filter((group) => group.author._id !== currentUser?._id)
