@@ -11,7 +11,6 @@ export default function GuestFeedPage() {
   const [attempt, setAttempt] = useState(0);
 
   const load = useCallback(async (target, append, signal) => {
-    setLoading(true); setError("");
     try {
       const response = await fetch(`${API_BASE}/api/public/posts?page=${target}&limit=20`, { signal });
       const data = await response.json();
@@ -23,15 +22,15 @@ export default function GuestFeedPage() {
     finally { if (!signal.aborted) setLoading(false); }
   }, []);
 
-  useEffect(() => { const controller = new AbortController(); load(1, false, controller.signal); return () => controller.abort(); }, [attempt, load]);
-  function loadMore() { const controller = new AbortController(); load(page + 1, true, controller.signal); }
+  useEffect(() => { const controller = new AbortController(); Promise.resolve().then(() => load(1, false, controller.signal)); return () => controller.abort(); }, [attempt, load]);
+  function loadMore() { setLoading(true); setError(""); const controller = new AbortController(); load(page + 1, true, controller.signal); }
 
-  if (error && !posts.length) return <section className="guest-page-message" role="alert">{error}<br /><button className="guest-load-more" type="button" onClick={() => setAttempt((n) => n + 1)}>Thử lại</button></section>;
+  if (error && !posts.length) return <section className="guest-page-message" role="alert">{error}<br /><button className="guest-load-more" type="button" onClick={() => { setLoading(true); setError(""); setAttempt((n) => n + 1); }}>Thử lại</button></section>;
   if (loading && !posts.length) return <p className="guest-page-message">Đang tải bảng tin...</p>;
   if (!posts.length) return <p className="guest-page-message">Chưa có bài viết công khai.</p>;
   return <section aria-label="Bảng tin công khai">
     {posts.map((post) => <GuestPostCard key={post._id} post={post} />)}
-    {error && <p className="guest-page-message" role="alert">{error} <button type="button" onClick={() => load(page + 1, true, new AbortController().signal)}>Thử lại</button></p>}
+    {error && <p className="guest-page-message" role="alert">{error} <button type="button" onClick={() => { setLoading(true); setError(""); load(page + 1, true, new AbortController().signal); }}>Thử lại</button></p>}
     {page < pages && <button className="guest-load-more" type="button" disabled={loading} onClick={loadMore}>{loading ? "Đang tải..." : "Tải thêm bài viết"}</button>}
   </section>;
 }
