@@ -143,6 +143,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể đổi mật khẩu.");
+      if (typeof data.token === "string" && data.token) localStorage.setItem("token", data.token);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
