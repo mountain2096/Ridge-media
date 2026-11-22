@@ -150,10 +150,8 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
-          <Route path="feed" element={<FeedPage section="feed" />} />
           <Route path="messages" element={<MessagesViewRoute />} />
           <Route path="friends" element={<FeedPage section="connections" />} />
-          <Route path="profile/:id" element={<ProfilePage embedded />} />
           <Route path="saved" element={<FeedPage section="saved" />} />
           <Route path="settings" element={<ProfileSettingsRoute />} />
           <Route path="admin" element={<AdminPanelRoute />} />
