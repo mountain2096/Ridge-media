@@ -58,7 +58,7 @@ export default function PostComposer({ currentUser, postContent, onPostContentCh
           {isPosting ? "Đang đăng..." : "Đăng bài"}
         </button>
       </div>
-    
+
       {postError && (
         <p className="feedback-message error">{postError}</p>
       )}
