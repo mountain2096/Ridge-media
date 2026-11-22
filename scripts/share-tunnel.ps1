@@ -20,6 +20,20 @@ if ($UseDefaultDb) {
 $logDir = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
 $apiOut = Join-Path $logDir 'api.out.log'
 $apiErr = Join-Path $logDir 'api.err.log'
+function Read-SharedText($path) {
+  $stream = $null
+  $reader = $null
+  try {
+    $stream = [IO.FileStream]::new($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+    $reader = [IO.StreamReader]::new($stream)
+    return $reader.ReadToEnd()
+  } catch [IO.IOException] {
+    return ''
+  } finally {
+    if ($reader) { $reader.Dispose() }
+    if ($stream) { $stream.Dispose() }
+  }
+}
 $webOut = Join-Path $logDir 'web.out.log'
 $webErr = Join-Path $logDir 'web.err.log'
 $apiTunnel = $null
@@ -36,13 +50,13 @@ try {
   while ([DateTime]::UtcNow -lt $deadline -and (-not $apiUrl -or -not $webUrl)) {
     foreach ($path in @($apiOut, $apiErr)) {
       if (Test-Path $path) {
-        $match = [regex]::Match([IO.File]::ReadAllText($path), 'https://[a-zA-Z0-9-]+\.trycloudflare\.com')
+        $match = [regex]::Match((Read-SharedText $path), 'https://[a-zA-Z0-9-]+\.trycloudflare\.com')
         if ($match.Success) { $apiUrl = $match.Value; break }
       }
     }
     foreach ($path in @($webOut, $webErr)) {
       if (Test-Path $path) {
-        $match = [regex]::Match([IO.File]::ReadAllText($path), 'https://[a-zA-Z0-9-]+\.trycloudflare\.com')
+        $match = [regex]::Match((Read-SharedText $path), 'https://[a-zA-Z0-9-]+\.trycloudflare\.com')
         if ($match.Success) { $webUrl = $match.Value; break }
       }
     }
