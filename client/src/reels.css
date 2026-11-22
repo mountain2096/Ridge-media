@@ -134,3 +134,66 @@
   .reel-actions { position: absolute; right: 8px; bottom: 16px; z-index: 2; margin: 0; }
   .reel-overlay { padding: 16px 62px calc(16px + env(safe-area-inset-bottom)) 12px; }
 }
+
+/* Round 19c frame and control overrides. */
+.reel-item { padding: 12px 20px; box-sizing: border-box; }
+.reel-stage { height: 100%; align-items: flex-end; gap: 12px; transition: width .2s, transform .2s; }
+.reel-stage.has-comments { width: calc(100% - 400px); transform: translateX(-200px); }
+.reel-frame { height: auto; max-height: 100%; width: min(calc((100dvh - var(--reels-top, 56px) - 24px) * var(--reel-ratio)), calc(100% - 72px)); aspect-ratio: var(--reel-ratio); flex: 0 1 auto; border-radius: 14px; }
+.reel-frame video { position: absolute; inset: 0; width: 100%; height: 100%; }
+.reel-frame video.reel-main-video { z-index: 1; object-fit: contain; }
+.reel-frame video.reel-backdrop { z-index: 0; object-fit: cover; filter: blur(28px) brightness(.55); transform: scale(1.2); pointer-events: none; }
+.reel-overlay { z-index: 2; display: block; padding: 20px 16px 26px; text-align: left; }
+.reel-author a { min-height: 36px; }
+.reel-avatar { width: 36px; height: 36px; flex-basis: 36px; }
+.reel-caption { max-width: 480px; margin-top: 8px; text-align: left; -webkit-line-clamp: 2; pointer-events: auto; }
+.reel-caption button { display: inline; padding: 0 0 0 6px; border: 0; background: none; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+.reel-caption:not(.is-expanded) button { display: none; }
+.reel-caption.is-expanded { display: block; }
+.reel-mute { position: absolute; z-index: 3; top: 12px; left: 12px; width: 40px; min-width: 40px; height: 40px; padding: 0; background: rgb(0 0 0 / 48%); }
+.reel-mute span { display: none; }
+.reel-progress { position: absolute; z-index: 4; right: 0; bottom: 0; left: 0; height: 4px; background: rgb(255 255 255 / 35%); pointer-events: none; }
+.reel-progress::after { display: block; width: var(--reel-progress); height: 100%; background: #fff; content: ""; }
+.reel-actions { align-self: flex-end; margin-bottom: 12px; }
+.reel-reaction .ridge-react-main, .reel-comments, .reel-share, .reel-more, .reel-nav { width: 44px; height: 44px; min-width: 44px; min-height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgb(255 255 255 / 14%); color: #fff; cursor: pointer; }
+.reel-share svg, .reel-more svg, .reel-nav svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.reel-more-wrap { position: relative; }
+.reel-post-menu { position: absolute; display: grid; top: auto; right: 48px; bottom: 48px; }
+.reel-more-wrap .reel-post-menu { top: auto; right: 48px; bottom: 48px; height: auto; }
+.reel-nav { position: absolute; z-index: 5; top: 50%; transform: translateY(-50%); }
+.reel-nav-prev { left: 12px; }
+.reel-nav-next { right: 12px; }
+.reel-nav:disabled { opacity: .35; cursor: default; }
+.reel-comments-panel { position: absolute; z-index: 6; top: 12px; right: 16px; bottom: 12px; width: 380px; border: 1px solid var(--news-border, #e6e8ef); border-radius: 14px; }
+.reel-comments-panel header button { width: 40px; height: 40px; min-width: 40px; border: 0; border-radius: 50%; background: var(--news-hover, #eef0f7); font-size: 0; cursor: pointer; }
+.reel-comments-panel header button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.reel-comment { display: grid; grid-template-columns: 32px 1fr; column-gap: 8px; border: 0; }
+.reel-comment-avatar { grid-row: span 2; display: grid; width: 32px; height: 32px; place-items: center; overflow: hidden; border-radius: 50%; background: var(--news-hover, #eef0f7); font-size: 12px; }
+.reel-comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.reel-composer-avatar { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; overflow: hidden; border-radius: 50%; background: var(--news-hover, #eef0f7); }
+.reel-composer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.reel-comments-empty { display: grid; min-height: 100%; place-content: center; justify-items: center; gap: 8px; color: var(--news-muted, #5b6478); }
+.reel-comments-empty svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.reel-comments-empty p { margin: 0; }
+.reel-comment > a, .reel-comment > p { grid-column: 2; }
+.reel-comment > a { padding: 8px 12px 0; border-radius: 16px 16px 0 0; background: var(--news-hover, #eef0f7); }
+.reel-comment > p { margin: 0; padding: 2px 12px 8px; border-radius: 0 0 16px 16px; background: var(--news-hover, #eef0f7); }
+.reel-comment > time { grid-column: 2; padding: 4px 12px; }
+.reel-comment.is-reply { margin-left: 40px; }
+.reel-comment.is-reply { grid-column: 1 / -1; grid-template-columns: 28px minmax(0, 1fr); width: calc(100% - 40px); min-width: 0; }
+.reel-comment.is-reply .reel-comment-avatar { width: 28px; height: 28px; }
+.reel-comment > a, .reel-comment > p { min-width: 0; overflow-wrap: anywhere; }
+.reel-comments-backdrop { display: none; }
+.reel-comments-panel form button { width: 44px; border: 0; border-radius: 50%; background: #1877f2; color: #fff; }
+.reel-comments-panel form button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.reel-page .ridge-toast { z-index: 120; }
+@media (max-width: 900px) {
+  .reel-item { padding: 0; }
+  .reel-stage, .reel-stage.has-comments { width: 100%; transform: none; gap: 0; }
+  .reel-frame { width: 100%; height: 100%; border-radius: 0; }
+  .reel-actions { position: absolute; right: 8px; bottom: 20px; z-index: 3; }
+  .reel-nav { display: none; }
+  .reel-comments-panel { top: auto; right: 0; bottom: 0; left: 0; width: 100%; height: 70dvh; border-radius: 16px 16px 0 0; }
+  .reel-comments-panel::before { width: 38px; height: 4px; flex: 0 0 4px; align-self: center; margin-top: 8px; border-radius: 4px; background: #aab1bf; content: ""; }
+  .reel-comments-backdrop { position: fixed; z-index: 5; inset: var(--reels-top, 56px) 0 0; display: block; width: 100%; border: 0; background: rgb(0 0 0 / 45%); }
+}
