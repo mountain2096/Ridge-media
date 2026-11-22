@@ -1,7 +1,7 @@
 # BÀN GIAO — Ridge-media
 
 > Dành cho agent mới (Claude, Codex hoặc agent khác) tiếp tục dự án. Đọc cùng `AGENTS.md`. Sau MỖI tính năng xong: cập nhật mục 4, 7 và 8 rồi commit file này.
-> Cập nhật lần cuối: 2026-11-22, sau tính năng nhãn chỉnh sửa bài viết (nhánh `feat/edited-post-label`, commit `1d957c2`, `1325b25`, `9212f66`, `aec963e`).
+> Cập nhật lần cuối: 2026-11-22, sau khi sửa luồng cập nhật bài viết (nhánh `feat/edited-post-label`, commit `055d78d`).
 
 ## 1. Dự án
 - Repo: https://github.com/mountain2096/Ridge-media (public). Mạng xã hội dạng feed: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO cho realtime.
@@ -17,8 +17,9 @@ Chuỗi nhánh (mỗi nhánh tạo từ nhánh trước): `main` → `fix/audit-
 
 ## 4. Trạng thái kiểm thử (cập nhật mỗi vòng)
 - Chủ dự án đã tự kiểm tra danh sách cảm xúc trong hộp thoại trên trình duyệt sau khi sửa lỗi tải thêm.
-- Vòng 4: `node --test`: 98 bài kiểm tra thành công, không lỗi; kiểm tra lint và bản dựng client thành công.
-- Vòng 4 chưa kiểm tra trên trình duyệt và chưa xác minh kết nối MongoDB trực tiếp.
+- Vòng 4: `node --test`: 98 bài kiểm tra thành công, không lỗi; lint và bản dựng client đều đạt.
+- Bản sửa merge phản hồi PUT: lint và build client đều đạt; đã đọc luồng cập nhật để xác nhận giữ nguyên tác giả, menu và bài chia sẻ, đồng thời nhận nhãn chỉnh sửa ngay trên feed và trang cá nhân.
+- Chưa kiểm tra luồng sửa bài trên trình duyệt trong vòng này; chưa xác minh kết nối MongoDB trực tiếp. Không chạy lại `node --test` sau bản sửa client-only.
 
 ## 5. Quy trình làm việc (3 bên)
 - **Chủ dự án**: test bằng mắt, chọn tính năng, tự `git push`.
@@ -41,7 +42,7 @@ Danh sách cảm xúc: bộ đếm tổng có thể tính cả người dùng b�
 | 1 | Dọn worktree và cập nhật hướng dẫn/trạng thái dự án | Worktree sạch; đã push | `8c2b008` |
 | 2 | API, hộp thoại danh sách cảm xúc bài viết và tài liệu | 94 bài kiểm tra; lint/build đạt; đã kiểm tra trực quan | `a0f8adc`, `6a56d8c`, `da637c2` |
 | 3 | API và giao diện danh sách cảm xúc bình luận; sửa chuẩn hóa subdocument Mongoose, bổ sung kiểm thử hồi quy bằng document thật và ghi tài liệu cho hai endpoint | 96 bài kiểm tra; lint/build đạt | `c010ab8`, `a28a27c`, `8fa86f1`, `7bbe25c`, `5f5af78` |
-| 4 | Giữ danh sách cảm xúc khi tải thêm; lưu `editedAt` khi nội dung/media thực sự đổi và hiện nhãn trên bài viết | 98 bài kiểm tra; lint/build đạt; chưa kiểm tra trình duyệt hoặc MongoDB trực tiếp | `1d957c2`, `1325b25`, `9212f66`, `aec963e` |
+| 4 | Giữ danh sách cảm xúc khi tải thêm; lưu `editedAt` khi nội dung/media thực sự đổi và hiện nhãn trên bài viết; giữ dữ liệu tác giả/bài chia sẻ khi merge phản hồi sửa trên feed và trang cá nhân | 98 bài kiểm tra; lint/build đạt; bản sửa merge đã được rà soát bằng code, chưa kiểm tra trên trình duyệt hoặc MongoDB trực tiếp | `1d957c2`, `1325b25`, `9212f66`, `aec963e`, `d3cc2e2`, `055d78d` |
 
 ## 8. Việc có thể làm tiếp (chủ dự án lựa chọn)
 Cuộn vô hạn thay cho nút "Tải thêm"; trang cá nhân cho khách; thu hồi JWT khi đăng xuất; tách nhỏ `FeedPage.jsx`; bổ sung các phần kiểm thử còn thiếu ở mục 6.
