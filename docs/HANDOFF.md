@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-22, after Round 18 (branch `feat/reels-api`).
+> Last updated: 2026-11-22, after Round 19 (branch `fix/post-access-checks`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). New branches are created from main. Current branch: `feat/reels-api`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). New branches are created from main. Current branch: `fix/post-access-checks`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -35,6 +35,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 - Round 16: `node --test` passed all 114 tests; client lint and build passed. Story strip and post composer were not verified in a browser.
 - Round 17: `node --test` passed all 114 tests; client lint and build passed. Infinite scroll was not verified in a browser.
 - Round 18: `node --test` passed 116 tests; client not touched; media filter not verified against live MongoDB.
+- Round 19: focused post-access tests passed; full `node --test` passed 118 tests. Backend-only; not verified against live MongoDB.
 
 ## 5. Workflow (three parties)
 - **Project owner**: manually test and choose features.
@@ -75,9 +76,11 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 16 | Re-indented extracted views; extracted and wired StoryStrip and PostComposer | 114 tests passed; client lint/build passed; story strip and composer not verified in a browser | `be2a44b`, `d35083f`, `b5b58e6`, `35ec3cc`, `9ee0488` |
 | 17 | Load more feed posts on scroll with an IntersectionObserver sentinel and button fallback | 114 tests passed; client lint/build passed; not verified in a browser | `956ca21`, `25e5a83` |
 | 18 | Add the server-side `media=video` filter to GET `/api/posts`; document temporary Playwright output location | 116 tests passed; client not touched; media filter not verified against live MongoDB | `f41ffa8`, `bd9087b`, `f2fa663`, `1a557cc` |
+| 19 | Centralize post visibility checks and enforce them for post reactions, saves, and comment access; hide comments by blocked users | 118 tests passed; client untouched; not verified against live MongoDB | pending |
 
 ## 8. Possible next work (project owner chooses)
 Split `FeedPage.jsx` in stages (Round 15: presentational views, done; Round 16: story strip and composer (done); Round 19+: hooks); Reels view (Round 19); server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes.
+Post visibility checks now cover direct post reads, reactions, saves, comments, and comment reads (Round 19).
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.

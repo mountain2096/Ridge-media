@@ -1,4 +1,3 @@
-const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const Message = require("../models/Message");
 const Conversation = require("../models/Conversation");
@@ -7,6 +6,7 @@ const Notification = require("../models/Notification");
 const errorResponse = require("../utils/errorResponse");
 const { emitToUser } = require("../utils/realtime");
 const { isReactionType, withLegacyLikes, applyReaction, listReactions, REACTION_TYPES, idOf } = require("../utils/reactions");
+const { loadAccessiblePost } = require("../utils/postAccess");
 
 const plain = (reactions = []) => reactions.map((item) => ({ userId: item.userId, reaction: item.reaction }));
 
@@ -14,19 +14,7 @@ const blockedEitherWay = (viewer, other) =>
     (viewer.blockList || []).some((id) => idOf(id) === idOf(other._id)) ||
     (other.blockList || []).some((id) => idOf(id) === idOf(viewer._id));
 
-// Returns the post only when the current user may see it and nobody blocked
-// anybody; otherwise null (the caller answers 404).
-async function loadReactablePost(req, postId) {
-    const post = await Post.findOne({ _id: postId, status: "active" });
-    if (!post) return null;
-    const author = await User.findById(post.authorId).select("blockList");
-    if (!author) return null;
-    if (idOf(post.authorId) !== idOf(req.user._id) && blockedEitherWay(req.user, author)) return null;
-    const isOwner = idOf(post.authorId) === idOf(req.user._id);
-    const isFriend = (req.user.friend || []).some((id) => idOf(id) === idOf(post.authorId));
-    const canView = post.privacy === "public" || isOwner || (post.privacy === "friends" && isFriend);
-    return canView ? post : null;
-}
+const loadReactablePost = (req, postId) => loadAccessiblePost(req.user, postId);
 
 async function notifyReaction({ recipientId, senderId, reaction, postId, commentId = null }) {
     if (idOf(recipientId) === idOf(senderId)) return;
