@@ -148,8 +148,10 @@ function App() {
       <Route path="/" element={<AuthRoute />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route element={<RequireAuth />}>
-        <Route element={<AppLayout />}>
+      <Route element={<AppOrGuestLayout />}>
+        <Route path="feed" element={<TokenRoute guest={<GuestFeedPage />} authenticated={<FeedPage section="feed" />} />} />
+        <Route path="profile/:id" element={<TokenRoute guest={<GuestProfilePage />} authenticated={<ProfilePage embedded />} />} />
+        <Route element={<RequireAuth />}>
           <Route path="messages" element={<MessagesViewRoute />} />
           <Route path="friends" element={<FeedPage section="connections" />} />
           <Route path="saved" element={<FeedPage section="saved" />} />
@@ -158,10 +160,6 @@ function App() {
           <Route path="reels" element={<FeedPage section="reels" />} />
           <Route path="activity" element={<FeedPage section="activity" />} />
         </Route>
-      </Route>
-      <Route element={<AppOrGuestLayout />}>
-        <Route path="feed" element={<TokenRoute guest={<GuestFeedPage />} authenticated={<FeedPage section="feed" />} />} />
-        <Route path="profile/:id" element={<TokenRoute guest={<GuestProfilePage />} authenticated={<ProfilePage embedded />} />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
