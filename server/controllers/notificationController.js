@@ -4,10 +4,18 @@ const errorResponse = require("../utils/errorResponse");
 
 const getNotification = async (req, res) =>{
     try{
+        const page = Number(req.query?.page ?? 1);
+        const limit = Number(req.query?.limit ?? 30);
+        if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > 50) {
+            return res.status(400).json({ message: "Tham số phân trang không hợp lệ!" });
+        }
         const notifications = await Notification.find({
-            recipientId: req.user._id
+            recipientId: req.user._id,
+            type: { $ne: "message" },
         }).populate("senderId", "username profilePicture")
         .sort({ createdAt: -1})
+        .skip((page - 1) * limit)
+        .limit(limit);
         
         res.status(200).json({
             notifications

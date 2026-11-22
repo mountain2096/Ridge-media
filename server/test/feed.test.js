@@ -109,6 +109,7 @@ test("feed rejects invalid media query values", async () => {
         const res = response();
         await getPosts({ query: { media }, user: { _id: "viewer" } }, res);
         assert.equal(res.statusCode, 400);
+        assert.equal(res.body.message, "Tham số media không hợp lệ!");
     }
 });
 

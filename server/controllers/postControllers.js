@@ -48,7 +48,7 @@ const getPosts = async (req,res) =>{
             return res.status(400).json({ message: "Tham số phân trang không hợp lệ!" });
         }
         if (req.query.media !== undefined && req.query.media !== "video") {
-            return res.status(400).json({ message: "Tham số phân trang không hợp lệ!" });
+            return res.status(400).json({ message: "Tham số media không hợp lệ!" });
         }
 
         const blockedByCurrentUser = req.user.blockList || [];

@@ -1,5 +1,6 @@
 const Story = require("../models/Story");
 const errorResponse = require("../utils/errorResponse");
+const validateMediaUrl = require("../utils/validateMediaUrl");
 
 const createStory = async (req, res) => {
     try {
@@ -9,19 +10,18 @@ const createStory = async (req, res) => {
             return res.status(400).json({ message: "Thông tin story không hợp lệ!" });
         }
 
-        let parsedUrl;
-        try {
-            parsedUrl = new URL(mediaUrl.trim());
-        } catch {
-            return res.status(400).json({ message: "Đường dẫn media không hợp lệ!" });
+        if (!validateMediaUrl(mediaUrl, req)) {
+            return res.status(400).json({ message: "Media phải là URL hợp lệ từ máy chủ tải lên của chúng tôi." });
         }
-        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-            return res.status(400).json({ message: "Đường dẫn media phải dùng HTTP hoặc HTTPS!" });
+        const extension = new URL(mediaUrl).pathname.split(".").pop().toLowerCase();
+        if ((mediaType === "image" && !["jpg", "png", "webp", "gif"].includes(extension)) ||
+            (mediaType === "video" && !["mp4", "webm"].includes(extension))) {
+            return res.status(400).json({ message: "Đường dẫn media không hợp lệ!" });
         }
 
         const story = await Story.create({
             authorId: req.user._id,
-            mediaUrl: parsedUrl.toString(),
+            mediaUrl,
             mediaType,
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         });
