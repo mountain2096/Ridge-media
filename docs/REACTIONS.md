@@ -46,8 +46,11 @@ Hai tính năng này **đã có từ phiên bản đầu** (nút "Lưu bài vi�
 | PUT | `/api/post/:id/reaction` | Thả hoặc đổi cảm xúc, body `{ "type": "love" }` |
 | DELETE | `/api/post/:id/reaction` | Bỏ cảm xúc |
 | GET | `/api/post/:id/reactions` | Danh sách người thả cảm xúc; tùy chọn `type`, `page`, `limit` |
+| GET | `/api/comment/:id/reactions` | List people who reacted to a comment; optional `type`, `page`, `limit` |
 | PUT / DELETE | `/api/comment/:id/reaction` | Như trên, cho bình luận |
 | PUT / DELETE | `/api/message/conversation/:conversationId/messages/:messageId/reaction` | Như trên, cho tin nhắn |
+
+The reaction list now covers posts and comments.
 
 `type` là một trong: `like`, `love`, `haha`, `wow`, `sad`, `angry`. Mọi đường dẫn đều cần đăng nhập. Sự kiện Socket.IO `message:reaction` báo cho cả hai người trong cuộc trò chuyện.
 
