@@ -1,55 +1,56 @@
-# BÀN GIAO — Ridge-media
+# HANDOFF — Ridge-media
 
-> Dành cho agent mới (Claude, Codex hoặc agent khác) tiếp tục dự án. Đọc cùng `AGENTS.md`. Sau MỖI tính năng xong: cập nhật mục 4, 7 và 8 rồi commit file này.
-> Cập nhật lần cuối: 2026-11-22, sau round 5 (nhánh `test/reaction-list-coverage`, commit `020960d`).
+> For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
+> Last updated: 2026-11-22, after Round 5 (branch `test/reaction-list-coverage`, commit `020960d`).
 
-## 1. Dự án
-- Repo: https://github.com/mountain2096/Ridge-media (public). Mạng xã hội dạng feed: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO cho realtime.
-- Thư mục máy chủ dự án: `C:\Ridge Project` (Windows, PowerShell). Chủ dự án nói tiếng Việt; giao diện app bằng tiếng Việt.
-- Chạy: `npm install` → `npm install --prefix client` → tạo `.env` từ `.env.example` → `npm run dev:all` (web :5173, API :5000). API URL của client đọc từ `VITE_API_URL` (mặc định `http://localhost:5000`) qua `client/src/lib/api.js`.
-- Kiểm tra: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. Chưa có test client.
+## 1. Project
+- Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
+- Project directory on the owner's machine: `C:\Ridge Project` (Windows, PowerShell). The project owner speaks Vietnamese; the app UI is in Vietnamese.
+- Run: `npm install` → `npm install --prefix client` → create `.env` from `.env.example` → `npm run dev:all` (web :5173, API :5000). The client reads its API URL from `VITE_API_URL` (default `http://localhost:5000`) via `client/src/lib/api.js`.
+- Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
-## 2. Nhánh Git
-Chuỗi nhánh (mỗi nhánh tạo từ nhánh trước): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → **`test/reaction-list-coverage`** (hiện tại). Nhánh `docs/agents-branch-sync` được tạo từ `feat/edited-post-label`; nhánh kiểm thử được tạo từ nhánh đó. Nhánh mới cho mỗi tính năng, tạo từ nhánh gần nhất. Push bình thường, KHÔNG `--force`. Chưa có PR nào được xác minh.
+## 2. Git branches
+Branch chain (each branch created from the previous one): `main` → `fix/audit-roadmap` → `feat/ui-redesign` → `feat/realtime-messaging` → `feat/comment-reaction-list` → `feat/edited-post-label` → `docs/agents-branch-sync` → **`test/reaction-list-coverage`** (current). Branch `docs/agents-branch-sync` was created from `feat/edited-post-label`; the test branch was created from that branch. Create each new feature branch from the nearest preceding branch. Push normally; never use `--force`. No PR has been verified.
 
-## 3. Chức năng đã xác minh trong code
-Đăng ký và đăng nhập bằng JWT; quên và đổi mật khẩu (tối thiểu 8 ký tự); trang cá nhân (`/profile/:id`, `ProfilePage.jsx`); bài viết công khai, bạn bè hoặc riêng tư, có thể sửa, xóa mềm, chia sẻ và lưu; feed phân trang 20 bài cùng nút "Tải thêm bài viết"; 6 loại cảm xúc cho bài viết, bình luận và tin nhắn; danh sách cảm xúc cho bài viết và bình luận; trả lời bình luận một cấp và @mention; tin (story); kết bạn, chặn và tìm người dùng; nhắn tin realtime (đang nhập, "Đã xem"), emoji và nhãn dán; thông báo realtime (Socket.IO); báo cáo và trang quản trị (thống kê, hàng đợi kiểm duyệt có điểm ưu tiên); giới hạn tần suất, danh sách cho phép CORS, kiểm tra URL media; script tạo dữ liệu mẫu.
+## 3. Features verified in code
+JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
-## 4. Trạng thái kiểm thử (cập nhật mỗi vòng)
-- Chủ dự án đã tự kiểm tra danh sách cảm xúc trong hộp thoại trên trình duyệt sau khi sửa lỗi tải thêm.
-- Round 5: `node --test` 102 bài kiểm tra thành công; chỉ bổ sung kiểm thử trường hợp biên cho danh sách cảm xúc (không chạy lint/build client, không có thay đổi client); luồng sửa bài vẫn chưa được xác minh trên trình duyệt hoặc với MongoDB trực tiếp.
-- Bản sửa merge phản hồi PUT: lint và build client đều đạt; đã đọc luồng cập nhật để xác nhận giữ nguyên tác giả, menu và bài chia sẻ, đồng thời nhận nhãn chỉnh sửa ngay trên feed và trang cá nhân.
-- Chưa kiểm tra luồng sửa bài trên trình duyệt trong vòng này; chưa xác minh kết nối MongoDB trực tiếp. Không chạy lại `node --test` sau bản sửa client-only.
+## 4. Test status (update each round)
+- The project owner manually checked the reaction list dialog in a browser after the load-more fix.
+- Round 5: `node --test` passed 102 tests; only edge cases for reaction lists were added (client lint/build not run; no client changes); the post-edit flow has not been verified in a browser or against a live MongoDB instance.
+- The PUT response merge fix passed client lint and build; code review confirmed it preserves the author, menu, and shared-post data, and applies the edited label on the feed and profile page.
+- `node --test` was not rerun after the client-only fix.
 
-## 5. Quy trình làm việc (3 bên)
-- **Chủ dự án**: test bằng mắt, chọn tính năng, tự `git push`.
-- **Claude (chat)**: đọc repo trên GitHub, chia việc nhỏ, viết prompt cho Codex, review diff sau khi chủ dự án push, cập nhật file này. Claude chỉ đọc được bản đã push và không có quyền ghi.
-- **Codex CLI (plugin Ponytail mức Full)**: code, lint, build, test.
-- Mẫu làm việc một tính năng: mở `codex` → `/new` → chọn "Use current Git worktree" → dán prompt (Codex tự tạo nhánh) → Codex commit nhỏ, không push → chủ dự án test bằng mắt và `git push -u origin <nhánh>` → Claude review diff → cập nhật handoff.
-- Quy tắc prompt cho Codex: nêu rõ file cần sửa; dùng `git add <file cụ thể>`, không `git add .`; không push, không xóa file (chỉ di chuyển); chạy test hẹp khi lặp và test đầy đủ ở cuối; báo cáo dưới ~12 dòng.
+## 5. Workflow (three parties)
+- **Project owner**: manually test, choose features, and run `git push` themselves.
+- **Claude (chat)**: read the repo on GitHub, break work into small tasks, write prompts for Codex, review diffs after the owner pushes, and update this file. Claude can only read the pushed version and cannot write.
+- **Codex CLI (Ponytail plugin, Full level)**: code, lint, build, and test.
+- One-feature workflow: open `codex` → `/new` → select "Use current Git worktree" → paste the prompt (Codex creates the branch) → Codex makes a small commit, without pushing → project owner manually tests and runs `git push -u origin <branch>` → Claude reviews the diff → update the handoff.
+- Codex prompt rules: name the files to change; use `git add <specific file>`, never `git add .`; do not push or delete files (move only); run focused tests while iterating and the full checks at the end; report in about 12 lines or fewer.
 
-## 6. Giới hạn đã biết
-Tổng quát: realtime hiện chạy trên một tiến trình (cần Redis adapter để mở rộng); xác nhận đã đọc chỉ áp dụng cho hội thoại hai người; JWT chưa bị thu hồi khi đăng xuất; chưa có trang cá nhân cho khách; bài viết được sửa trước thay đổi này chưa có nhãn chỉnh sửa vì không có `editedAt`; thông báo lượt thích chưa được gộp nhóm; trả lời bình luận tối đa hai cấp; nhãn dán chưa tải lên hoặc chuyển động; `FeedPage.jsx` vẫn dài khoảng 1.250 dòng.
+## 6. Known limitations
+General: realtime currently runs in a single process (a Redis adapter is needed to scale); read receipts apply only to two-person conversations; JWTs are not revoked on logout; no guest profile page; posts edited before this change have no edited label because they lack `editedAt`; like notifications are not grouped; comment replies are limited to two levels; stickers are not uploaded or animated; `FeedPage.jsx` is still about 1,250 lines.
 
-Danh sách cảm xúc: bộ đếm tổng có thể tính cả người dùng bị chặn hoặc khóa, trong khi danh sách đã lọc họ; endpoint tải toàn bộ cảm xúc vào bộ nhớ trước khi phân trang, phù hợp với dự án hiện tại nhưng không phù hợp với bài có hàng nghìn lượt; `limit=0` quay về 30 nhưng `limit=-5` bị kẹp về 1 (hành vi `parseInt || 30`); kiểm thử khẳng định hành vi hiện tại này, cần cập nhật nếu thống nhất cách xử lý; hộp thoại có `tablist` nhưng chưa có `tabpanel`.
+Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
-Đã hoàn thành vòng trước: danh sách cảm xúc áp dụng cho cả bình luận và bài viết; khi đổi thẻ, các dòng cũ được xóa trong lúc tải; số bình luận vẫn nằm sát bên phải khi bài viết chưa có cảm xúc. Vòng 4 giữ các dòng đang hiển thị khi tải thêm.
+Completed in the previous round: reaction lists work for both comments and posts; switching tabs clears old rows while loading; the comment count stays at the far right when a post has no reactions. Round 4 retained visible rows while loading more.
 
-## 7. Nhật ký các vòng
-| Vòng | Công việc | Kết quả | Commit |
+## 7. Round log
+| Round | Work | Result | Commit |
 |---|---|---|---|
-| 0 | Claude rà soát kho mã, nhánh và trạng thái ban đầu | Ban đầu: 92 bài kiểm tra, lint và build đều đạt | `e64c605` |
-| 1 | Dọn worktree và cập nhật hướng dẫn/trạng thái dự án | Worktree sạch; đã push | `8c2b008` |
-| 2 | API, hộp thoại danh sách cảm xúc bài viết và tài liệu | 94 bài kiểm tra; lint/build đạt; đã kiểm tra trực quan | `a0f8adc`, `6a56d8c`, `da637c2` |
-| 3 | API và giao diện danh sách cảm xúc bình luận; sửa chuẩn hóa subdocument Mongoose, bổ sung kiểm thử hồi quy bằng document thật và ghi tài liệu cho hai endpoint | 96 bài kiểm tra; lint/build đạt | `c010ab8`, `a28a27c`, `8fa86f1`, `7bbe25c`, `5f5af78` |
-| 4 | Giữ danh sách cảm xúc khi tải thêm; lưu `editedAt` khi nội dung/media thực sự đổi và hiện nhãn trên bài viết; giữ dữ liệu tác giả/bài chia sẻ khi merge phản hồi sửa trên feed và trang cá nhân | 98 bài kiểm tra; lint/build đạt; bản sửa merge đã được rà soát bằng code, chưa kiểm tra trên trình duyệt hoặc MongoDB trực tiếp | `1d957c2`, `1325b25`, `9212f66`, `aec963e`, `d3cc2e2`, `055d78d` |
-| 5 | Sửa AGENTS.md theo nhánh hiện tại; bổ sung test cho danh sách cảm xúc (like cũ, kẹp limit, trang rỗng/vượt trang) | 102 tests passing; docs and test changes only | `861f922`, `9cf576d`, `020960d` |
+| 0 | Claude reviewed the repository, branches, and initial state | Initially: 92 tests; lint and build passed | `e64c605` |
+| 1 | Cleaned up the worktree and updated project guidance/status | Worktree clean; pushed | `8c2b008` |
+| 2 | API, post reaction-list dialog, and documentation | 94 tests; lint/build passed; visually checked | `a0f8adc`, `6a56d8c`, `da637c2` |
+| 3 | API and comment reaction-list UI; fixed Mongoose subdocument normalization, added regression tests using real documents, and documented both endpoints | 96 tests; lint/build passed | `c010ab8`, `a28a27c`, `8fa86f1`, `7bbe25c`, `5f5af78` |
+| 4 | Retained reaction lists while loading more; saved `editedAt` when content/media actually changes and showed the post label; preserved author/shared-post data when merging edit responses on the feed and profile page | 98 tests; lint/build passed; merge fix reviewed in code | `1d957c2`, `1325b25`, `9212f66`, `aec963e`, `d3cc2e2`, `055d78d` |
+| 5 | Updated AGENTS.md for the current branch; added reaction-list tests (legacy likes, limit clamping, empty/out-of-range pages) | 102 tests passing; docs and test changes only | `861f922`, `9cf576d`, `020960d` |
 
-## 8. Việc có thể làm tiếp (chủ dự án lựa chọn)
-Cuộn vô hạn thay cho nút "Tải thêm"; trang cá nhân cho khách; thu hồi JWT khi đăng xuất; tách nhỏ `FeedPage.jsx`.
+## 8. Possible next work (project owner chooses)
+Infinite scroll instead of the "Tải thêm bài viết" button; guest profile page; revoke JWTs on logout; split up `FeedPage.jsx`.
 
-## 9. Lưu ý cho agent mới
-- `docs/STATUS.md` và `docs/AUDIT.md` là snapshot CŨ; luôn kiểm chứng với code và `git log`.
-- Không chạy seed hoặc migration vào database thật: script seed chỉ nên chạy với database có chữ `demo` trong tên.
-- Bản lưu ngoài repo ở `C:\Ridge_backup\2026-11-22` (file patch cũ, `_share/`); đừng đưa lại vào repo.
-- Không commit `.env`, khóa, mật khẩu hay token.
+## 9. Notes for a new agent
+- `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
+- Do not run seed scripts or migrations against a real database: the seed script should only run against a database whose name contains `demo`.
+- Backup outside the repo: `C:\Ridge_backup\2026-11-22` (old patch file, `_share/`); do not bring it back into the repo.
+- Do not commit `.env`, keys, passwords, or tokens.
+- Docs language: this file and AGENTS.md are in English; write Codex prompts in English.
