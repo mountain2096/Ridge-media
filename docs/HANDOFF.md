@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Chat recall and conversation menu: `node --test` passed 147 tests; client lint/build passed. Recalled bubbles/previews use sender ownership and requested wording; added the portal-based left-list menu for profile, per-user mute, mark-read, and per-user conversation deletion. No browser, API server, or MongoDB was started.
 - Message recall/delete UI: client lint and build passed; added per-message recall/delete actions, recalled bubble state, and realtime list/message updates. No browser or live API/database was started.
 - Chat media: `node --test` passed 141 tests; chat messages accept validated same-origin image/video uploads with readable previews; no API server, MongoDB, or browser was started.
 - Chat themes: `node --test` passed 140 tests; client lint/build passed. Added four themes and split sea-theme bubble art by sender; no API, Vite, database, or browser was started.
@@ -143,8 +144,10 @@ Reaction lists: the total count may include blocked or deactivated users while t
 
 | 42 | Add validated image/video attachments to chat messages with readable previews and realtime payloads | `node --test`: 141 passed; no API/Vite/database/browser started | pending |
 | 43 | Add client recall and delete-for-me actions for chat messages with socket updates | Client lint/build passed; no browser or live API/database started | this commit |
+| 44 | Fix recalled-message sender display; add profile, mute, read, and per-user delete actions to the left conversation list | `node --test`: 147 passed; client lint/build passed; no browser or live API/database started | pending |
 
 ## 8. Possible next work (project owner chooses)
+Round 44 keeps sender IDs usable whether populated or raw, uses existing mute/read state, and hides existing messages only for the deleting participant; new messages unhide that participant's conversation. The list menu is rendered outside its scrolling container. Browser and live two-user behavior remain for manual verification.
 Round 43 uses the existing recall/delete endpoints. Recall updates both users’ message and preview state; delete removes the message locally and refreshes the conversation preview when needed. No server behavior changed; no browser or live service was started.
 Round 42 accepts only same-origin uploaded chat images and videos, derives message type from the extension, and keeps readable content previews; no API server, MongoDB, or browser was started.
 Round 41 adds four themes using the eight supplied WebP assets, extends appearance allowlists, and tests acceptance plus unknown-key rejection. No browser or live service was used.

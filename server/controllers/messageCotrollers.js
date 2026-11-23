@@ -9,12 +9,17 @@ const CHAT_MEDIA_PATH = /^\/uploads\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$
 const SHARE_PREVIEW = "Đã chia sẻ một bài viết";
 
 async function findOrCreateConversation(senderId, receiverId) {
-    let conversation = await Conversation.findOne({ participants: { $all: [senderId, receiverId], $size: 2 }, hiddenFor: { $ne: senderId } });
+    let conversation = await Conversation.findOne({ participants: { $all: [senderId, receiverId], $size: 2 } });
     if (!conversation) conversation = await Conversation.create({ participants: [senderId, receiverId] });
+    else if (conversation.hiddenFor.some((id) => idString(id) === idString(senderId))) {
+        conversation.hiddenFor = conversation.hiddenFor.filter((id) => idString(id) !== idString(senderId));
+        await conversation.save();
+    }
     return conversation;
 }
 
 async function createAndEmitMessage(conversation, senderId, receiverId, data) {
+    conversation.hiddenFor = (conversation.hiddenFor || []).filter((id) => idString(id) !== idString(receiverId));
     const newMessage = await Message.create({ conversationId: conversation._id, senderId, ...data });
     conversation.lastMessage = newMessage._id;
     await conversation.save();
@@ -94,10 +99,11 @@ const createOrGetConversation = async (req, res) => {
                 $all: [senderId, receiverId],
                 $size: 2,
             },
-            hiddenFor: { $ne: senderId },
         }).populate("participants","username profilePicture");
         
         if (existingConversation) {
+            existingConversation.hiddenFor = existingConversation.hiddenFor.filter((id) => idString(id) !== idString(senderId));
+            await existingConversation.save();
             return res.status(200).json({
                 message: "Cuộc trò chuyện đã tồn tại!",
                 conversation: existingConversation,
@@ -298,6 +304,7 @@ const getConversations = async (req, res) =>{
                 const unreadCount = isMuted ? 0 : await Message.countDocuments({
                     conversationId: conversation._id,
                     senderId:{$ne: userId},
+                    deletedFor: { $ne: userId },
                     isRead: false
                 });
 
@@ -464,7 +471,25 @@ const setConversationMute = async (req, res) => {
         conversation.mutedBy = (conversation.mutedBy || []).filter((id) => idString(id) !== idString(req.user._id));
         if (muted) conversation.mutedBy.push(req.user._id);
         await conversation.save();
+        emitToUser(req.user._id, "conversation:updated", { conversationId: idString(conversation._id), isMuted: muted });
         return res.status(200).json({ isMuted: muted });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID cuộc trò chuyện không hợp lệ!" });
+        return errorResponse(res, error);
+    }
+};
+
+const deleteConversationForMe = async (req, res) => {
+    try {
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) return res.status(404).json({ message: "Không tìm thấy cuộc trò chuyện!" });
+        if (!conversation.participants.some((id) => idString(id) === idString(req.user._id))) {
+            return res.status(403).json({ message: "Bạn không thuộc cuộc trò chuyện này!" });
+        }
+        await Message.updateMany({ conversationId: conversation._id }, { $addToSet: { deletedFor: req.user._id } });
+        if (!conversation.hiddenFor.some((id) => idString(id) === idString(req.user._id))) conversation.hiddenFor.push(req.user._id);
+        await conversation.save();
+        return res.status(200).json({ message: "Đã xóa cuộc trò chuyện!" });
     } catch (error) {
         if (error.name === "CastError") return res.status(400).json({ message: "ID cuộc trò chuyện không hợp lệ!" });
         return errorResponse(res, error);
@@ -539,6 +564,7 @@ module.exports = {
     markMessageIsRead,
     updateNickname,
     setConversationMute,
+    deleteConversationForMe,
     setConversationQuickIcon,
     setConversationAppearance,
     deleteMessageForMe,

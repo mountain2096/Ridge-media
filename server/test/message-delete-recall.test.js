@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const Message = require("../models/Message");
 const Conversation = require("../models/Conversation");
-const { deleteMessageForMe, recallMessage } = require("../controllers/messageCotrollers");
+const { deleteMessageForMe, deleteConversationForMe, recallMessage } = require("../controllers/messageCotrollers");
 
 const ME = "64b000000000000000000001";
 const OTHER = "64b000000000000000000002";
@@ -47,6 +47,7 @@ test("sender recall clears attachments and is idempotent", async () => {
     const res = response();
     await recallMessage({ params: { messageId: MID }, user: { _id: ME } }, res);
     assert.equal(res.statusCode, 200);
+    assert.equal(res.body.message.senderId, ME);
     assert.ok(state.message.recalledAt instanceof Date);
     assert.equal(state.message.content, "Tin nhắn đã được thu hồi");
     assert.equal(state.message.mediaUrl, null);
@@ -58,6 +59,22 @@ test("sender recall clears attachments and is idempotent", async () => {
     assert.equal(state.message.recalledAt, recalledAt);
     assert.equal(state.saves, 1);
   } finally { state.restore(); }
+});
+
+test("delete conversation hides it only for the requester and hides existing messages", async () => {
+  const original = [Message.updateMany, Conversation.findById];
+  const item = { _id: CID, participants: [ME, OTHER], hiddenFor: [], async save() {} };
+  let update;
+  Message.updateMany = async (filter, operation) => { update = { filter, operation }; };
+  Conversation.findById = async () => item;
+  try {
+    const res = response();
+    await deleteConversationForMe({ params: { conversationId: CID }, user: { _id: ME } }, res);
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(item.hiddenFor, [ME]);
+    assert.equal(update.filter.conversationId, CID);
+    assert.equal(update.operation.$addToSet.deletedFor, ME);
+  } finally { [Message.updateMany, Conversation.findById] = original; }
 });
 
 test("recall rejects the other participant and malformed ids return 400", async () => {

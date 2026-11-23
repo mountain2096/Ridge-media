@@ -1,7 +1,7 @@
 const express = require("express");
 
 const protect = require("../middlewares/protect");
-const {sendMessage, createOrGetConversation, getMessage, getConversations, markMessageIsRead, updateNickname, setConversationMute, setConversationQuickIcon, setConversationAppearance, deleteMessageForMe, recallMessage } = require("../controllers/messageCotrollers");
+const {sendMessage, createOrGetConversation, getMessage, getConversations, markMessageIsRead, updateNickname, setConversationMute, deleteConversationForMe, setConversationQuickIcon, setConversationAppearance, deleteMessageForMe, recallMessage } = require("../controllers/messageCotrollers");
 
 const { reactToMessage } = require("../controllers/reactionControllers");
 
@@ -23,6 +23,7 @@ router.post(
 router.patch("/conversation/:conversationId/read", protect, markMessageIsRead);
 router.patch("/conversation/:conversationId/nickname", protect, updateNickname);
 router.put("/conversation/:conversationId/mute", protect, setConversationMute);
+router.delete("/conversation/:conversationId", protect, deleteConversationForMe);
 router.patch("/conversation/:conversationId/quick-icon", protect, setConversationQuickIcon);
 router.patch("/conversation/:conversationId/appearance", protect, setConversationAppearance);
 router.get("/conversation/:conversationId/messages", protect, getMessage);
