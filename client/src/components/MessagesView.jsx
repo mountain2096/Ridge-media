@@ -63,6 +63,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [messageMenuId, setMessageMenuId] = useState(null);
+  const [messageConfirm, setMessageConfirm] = useState(null);
+  const messageConfirmButtonRef = useRef(null);
   const [messageMenuStyle, setMessageMenuStyle] = useState({});
   const [nicknameDrafts, setNicknameDrafts] = useState({ me: "", other: "" });
   const messageListRef = useRef(null);
@@ -116,6 +118,16 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       window.removeEventListener("scroll", placeMenu, true);
     };
   }, [messageMenuId]);
+
+  const isMessageConfirmOpen = Boolean(messageConfirm);
+
+  useEffect(() => {
+    if (!isMessageConfirmOpen) return undefined;
+    messageConfirmButtonRef.current?.focus();
+    const closeOnEscape = (event) => { if (event.key === "Escape" && !messageConfirm.busy) setMessageConfirm(null); };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isMessageConfirmOpen, messageConfirm?.busy]);
 
   const filteredConversations = useMemo(() => conversations.filter((conversation) => {
     const participant = conversation.participants?.find((person) => person._id !== currentUser?._id);
@@ -588,30 +600,24 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     }
   }
 
-  async function handleMessageAction(message, action) {
-    const recall = action === "recall";
-    const question = recall ? "Thu hồi tin nhắn này với mọi người?" : "Xóa tin nhắn này chỉ ở phía bạn?";
-    if (!window.confirm(question)) return;
-    setError("");
-    setMessageMenuId(null);
+  async function handleMessageAction(message, action) { setMessageConfirm({ message, action, error: "", busy: false }); }
+
+  async function confirmMessageAction() {
+    if (!messageConfirm || messageConfirm.busy) return;
+    const { message, action } = messageConfirm, recall = action === "recall";
+    const fallback = recall ? "Kh\u00f4ng th\u1ec3 thu h\u1ed3i tin nh\u1eafn." : "Kh\u00f4ng th\u1ec3 x\u00f3a tin nh\u1eafn.";
+    setMessageConfirm((state) => ({ ...state, busy: true, error: "" })); setError(""); setMessageMenuId(null);
     try {
-      const response = await fetch(`${API_BASE}/api/message/${message._id}${recall ? "/recall" : ""}`, {
-        method: recall ? "PATCH" : "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || (recall ? "Không thể thu hồi tin nhắn." : "Không thể xóa tin nhắn."));
+      const response = await fetch(`${API_BASE}/api/message/message/${message._id}${recall ? "/recall" : ""}`, { method: recall ? "PATCH" : "DELETE", headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || fallback);
       if (recall) {
         const recalled = { ...message, ...(data.message || {}), recalledAt: data.message?.recalledAt || new Date().toISOString(), content: "Tin nhắn đã được thu hồi", mediaUrl: null, stickerId: null, sharedPostId: null, reactions: [] };
         setMessages((items) => items.map((item) => item._id === message._id ? recalled : item));
         setConversations((items) => items.map((item) => item._id === activeConversationIdRef.current && item.lastMessage?._id === message._id ? { ...item, lastMessage: recalled } : item));
-      } else {
-        setMessages((items) => items.filter((item) => item._id !== message._id));
-        if (activeConversation?.lastMessage?._id === message._id) void loadConversations();
-      }
-    } catch (requestError) {
-      setError(requestError.message || (recall ? "Không thể thu hồi tin nhắn." : "Không thể xóa tin nhắn."));
-    }
+      } else { setMessages((items) => items.filter((item) => item._id !== message._id)); if (activeConversation?.lastMessage?._id === message._id) void loadConversations(); }
+      setMessageConfirm(null);
+    } catch (requestError) { setMessageConfirm((state) => ({ ...state, busy: false, error: requestError.message || fallback })); }
   }
 
   // Sends a text message ({ content }) or a sticker ({ stickerId }). Returns true on success.
@@ -905,6 +911,14 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
         )}
         {(error || (conversationActionError && !isFriendPickerOpen)) && <p className="feedback-message error messages-error ridge-messages-error" role="alert">{conversationActionError || error}</p>}
       </section>
+      {messageConfirm && <div className="ridge-message-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !messageConfirm.busy) setMessageConfirm(null); }}>
+        <section className="ridge-message-confirm" role="dialog" aria-modal="true" aria-labelledby="ridge-message-confirm-title">
+          <h2 id="ridge-message-confirm-title">{messageConfirm.action === "recall" ? "Thu hồi tin nhắn?" : "Xóa tin nhắn?"}</h2>
+          <p>{messageConfirm.action === "recall" ? "Tin nhắn sẽ được thu hồi với mọi người trong cuộc trò chuyện." : "Tin nhắn chỉ bị xóa ở phía bạn, người kia vẫn thấy."}</p>
+          {messageConfirm.error && <p className="ridge-message-confirm-error" role="alert">{messageConfirm.error}</p>}
+          <div className="ridge-message-confirm-actions"><button type="button" disabled={messageConfirm.busy} onClick={() => setMessageConfirm(null)}>Hủy</button><button ref={messageConfirmButtonRef} className={messageConfirm.action === "delete" ? "destructive" : ""} type="button" disabled={messageConfirm.busy} onClick={() => void confirmMessageAction()}>{messageConfirm.busy ? "Đang xử lý..." : messageConfirm.action === "recall" ? "Thu hồi" : "Xóa"}</button></div>
+        </section>
+      </div>}
     </section>
   );
 }
