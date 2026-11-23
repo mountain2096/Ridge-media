@@ -20,6 +20,8 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 
 ## 4. Test status (update each round)
 - Round 37: `node --test` passed 129 tests; client lint and build passed. Message sends no longer create bell notifications; legacy message notifications are filtered from API and client bell state; the bell count and panel layout were fixed, and message toast previews now reflect text, post shares, and stickers. No API, Vite server, database, or browser was started.
+- Round 36: `node --test` passed 134 tests; client lint and build passed. Added a shared conversation quick icon, realtime updates, and send-button behavior for empty composers. No API, Vite server, database, or browser was started.
+- Round 35: `node --test` passed 133 tests; client lint and build passed. Added shared conversation nicknames and personal mute controls, with muted threads excluded from unread counts and message toasts. No API, Vite server, database, or browser was started.
 - Round 34: `node --test` passed 128 tests; client lint and build passed. Added GSAP sidebar active-pill movement, post reaction pop/burst/count animation, and one-shot feed-card entrance animation (max 8); added the client GSAP dependency. No browser, API, Vite server, or database was started.
 - Round 33: client lint/build passed; `node --test` passed 128 tests. Added global button press/hover motion, route/profile-tab entrance motion, and Lenis for window scrolling with reduced-motion and nested-scroll exclusions. No browser, API, Vite server, or database was started.
 - Round 32: `node --test` passed 128 tests; client lint and build passed. Sharing now resolves to the root post, supports captions, and exposes a caption field in the share dialog. No API, Vite server, database, or browser was started.
@@ -123,6 +125,8 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 33 | Add shared button and route motion and Lenis window scrolling, respecting reduced motion and nested scrollers | `node --test`: 128 passed; client lint/build passed; no API/Vite server/database/browser started | `fddebec` |
 | 34 | Add GSAP sidebar pill, post reaction burst/count, and one-shot feed-card entrance motion | `node --test`: 128 passed; client lint/build passed; no API/Vite server/database/browser started; visual motion not browser-verified | this commit |
 | 37 | Remove message notifications from the bell; add unread count badge, fix panel sizing/avatar crop, and improve message toast previews | `node --test`: 129 passed; client lint/build passed; no API/Vite server/database/browser started | pending |
+| 35 | Add shared per-user conversation nicknames and personal mute settings, including realtime updates and muted unread/toast handling | `node --test`: 133 passed; client lint/build passed; no API/Vite server/database/browser started | this commit |
+| 36 | Add shared conversation quick icons, picker/reset, realtime update, and send-on-empty behavior | `node --test`: 134 passed; client lint/build passed; no API/Vite server/database/browser started | this commit |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
@@ -143,6 +147,8 @@ Round 29 uses the protected AppLayout route and existing PostCard handlers for d
 Round 33 leaves route scroll restoration and deep-link handling in React Router, excludes modal and nested scrollers from Lenis, and animates profile tab content without changing profile data behavior. Browser scroll restoration and visual timing were not manually verified.
 Round 34 respects reduced motion and scopes GSAP contexts to the sidebar, feed, and post reaction button; it does not animate Reels or chat reactions. Visual timing and collapsed-sidebar movement were not manually verified in a browser.
 Round 37 keeps message unread counts on the messages icon unchanged, filters legacy message notification records from listing/reading, and suppresses a message toast only for the conversation currently open. Browser behavior was not manually verified.
+Round 35 keeps mute personal to each participant, broadcasts nickname changes through the existing user-room socket helper, and leaves message delivery, read receipts, stickers, reactions, and shared-post payloads unchanged. No live service or browser was used.
+Round 36 validates short emoji-only quick icons, broadcasts them to the other participant, and sends the selected emoji through the existing text-message path when the composer is empty. No live service or browser was used.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.

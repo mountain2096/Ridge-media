@@ -19,7 +19,13 @@ const conversationSchema = mongoose.Schema(
             type:mongoose.Schema.Types.ObjectId,
             ref:"User"
         },
-        ]
+        ],
+        nicknames: [{
+            user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+            nickname: { type: String, trim: true, maxlength: 40, required: true },
+        }],
+        mutedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+        quickIcon: { type: String, default: "" },
     },{
         timestamps: true    
     }

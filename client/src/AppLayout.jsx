@@ -111,6 +111,7 @@ function AppLayout() {
   const currentUserIdRef = useRef("");
   const navigateRef = useRef(navigate);
   const activeConversationIdRef = useRef(null);
+  const mutedConversationIdsRef = useRef(new Set());
   const isFeed = location.pathname === "/feed";
 
   useEffect(() => {
@@ -203,6 +204,7 @@ function AppLayout() {
         ]);
         const [messages, requests] = await Promise.all([messagesResponse.json(), requestsResponse.json()]);
         if (!mounted || !messagesResponse.ok || !requestsResponse.ok) return;
+        mutedConversationIdsRef.current = new Set((messages.conversations || []).filter((item) => item.isMuted).map((item) => item._id));
         setMessageCount((messages.conversations || []).reduce((sum, item) => sum + Number(item.unreadCount || 0), 0));
         setRequestCount((requests.request || []).length);
       } catch {
@@ -252,6 +254,7 @@ function AppLayout() {
       scheduleRefresh();
       const senderId = message?.senderId?._id;
       if (!senderId || senderId === currentUserIdRef.current) return;
+      if (mutedConversationIdsRef.current.has(conversationId)) return;
       if (conversationId === activeConversationIdRef.current) return;
       const preview = message.type === "post_share" ? "Đã gửi một bài viết"
         : message.type === "sticker" ? "Đã gửi một sticker"
@@ -265,6 +268,12 @@ function AppLayout() {
       });
     }
 
+    function handleConversationUpdated({ conversationId, isMuted } = {}) {
+      if (isMuted) mutedConversationIdsRef.current.add(conversationId);
+      else mutedConversationIdsRef.current.delete(conversationId);
+      scheduleRefresh();
+    }
+
     // Resync after a dropped connection so nothing sent meanwhile is missed.
     let hasConnected = socket.connected;
     function handleConnect() {
@@ -274,6 +283,7 @@ function AppLayout() {
 
     socket.on("notification:new", handleNotification);
     socket.on("message:new", handleNewMessage);
+    socket.on("conversation:updated", handleConversationUpdated);
     socket.on("connect", handleConnect);
     const handleActiveConversation = (event) => { activeConversationIdRef.current = event.detail; };
     window.addEventListener("ridge:active-conversation", handleActiveConversation);
@@ -296,6 +306,7 @@ function AppLayout() {
       window.removeEventListener("ridge:counts-changed", scheduleRefresh);
       socket.off("notification:new", handleNotification);
       socket.off("message:new", handleNewMessage);
+      socket.off("conversation:updated", handleConversationUpdated);
       socket.off("connect", handleConnect);
       disconnectSocket();
     };

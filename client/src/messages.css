@@ -212,6 +212,25 @@
   font-variant-numeric: tabular-nums;
 }
 
+.ridge-muted-icon { width: 15px; height: 15px; flex: 0 0 auto; fill: none; stroke: #737b8d; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.ridge-messages .ridge-conversation-header .ridge-chat-title { min-width: 0; flex: 1; overflow: hidden; color: var(--news-ink,#0f172a); font-weight: 650; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.ridge-chat-settings-wrap { position: relative; flex: 0 0 auto; }
+.ridge-chat-settings-button,.ridge-chat-settings-actions button { min-height: 38px; padding: 0 13px; border: 1px solid #e6e8ef; border-radius: 999px; background: #fff; color: #2f4be0; font: inherit; font-weight: 600; cursor: pointer; }
+.ridge-chat-settings-button { width: 42px; padding: 0; font-size: 22px; line-height: 1; }
+.ridge-chat-settings { position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; display: grid; width: min(300px, calc(100vw - 40px)); gap: 12px; padding: 16px; border: 1px solid #e6e8ef; border-radius: 16px; background: #fff; font-family: "Be Vietnam Pro",system-ui,sans-serif; }
+.ridge-chat-settings > label { display: grid; gap: 5px; color: #30384a; font-size: 13px; font-weight: 600; }
+.ridge-chat-settings small { color: #737b8d; font-size: 11px; font-weight: 400; }
+.ridge-chat-settings input:not([type="checkbox"]) { width: 100%; min-height: 38px; padding: 0 10px; border: 1px solid #e6e8ef; border-radius: 10px; color: #172033; font: inherit; }
+.ridge-chat-settings-actions { display: flex; gap: 8px; }
+.ridge-quick-icons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.ridge-quick-icons button,.ridge-quick-icon-reset { min-height: 34px; border: 1px solid #e6e8ef; border-radius: 9px; background: #fff; cursor: pointer; }
+.ridge-quick-icons button { font-size: 19px; }
+.ridge-quick-icons button[aria-pressed="true"] { border-color: #2f4be0; background: #eef1ff; }
+.ridge-quick-icon-reset { justify-self: start; padding: 0 12px; color: #2f4be0; }
+.ridge-mute-toggle { display: flex !important; grid-template-columns: auto 1fr; align-items: center; }
+.ridge-mute-toggle input { accent-color: #2f4be0; }
+.ridge-message-sender-name { display: block; margin: 0 0 3px 8px; color: #737b8d; font-size: 11px; }
+
 .ridge-conversation-preview {
   min-width: 0;
   overflow: hidden;
