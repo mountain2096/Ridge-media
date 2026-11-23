@@ -26,8 +26,8 @@ function nicknameFor(conversation, userId) {
 const QUICK_ICONS = ["❤️", "👍", "😂", "😮", "😢", "🙏", "🔥", "⭐", "🎉", "😍", "👏", "💯"];
 const CHAT_BACKGROUNDS = ["mint", "sky", "peach", "lavender", "sunset", "night", "paper", "pink"];
 const CHAT_BUBBLE_STYLES = ["cat-dog", "frog", "pink-heart", "sky-fish", "duck", "sketch", "dark"];
-const CHAT_BUBBLE_LABELS = { "cat-dog": "Mèo & gấu trúc", duck: "Hải cẩu", "sky-fish": "Cá heo" };
-const CHAT_BUBBLE_IMAGES = { "cat-dog": "cat", frog: "frog", "pink-heart": "heart", "sky-fish": "dolphin", duck: "seal" };
+const CHAT_BUBBLE_LABELS = { "cat-dog": "Mèo", dark: "Gấu trúc", duck: "Hải cẩu", "sky-fish": "Cá heo" };
+const CHAT_BUBBLE_IMAGES = { "cat-dog": "cat", frog: "frog", "pink-heart": "heart", "sky-fish": "dolphin", duck: "seal", dark: "panda" };
 
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const location = useLocation();
