@@ -20,7 +20,7 @@ async function createAndEmitMessage(conversation, senderId, receiverId, data) {
     await conversation.save();
     await newMessage.populate("senderId", "username profilePicture");
     if (newMessage.type === "post_share") await newMessage.populate({ path: "sharedPostId", select: "authorId content image video status", populate: { path: "authorId", select: "username profilePicture" } });
-    const payload = { conversationId: conversation._id.toString(), message: newMessage.toObject() };
+    const payload = { conversationId: conversation._id.toString(), message: { ...newMessage.toObject(), recalledAt: null } };
     emitToUser(receiverId, "message:new", payload);
     emitToUser(senderId, "message:new", payload);
     return newMessage;
@@ -240,7 +240,7 @@ const getMessage = async (req, res) =>{
 
         if (await rejectIfBlocked(conversation, req, res)) return;
 
-        const message = await Message.find({conversationId})
+        const message = await Message.find({conversationId, deletedFor: { $ne: req.user._id }})
         .populate("senderId", "username profilePicture")
         .populate({ path: "sharedPostId", select: "authorId content image video status privacy", populate: { path: "authorId", select: "username profilePicture" } })
         .sort({ createdAt: 1})
@@ -301,8 +301,10 @@ const getConversations = async (req, res) =>{
                     isRead: false
                 });
 
+                const lastMessage = await Message.findOne({ conversationId: conversation._id, deletedFor: { $ne: userId } }).populate("senderId", "username profilePicture").sort({ createdAt: -1 });
                 return {
                     ...conversation.toObject(),
+                    lastMessage,
                     unreadCount,
                     isMuted,
                 }
@@ -408,6 +410,47 @@ const updateNickname = async (req, res) => {
     }
 };
 
+const deleteMessageForMe = async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+        if (!message) return res.status(404).json({ message: "KhÃ´ng tÃ¬m tháº¥y tin nháº¯n!" });
+        const conversation = await Conversation.findById(message.conversationId);
+        if (!conversation?.participants.some((id) => idString(id) === idString(req.user._id))) {
+            return res.status(403).json({ message: "Báº¡n khÃ´ng thuá»™c cuá»™c trÃ² chuyá»‡n nÃ y!" });
+        }
+        await Message.updateOne({ _id: message._id }, { $addToSet: { deletedFor: req.user._id } });
+        const payload = { messageId: idString(message._id), conversationId: idString(message.conversationId) };
+        emitToUser(req.user._id, "message:deleted", payload);
+        return res.status(200).json({ message: "ÄÃ£ xÃ³a tin nháº¯n!" });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID tin nháº¯n khÃ´ng há»£p lá»‡!" });
+        return errorResponse(res, error);
+    }
+};
+
+const recallMessage = async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+        if (!message) return res.status(404).json({ message: "KhÃ´ng tÃ¬m tháº¥y tin nháº¯n!" });
+        if (idString(message.senderId) !== idString(req.user._id)) return res.status(403).json({ message: "Chá»‰ ngÆ°á»i gá»­i cÃ³ thá»ƒ thu há»“i tin nháº¯n!" });
+        if (!message.recalledAt) {
+            message.recalledAt = new Date();
+            message.content = "Tin nh\u1eafn \u0111\u00e3 \u0111\u01b0\u1ee3c thu h\u1ed3i";
+            message.mediaUrl = null;
+            message.stickerId = null;
+            message.sharedPostId = null;
+            await message.save();
+        }
+        const payload = { messageId: idString(message._id), conversationId: idString(message.conversationId) };
+        const conversation = await Conversation.findById(message.conversationId);
+        for (const participant of conversation?.participants || [req.user._id]) emitToUser(participant, "message:recalled", payload);
+        return res.status(200).json({ message });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID tin nháº¯n khÃ´ng há»£p lá»‡!" });
+        return errorResponse(res, error);
+    }
+};
+
 const setConversationMute = async (req, res) => {
     try {
         const { conversationId } = req.params;
@@ -498,4 +541,6 @@ module.exports = {
     setConversationMute,
     setConversationQuickIcon,
     setConversationAppearance,
+    deleteMessageForMe,
+    recallMessage,
 };

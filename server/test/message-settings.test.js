@@ -58,12 +58,13 @@ test("mute changes only the requesting participant's muted state", async () => {
 });
 
 test("getConversations returns nicknames and excludes muted unread messages", async () => {
-  const original = { find: Conversation.find, usersFind: User.find, count: Message.countDocuments };
+  const original = { find: Conversation.find, usersFind: User.find, count: Message.countDocuments, latest: Message.findOne };
   const items = [conversation({ mutedBy: [ME], nicknames: [{ user: OTHER, nickname: "Buddy" }], quickIcon: "❤️", background: "mint", bubbleStyle: "frog" }), conversation({ _id: "second", participants: [ME, OUTSIDER] })];
   Conversation.find = () => ({ populate() { return this; }, sort: async () => items });
   User.find = () => ({ select: async () => [{ _id: OTHER, blockList: [] }, { _id: OUTSIDER, blockList: [] }] });
   let countCalls = 0;
   Message.countDocuments = async () => { countCalls += 1; return 3; };
+  Message.findOne = (filter) => ({ populate() { return this; }, sort: async () => ({ content: "visible", senderId: OTHER, filter }) });
   try {
     const res = response();
     await getConversations({ user: { _id: ME, blockList: [] } }, res);
@@ -75,7 +76,7 @@ test("getConversations returns nicknames and excludes muted unread messages", as
     assert.equal(res.body.conversations[0].bubbleStyle, "frog");
     assert.equal(res.body.conversations[1].unreadCount, 3);
     assert.equal(countCalls, 1);
-  } finally { Conversation.find = original.find; User.find = original.usersFind; Message.countDocuments = original.count; }
+  } finally { Conversation.find = original.find; User.find = original.usersFind; Message.countDocuments = original.count; Message.findOne = original.latest; }
 });
 
 test("conversation appearance can be set and reset by either participant", async () => {

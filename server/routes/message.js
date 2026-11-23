@@ -1,11 +1,14 @@
 const express = require("express");
 
 const protect = require("../middlewares/protect");
-const {sendMessage, createOrGetConversation, getMessage, getConversations, markMessageIsRead, updateNickname, setConversationMute, setConversationQuickIcon, setConversationAppearance } = require("../controllers/messageCotrollers");
+const {sendMessage, createOrGetConversation, getMessage, getConversations, markMessageIsRead, updateNickname, setConversationMute, setConversationQuickIcon, setConversationAppearance, deleteMessageForMe, recallMessage } = require("../controllers/messageCotrollers");
 
 const { reactToMessage } = require("../controllers/reactionControllers");
 
 const router = express.Router();
+
+router.delete("/message/:messageId", protect, deleteMessageForMe);
+router.patch("/message/:messageId/recall", protect, recallMessage);
 
 router.post(
     "/conversation/:userId",

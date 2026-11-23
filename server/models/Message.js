@@ -38,6 +38,9 @@ const messageSchema = new mongoose.Schema(
 
         sharedPostId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: null },
 
+        deletedFor: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], default: [] },
+        recalledAt: { type: Date, default: null },
+
         isRead: {
             type: Boolean,
             default: false,
