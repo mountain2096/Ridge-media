@@ -62,7 +62,11 @@ html[data-theme="dark"] .ridge-message-list { background-color: var(--news-bg); 
 html[data-theme="dark"] .ridge-conversation-header,
 html[data-theme="dark"] .ridge-chat-settings,
 html[data-theme="dark"] .ridge-msg-menu { color: var(--news-ink); }
-html[data-theme="dark"] .ridge-conversation-panel .ridge-chat-settings-button { border-color: var(--news-border); background: var(--news-field); color: var(--news-ink); }
+html[data-theme="dark"] .ridge-conversation-panel:not([class*="chat-bg-"]) { --chat-ink: var(--news-ink); --chat-muted: var(--news-muted); --chat-surface: var(--news-surface); --chat-field: var(--news-field); --chat-border: var(--news-border); }
+html[data-theme="dark"] .ridge-conversation-panel .ridge-chat-settings-button,
+html[data-theme="dark"] .ridge-conversation-panel .ridge-msg-more { border-color: var(--chat-border, var(--news-border)); background: var(--chat-field, var(--news-field)); color: var(--chat-ink, var(--news-ink)); }
+html[data-theme="dark"] .ridge-conversation-panel .ridge-chat-settings-button:hover,
+html[data-theme="dark"] .ridge-conversation-panel .ridge-msg-more:hover { background: var(--chat-surface, var(--news-hover)); }
 html[data-theme="dark"] .ridge-msg-menu button:hover,
 html[data-theme="dark"] .ridge-conversation-list .active { background: var(--news-hover); }
 

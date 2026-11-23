@@ -218,6 +218,9 @@
 .ridge-chat-settings-wrap { position: relative; flex: 0 0 auto; }
 .ridge-chat-settings-button,.ridge-chat-settings-actions button { min-height: 38px; padding: 0 13px; border: 1px solid #e6e8ef; border-radius: 999px; background: #fff; color: #2f4be0; font: inherit; font-weight: 600; cursor: pointer; }
 .ridge-chat-settings-button { width: 42px; padding: 0; font-size: 22px; line-height: 1; }
+.ridge-conversation-panel .ridge-chat-settings-button { border-color: var(--chat-border, var(--news-border, #e6e8ef)); background: var(--chat-field, var(--news-field, #f8f9fc)); color: var(--chat-ink, var(--news-ink, #0f172a)); }
+.ridge-conversation-panel .ridge-chat-settings-button:hover { background: var(--chat-surface, var(--news-hover, #eef0f7)); }
+.ridge-conversation-panel .ridge-chat-settings-button:focus-visible { outline-color: var(--chat-border, var(--news-accent, #2f4be0)); }
 .ridge-chat-settings { position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; display: grid; width: min(320px, calc(100vw - 32px)); max-height: min(70dvh, 620px); gap: 12px; overflow-y: auto; padding: 16px; border: 1px solid #e6e8ef; border-radius: 16px; background: #fff; font-family: "Be Vietnam Pro",system-ui,sans-serif; }
 .ridge-chat-settings > label { display: grid; gap: 5px; color: #30384a; font-size: 13px; font-weight: 600; }
 .ridge-chat-settings small { color: #737b8d; font-size: 11px; font-weight: 400; }
@@ -459,9 +462,9 @@
 .ridge-messages .ridge-reply-bar strong { font-size: 12px; }
 .ridge-messages .ridge-reply-bar span { color: currentColor; opacity: .78; font-size: 12px; }
 .ridge-messages .ridge-message-compose .ridge-reply-bar button { width: 30px; height: 30px; flex: 0 0 30px; border: 0; border-radius: 50%; background: transparent; color: currentColor; font-size: 22px; }
-.ridge-messages .ridge-message-reply-quote { display: grid; width: 100%; max-width: 100%; gap: 2px; margin: 0 0 7px; padding: 5px 8px; border: 0; border-left: 3px solid var(--chat-accent-border, #5268d8); border-radius: 4px; background: #f1f5f9; color: #243047; color-scheme: light; text-align: left; cursor: pointer; forced-color-adjust: none; }
-.ridge-messages .ridge-message-reply-quote strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
-.ridge-messages .ridge-message-reply-quote span { display: -webkit-box; overflow: hidden; opacity: .82; font-size: 12px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.ridge-messages .ridge-message-reply-quote { display: grid; width: 100%; max-width: 100%; gap: 2px; margin: 0 0 7px; padding: 6px 10px; border: 0; border-left: 3px solid var(--chat-accent-border, #5268d8); border-radius: 4px; background: color-mix(in srgb, currentColor 12%, transparent); color: inherit; text-align: left; cursor: pointer; }
+.ridge-messages .ridge-message-reply-quote strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 700; }
+.ridge-messages .ridge-message-reply-quote span { display: -webkit-box; overflow: hidden; font-size: 13px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .ridge-messages .ridge-message-row.reply-flash .ridge-message-bubble { animation: ridge-reply-flash 1.5s ease-out; }
 @keyframes ridge-reply-flash { 0%, 35% { outline: 3px solid var(--chat-accent-border, #5268d8); } 100% { outline: 3px solid transparent; } }
 
@@ -615,12 +618,13 @@
 .ridge-messages .ridge-message-bubble.media .ridge-chat-media-link { width: min(320px, 68vw); }
 .ridge-messages .ridge-message-bubble.media .ridge-chat-media-link .ridge-chat-media { max-height: 360px; }
 .ridge-messages .ridge-msg-menu-wrap { align-self: center; }
-.ridge-messages .ridge-msg-actions button.ridge-react-main,
-.ridge-messages .ridge-msg-actions button.ridge-msg-more { box-sizing: border-box; display: grid; width: 28px !important; min-width: 28px; height: 28px !important; min-height: 28px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #8a93a6; }
-.ridge-messages .ridge-msg-actions button.ridge-react-main:hover,
-.ridge-messages .ridge-msg-actions button.ridge-msg-more:hover { background: #eef0f6; }
+.ridge-messages .ridge-msg-actions button.ridge-react-main { box-sizing: border-box; display: grid; width: 28px !important; min-width: 28px; height: 28px !important; min-height: 28px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #8a93a6; }
+.ridge-messages .ridge-msg-actions button.ridge-msg-more { box-sizing: border-box; display: grid; width: 28px !important; min-width: 28px; height: 28px !important; min-height: 28px; place-items: center; padding: 0; border: 1px solid var(--chat-border, var(--news-border, #e6e8ef)); border-radius: 50%; background: var(--chat-field, var(--news-field, #f8f9fc)); color: var(--chat-ink, var(--news-ink, #0f172a)); }
+.ridge-messages .ridge-msg-actions button.ridge-react-main:hover { background: #eef0f6; }
+.ridge-messages .ridge-msg-actions button.ridge-msg-more:hover { background: var(--chat-surface, var(--news-hover, #eef0f7)); }
 .ridge-messages .ridge-msg-actions button.ridge-msg-more { font-size: 0; }
-.ridge-messages .ridge-msg-actions button.ridge-msg-more::after { content: "⋮"; font-size: 20px; line-height: 1; }
+.ridge-messages .ridge-msg-actions button.ridge-msg-more::after { content: "⋮"; font-size: 22px; font-weight: 700; line-height: 1; }
+.ridge-messages .ridge-msg-actions button.ridge-msg-more:focus-visible { outline-color: var(--chat-border, var(--news-accent, #2f4be0)); }
 .ridge-msg-menu { position: fixed; z-index: 1000; display: flex; flex-direction: column; height: auto; min-width: 180px; padding: 6px; overflow: visible; border: 1px solid var(--news-border, #e6e8ef); border-radius: 12px; background: var(--news-surface, #fff); color: var(--news-ink, #0f172a); box-shadow: 0 6px 20px rgb(15 23 42 / 14%); }
 .ridge-msg-menu button { display: block; width: 100%; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--news-ink, #0f172a); font-family: "Be Vietnam Pro", system-ui, sans-serif; font-size: 14px; font-weight: 600; text-align: left; white-space: nowrap; cursor: pointer; }
 .ridge-msg-menu button:hover { background: var(--news-hover, #f1f3f9); }
@@ -874,12 +878,18 @@
 .ridge-conversation-panel.chat-bg-sunset { --chat-ink: #4c3024; --chat-muted: #765647; --chat-surface: #fff7e9; --chat-field: #fff; --chat-border: #e6c6ad; }
 .ridge-conversation-panel.chat-bg-night { --chat-ink: #f8fafc; --chat-muted: #e4e9f4; --chat-surface: #30394d; --chat-field: #252d40; --chat-border: #50596c; }
 .ridge-conversation-panel.chat-bg-starry { --chat-ink: #f1f5ff; --chat-muted: #d5def4; --chat-surface: #1a2f66; --chat-field: #13244e; --chat-border: #3b5bb5; }
+.ridge-conversation-panel.bubble-style-snow { --chat-accent: #cfe3f7; --chat-accent-text: #2b3a4a; --chat-accent-border: #b9c8d8; }
+.ridge-conversation-panel.bubble-style-starry { --chat-accent: #2c4fa3; --chat-accent-text: #f1f5ff; --chat-accent-border: #3b5bb5; }
+.ridge-conversation-panel.bubble-style-ghost { --chat-accent: #ffd1e3; --chat-accent-text: #6b2f4a; --chat-accent-border: #f3b4cf; }
+.ridge-conversation-panel.bubble-style-berry { --chat-accent: #d9c8f5; --chat-accent-text: #3f2a66; --chat-accent-border: #b79ee3; }
 .ridge-conversation-panel.chat-bg-paper { --chat-ink: #3c362a; --chat-muted: #625b4d; --chat-surface: #f6f1e6; --chat-field: #fffdf7; --chat-border: #d6cebd; }
 .ridge-conversation-panel.chat-bg-pink { --chat-ink: #632a42; --chat-muted: #7a4b60; --chat-surface: #fff8fb; --chat-field: #fff; --chat-border: #e8c4d2; }
 .ridge-conversation-panel .ridge-conversation-header { color: var(--chat-ink); }
 .ridge-conversation-panel[class*="chat-bg-"] .ridge-conversation-header .ridge-chat-title,
 .ridge-conversation-panel[class*="chat-bg-"] .ridge-chat-settings-button { color: var(--chat-ink); }
 .ridge-conversation-panel[class*="chat-bg-"] .ridge-chat-settings-button { border-color: var(--chat-border); background: var(--chat-field); }
+.ridge-conversation-panel[class*="bubble-style-"] .ridge-chat-settings-button,
+.ridge-conversation-panel[class*="bubble-style-"] .ridge-msg-more { border-color: var(--chat-accent-border, var(--chat-border)); background: var(--chat-accent, var(--chat-field)); color: var(--chat-accent-text, var(--chat-ink)); }
 .ridge-conversation-panel[class*="chat-bg-"] .ridge-message-sender-name,
 .ridge-conversation-panel[class*="chat-bg-"] .ridge-message-time,
 .ridge-conversation-panel[class*="chat-bg-"] .ridge-message-status,
@@ -902,4 +912,12 @@
 .bubble-style-ghost { --chat-received-surface: #fff0f6; --chat-received-ink: #6b2f4a; }
 .bubble-style-berry { --chat-received-surface: #efe7fb; --chat-received-ink: #3f2a66; }
 .ridge-message-bubble.theirs:not(.post-share):not(.sticker):not(.emoji-only) { background: var(--chat-received-surface, #fff); color: var(--chat-received-ink, #0f172a); }
+
+/* These controls follow the active chat palette; this file loads after dark-mode.css. */
+.ridge-messages .ridge-conversation-panel .ridge-chat-settings-button,
+.ridge-messages .ridge-conversation-panel .ridge-msg-actions button.ridge-msg-more { border-color: var(--chat-accent-border, var(--chat-border, var(--news-border, #e6e8ef))); background: var(--chat-accent, var(--chat-field, var(--news-field, #f8f9fc))); color: var(--chat-accent-text, var(--chat-ink, var(--news-ink, #0f172a))); }
+.ridge-messages .ridge-conversation-panel .ridge-chat-settings-button:hover,
+.ridge-messages .ridge-conversation-panel .ridge-msg-actions button.ridge-msg-more:hover { background: var(--chat-surface, var(--news-hover, #eef0f7)); }
+.ridge-messages .ridge-conversation-panel .ridge-chat-settings-button:focus-visible,
+.ridge-messages .ridge-conversation-panel .ridge-msg-actions button.ridge-msg-more:focus-visible { outline: 2px solid var(--news-accent, #2f4be0); outline-offset: 2px; }
 
