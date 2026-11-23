@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-23, after forced-dark chat contrast (`fix/chat-dark-contrast`).
+> Last updated: 2026-11-23, after message replies (`feat/message-reply`) and forced-dark chat contrast (`fix/chat-dark-contrast`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media` was merged into main; current task branch: `fix/chat-dark-contrast`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media` was merged into main; current task branches: `fix/chat-dark-contrast` and `feat/message-reply` (created from `main`, then merged together).
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -19,7 +19,9 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Merge message replies with dark mode: 156 server tests and 5 client tests passed; lint/build passed; message menu uses `messageMenu.js`, and chat header trigger uses dark theme variables. No browser started.
 - Dark-mode polish, friends actions, and chat contrast: `node --test` passed 148 tests; client lint/build passed. Shared feed cards, post actions, comment/share surfaces, and friend request buttons use theme variables. Chat headers, composer, received bubbles, and story creation card now use explicit contrast pairs; mocked Chromium force-dark and normal screenshots were visually inspected. No API server or MongoDB was started.
+- Message replies: `node --test` passed 152 tests; client lint/build passed. Replies validate same-conversation, unrecalled, sender-visible targets; history and socket previews are viewer-masked, with recall previews hiding media. No browser, API server, or MongoDB was started.
 - Chat recall and conversation menu: `node --test` passed 147 tests; client lint/build passed. Recalled bubbles/previews use sender ownership and requested wording; added the portal-based left-list menu for profile, per-user mute, mark-read, and per-user conversation deletion. No browser, API server, or MongoDB was started.
 - Message recall/delete UI: client lint and build passed; added per-message recall/delete actions, recalled bubble state, and realtime list/message updates. No browser or live API/database was started.
 - Chat media: `node --test` passed 141 tests; chat messages accept validated same-origin image/video uploads with readable previews; no API server, MongoDB, or browser was started.
@@ -93,6 +95,8 @@ Reaction lists: the total count may include blocked or deactivated users while t
 ## 7. Round log
 | Round | Work | Result | Commit |
 |---|---|---|---|
+| 47 | Merge message replies with dark mode; add reply through `messageMenu.js` and fix chat header `...` contrast | 156 server tests, 5 client tests, lint/build passed; no browser started | pending |
+| 46 | Add replies to chat messages with quoted previews, jump-to-original, and recall/deletion masking | `node --test`: 152 passed; client lint/build passed; no API/Vite/database/browser started | `307a7b0` |
 | 40 | Add shared per-conversation background and bubble appearance settings | `node --test`: 140 passed; client lint/build passed; no API/Vite/database/browser started | pending |
 | 0 | Claude reviewed the repository, branches, and initial state | Initially: 92 tests; lint and build passed | `e64c605` |
 | 1 | Cleaned up the worktree and updated project guidance/status | Worktree clean; pushed | `8c2b008` |
@@ -149,6 +153,8 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 45 | Fix dark-mode shared posts/actions and friends buttons; correct chat contrast under Chromium force-dark | `node --test`: 148 passed; client lint/build passed; mocked force-dark and normal Playwright captures inspected; no live API/database | pending |
 
 ## 8. Possible next work (project owner chooses)
+Round 47 merges message replies with dark mode, preserves the `messageMenu.js` action menu, and uses theme variables for the chat header `...` button. Tests, lint, and build passed; no browser started.
+Round 46 adds same-conversation message replies for text, sticker, and media; per-viewer previews hide targets deleted for that viewer, and recalled targets show only the recall label. The composer supports cancel/Escape, and quoted bubbles jump to loaded originals and flash briefly. No browser, API server, or MongoDB was started.
 Round 45 uses theme variables for shared post cards/media surroundings, action and menu contrast, comments, share dialog, and chat shared-post cards. Friends actions use consistent pill outlines/filled accept state and wrap on narrow rows. Chat contrast now pairs the conversation header, composer, received bubbles, and story creation card with their active backgrounds. Mocked force-dark and normal screenshots were inspected for snow, default, night, starry, and the feed story strip.
 Round 44 keeps sender IDs usable whether populated or raw, uses existing mute/read state, and hides existing messages only for the deleting participant; new messages unhide that participant's conversation. The list menu is rendered outside its scrolling container. Browser and live two-user behavior remain for manual verification.
 Round 43 uses the existing recall/delete endpoints. Recall updates both users’ message and preview state; delete removes the message locally and refreshes the conversation preview when needed. No server behavior changed; no browser or live service was started.

@@ -62,6 +62,7 @@ html[data-theme="dark"] .ridge-message-list { background-color: var(--news-bg); 
 html[data-theme="dark"] .ridge-conversation-header,
 html[data-theme="dark"] .ridge-chat-settings,
 html[data-theme="dark"] .ridge-msg-menu { color: var(--news-ink); }
+html[data-theme="dark"] .ridge-conversation-panel .ridge-chat-settings-button { border-color: var(--news-border); background: var(--news-field); color: var(--news-ink); }
 html[data-theme="dark"] .ridge-msg-menu button:hover,
 html[data-theme="dark"] .ridge-conversation-list .active { background: var(--news-hover); }
 
