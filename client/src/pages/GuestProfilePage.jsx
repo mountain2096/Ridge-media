@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
@@ -44,8 +45,8 @@ export default function GuestProfilePage() {
   return <>
     <div className="guest-profile-content">
     <section className="guest-profile-shell">
-      <div className={`public-profile-cover ${profile.coverPicture ? "has-cover" : ""}`}>{profile.coverPicture && <img src={profile.coverPicture} alt="Ảnh bìa" />}</div>
-      <div className="guest-profile-summary"><div className="public-profile-avatar">{profile.profilePicture ? <img src={profile.profilePicture} alt={`Ảnh đại diện của ${profile.username}`} /> : profile.username?.charAt(0).toUpperCase()}</div>
+      <div className={`public-profile-cover ${profile.coverPicture ? "has-cover" : ""}`}>{profile.coverPicture && <img src={resolveMediaUrl(profile.coverPicture)} alt="Ảnh bìa" />}</div>
+      <div className="guest-profile-summary"><div className="public-profile-avatar">{profile.profilePicture ? <img src={resolveMediaUrl(profile.profilePicture)} alt={`Ảnh đại diện của ${profile.username}`} /> : profile.username?.charAt(0).toUpperCase()}</div>
         <div className="guest-profile-identity"><h1>{profile.username}</h1><p>{profile.bio || "Chưa có giới thiệu"}</p><div className="guest-profile-stats">{profile.friendCount ?? profile.friends?.length ?? 0} bạn bè · Tham gia {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("vi-VN") : ""}</div></div>
       </div>
     </section>

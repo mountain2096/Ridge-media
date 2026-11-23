@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import ReactionButton from "./ReactionButton.jsx";
@@ -104,7 +105,7 @@ function CommentItem({
     <div id={`comment-${comment._id}`} className={`comment-item ridge-comment-item ${isReply ? "is-reply" : ""} ${isLastReply ? "is-last-reply" : ""} ${isThreadParent ? "ridge-thread-parent" : ""}`}>
       <div className="ridge-comment-avatar-column">
         <Link className="comment-avatar" to={`/profile/${comment.authorId?._id}`} aria-label={`Xem trang cá nhân ${comment.authorId?.username || "người dùng"}`}>
-          {comment.authorId?.profilePicture ? <img src={comment.authorId.profilePicture} alt="" /> : (comment.authorId?.username || "U").charAt(0).toUpperCase()}
+          {comment.authorId?.profilePicture ? <img src={resolveMediaUrl(comment.authorId.profilePicture)} alt="" /> : (comment.authorId?.username || "U").charAt(0).toUpperCase()}
         </Link>
         {hasReplies && <span className="ridge-comment-spine" aria-hidden="true" />}
       </div>

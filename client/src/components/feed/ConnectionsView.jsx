@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../../lib/api.js";
 import { Link } from "react-router-dom";
 import FriendPresence from "./FriendPresence.jsx";
 
@@ -17,7 +18,7 @@ export default function ConnectionsView({ friendRequests, friendRequestError, is
             {friendRequests.map((request) => (
               <div className="friend-request-row" key={request._id}>
                 <Link className="connection-person-avatar" to={"/profile/" + request.senderId?._id} aria-label={`Xem trang cá nhân ${request.senderId?.username || "người dùng"}`}>
-                  {request.senderId?.profilePicture ? <img src={request.senderId.profilePicture} alt="" /> : (request.senderId?.username?.charAt(0).toUpperCase() || "?")}
+                  {request.senderId?.profilePicture ? <img src={resolveMediaUrl(request.senderId.profilePicture)} alt="" /> : (request.senderId?.username?.charAt(0).toUpperCase() || "?")}
                 </Link>
                 <Link className="connection-person-name profile-name-link" to={"/profile/" + request.senderId?._id}>{request.senderId?.username || "Người dùng"}</Link>
                 <div>
@@ -42,7 +43,7 @@ export default function ConnectionsView({ friendRequests, friendRequestError, is
             {filteredFriends.map((friend) => (
               <div className="connection-friend-row" key={friend._id}>
                 <Link className="connection-person-avatar" to={"/profile/" + friend._id} aria-label={`Xem trang cá nhân ${friend.username}`}>
-                  {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                  {friend.profilePicture ? <img src={resolveMediaUrl(friend.profilePicture)} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
                 </Link>
                 <Link className="connection-person-name profile-name-link" to={"/profile/" + friend._id}>{friend.username}<FriendPresence friend={friend} /></Link>
                 <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
@@ -63,7 +64,7 @@ export default function ConnectionsView({ friendRequests, friendRequestError, is
           {people.map((person) => (
             <div className="person-row" key={person._id}>
               <Link className="person-avatar" to={`/profile/${person._id}`} aria-label={`Xem trang cá nhân ${person.username}`}>
-                {person.profilePicture ? <img src={person.profilePicture} alt="" /> : (person.username?.charAt(0).toUpperCase() || "?")}
+                {person.profilePicture ? <img src={resolveMediaUrl(person.profilePicture)} alt="" /> : (person.username?.charAt(0).toUpperCase() || "?")}
               </Link>
               <div className="person-info">
                 <Link className="profile-name-link" to={`/profile/${person._id}`}>{person.username}</Link>

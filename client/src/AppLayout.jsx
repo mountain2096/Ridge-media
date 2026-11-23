@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "./lib/api.js";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
@@ -59,9 +60,9 @@ function NotificationItem({ item, onOpen, onDelete }) {
     : item.type === "share" ? "M22 3 11 14M22 3l-7 18-4-7-7-4z"
       : item.type.startsWith("friend_") ? "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21v-1a8 8 0 0 1 16 0v1" : null;
   return <div className={`notification-item ${item.isRead ? "read" : "unread"}`} role="button" tabIndex={0} onClick={() => onOpen(item)} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); onOpen(item); } }}>
-    <span className="notification-avatar">{sender.profilePicture ? <img src={sender.profilePicture} alt="" /> : (sender.username?.charAt(0).toUpperCase() || "?")}<span className="notification-kind">{reaction || (badgePath ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d={badgePath} /></svg> : "•")}</span></span>
+    <span className="notification-avatar">{sender.profilePicture ? <img src={resolveMediaUrl(sender.profilePicture)} alt="" /> : (sender.username?.charAt(0).toUpperCase() || "?")}<span className="notification-kind">{reaction || (badgePath ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d={badgePath} /></svg> : "•")}</span></span>
     <span className="notification-copy"><span><strong>{sender.username || "Người dùng"}</strong> {notificationText(item.type, item.reaction, item.commentId)}</span><span className="notification-preview">{preview}</span><time>{notificationTime(item.createdAt)}</time></span>
-    {post?.image ? <img className="notification-thumb" src={post.image} alt="" /> : post?.video ? <span className="notification-thumb notification-video" aria-label="Video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z" /></svg></span> : null}
+    {post?.image ? <img className="notification-thumb" src={resolveMediaUrl(post.image)} alt="" /> : post?.video ? <span className="notification-thumb notification-video" aria-label="Video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z" /></svg></span> : null}
     {!item.isRead && <span className="notification-unread-dot" />}
     <button className="notification-delete" type="button" aria-label="Xóa thông báo" onClick={(event) => { event.stopPropagation(); onDelete(item); }}>✕</button>
   </div>;
@@ -469,7 +470,7 @@ function AppLayout() {
           </div>
           <div className="profile-menu-wrap">
             <button className="profile-menu-trigger" type="button" aria-label="Mở menu tài khoản" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>
-              <span className="user-avatar">{currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : currentUser?.username?.charAt(0).toUpperCase()}</span>
+              <span className="user-avatar">{currentUser?.profilePicture ? <img src={resolveMediaUrl(currentUser.profilePicture)} alt="" /> : currentUser?.username?.charAt(0).toUpperCase()}</span>
               <svg className="profile-menu-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
             </button>
             {profileMenuOpen && <div className="profile-menu">

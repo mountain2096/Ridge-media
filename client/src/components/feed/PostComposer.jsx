@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../../lib/api.js";
 import { useEffect, useRef, useState } from "react";
 
 export default function PostComposer({ currentUser, postContent, onPostContentChange, postPrivacy, onPostPrivacyChange, postImageFile, postVideoFile, onImageFileChange, onVideoFileChange, isPosting, postError, onSubmit }) {
@@ -41,7 +42,7 @@ export default function PostComposer({ currentUser, postContent, onPostContentCh
       <h2>Tạo bài viết</h2>
       <div className="composer-row">
         <span className="composer-avatar">
-          {currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
+          {currentUser?.profilePicture ? <img src={resolveMediaUrl(currentUser.profilePicture)} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
         </span>
         <textarea
           className="create-post-input"

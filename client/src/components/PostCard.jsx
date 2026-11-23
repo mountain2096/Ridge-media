@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CommentItem from "./CommentItem.jsx";
@@ -95,7 +96,7 @@ function PostCard({
       <header className="post-header">
         <div className="post-author">
           <Link className="post-avatar" to={authorId ? `/profile/${authorId}` : "#"} aria-label={`Xem trang cá nhân ${username}`}>
-            {post.authorId?.profilePicture ? <img src={post.authorId.profilePicture} alt="" /> : username.charAt(0).toUpperCase()}
+            {post.authorId?.profilePicture ? <img src={resolveMediaUrl(post.authorId.profilePicture)} alt="" /> : username.charAt(0).toUpperCase()}
           </Link>
           <div className="post-author-info">
             <div className="post-name-row"><Link className="profile-name-link" to={authorId ? `/profile/${authorId}` : "#"}>{username}</Link>{isShare && <span className="post-share-label">đã chia sẻ một bài viết</span>}</div>
@@ -125,19 +126,19 @@ function PostCard({
         </div>
       </header>
 
-      {!isShare && (visiblePost.video ? <div className="post-video-wrap"><RidgeVideo className="post-video" src={visiblePost.video} onExpand={() => navigate(`/reels?post=${post._id}`)} /></div> : visiblePost.image && !failedImagePost ? <img className="post-image" src={visiblePost.image} alt={`Bài viết của ${username}`} loading="lazy" onError={() => onImageError?.(post)} /> : null)}
+      {!isShare && (visiblePost.video ? <div className="post-video-wrap"><RidgeVideo className="post-video" src={resolveMediaUrl(visiblePost.video)} onExpand={() => navigate(`/reels?post=${post._id}`)} /></div> : visiblePost.image && !failedImagePost ? <img className="post-image" src={resolveMediaUrl(visiblePost.image)} alt={`Bài viết của ${username}`} loading="lazy" onError={() => onImageError?.(post)} /> : null)}
       {isShare && shareText && <p className="post-caption post-share-text">{shareText}</p>}
       {isShare ? <article className="shared-post-card">
         {originalPost ? <>
           <header className="shared-post-header">
             <Link className="shared-post-avatar" to={originalPost.authorId?._id ? `/profile/${originalPost.authorId._id}` : "#"} aria-label={`Xem trang cá nhân ${originalUsername}`}>
-              {originalPost.authorId?.profilePicture ? <img src={originalPost.authorId.profilePicture} alt="" /> : originalUsername.charAt(0).toUpperCase()}
+              {originalPost.authorId?.profilePicture ? <img src={resolveMediaUrl(originalPost.authorId.profilePicture)} alt="" /> : originalUsername.charAt(0).toUpperCase()}
             </Link>
             <div><Link className="profile-name-link" to={originalPost.authorId?._id ? `/profile/${originalPost.authorId._id}` : "#"}>{originalUsername}</Link><time title={originalFullDate}>{originalDate}</time></div>
           </header>
           {originalPost.content && <p className={originalPost.image || originalPost.video ? "post-caption" : "post-text"}>{originalPost.content}</p>}
-          {originalPost.image && <img className="shared-post-media" src={originalPost.image} alt={`Bài viết của ${originalUsername}`} loading="lazy" />}
-          {originalPost.video && <div className="post-video-wrap is-shared-video"><RidgeVideo className="shared-post-media" src={originalPost.video} onExpand={() => navigate(`/reels?post=${originalPost._id}`)} /></div>}
+          {originalPost.image && <img className="shared-post-media" src={resolveMediaUrl(originalPost.image)} alt={`Bài viết của ${originalUsername}`} loading="lazy" />}
+          {originalPost.video && <div className="post-video-wrap is-shared-video"><RidgeVideo className="shared-post-media" src={resolveMediaUrl(originalPost.video)} onExpand={() => navigate(`/reels?post=${originalPost._id}`)} /></div>}
         </> : <p className="shared-post-unavailable">Nội dung này không còn khả dụng.</p>}
       </article> : <>
       {editingPostId === post._id ? <form className="post-edit-form" onSubmit={(event) => onUpdatePost(event, post)}>

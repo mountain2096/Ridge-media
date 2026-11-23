@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
@@ -42,7 +43,7 @@ function toSearchItem(user) {
 }
 
 function UserAvatar({ item }) {
-  return <span className="user-search-avatar">{item.avatarUrl ? <img src={item.avatarUrl} alt="" /> : item.displayName.charAt(0).toUpperCase()}</span>;
+  return <span className="user-search-avatar">{item.avatarUrl ? <img src={resolveMediaUrl(item.avatarUrl)} alt="" /> : item.displayName.charAt(0).toUpperCase()}</span>;
 }
 
 function UserSearch({ currentUser }) {

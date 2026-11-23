@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../../lib/api.js";
 export default function StoryStrip({ currentUser, myStoryGroup, storyGroups, storyFeedback, onOpenStory, onAddStory }) {
   return (
     <div className="stories-card card">
@@ -8,7 +9,7 @@ export default function StoryStrip({ currentUser, myStoryGroup, storyGroups, sto
             <button className="story-avatar-button" type="button" aria-label={myStoryGroup ? "Xem story của bạn" : "Ảnh đại diện của bạn"} onClick={() => myStoryGroup && onOpenStory(myStoryGroup)}>
               <span className={`story-ring ${myStoryGroup ? "" : "story-ring-add"}`}>
                 <span className="story-avatar story-self">
-                  {currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
+                  {currentUser?.profilePicture ? <img src={resolveMediaUrl(currentUser.profilePicture)} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
                 </span>
               </span>
             </button>
@@ -30,13 +31,13 @@ export default function StoryStrip({ currentUser, myStoryGroup, storyGroups, sto
               <span className="story-ring">
                 <span className="story-avatar story-blue">
                   {group.author.profilePicture ? (
-                    <img src={group.author.profilePicture} alt="" />
+                    <img src={resolveMediaUrl(group.author.profilePicture)} alt="" />
                   ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
                 </span>
               </span>
               {group.items.at(-1)?.mediaType === "video"
-                ? <video className="story-card-preview" src={group.items.at(-1).mediaUrl} muted playsInline autoPlay />
-                : group.items.at(-1)?.mediaType === "image" && <img className="story-card-preview" src={group.items.at(-1).mediaUrl} alt="" />}
+                ? <video className="story-card-preview" src={resolveMediaUrl(group.items.at(-1).mediaUrl)} muted playsInline autoPlay />
+                : group.items.at(-1)?.mediaType === "image" && <img className="story-card-preview" src={resolveMediaUrl(group.items.at(-1).mediaUrl)} alt="" />}
               <span className="story-name">{group.author.username}</span>
             </button>
           ))}

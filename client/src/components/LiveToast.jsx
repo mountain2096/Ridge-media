@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { resolveMediaUrl } from "../lib/api.js";
 
 const ICON_PATHS = {
   message: "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z",
@@ -25,7 +26,7 @@ function LiveToast({ toast, onOpen, onDismiss }) {
     <div className="ridge-live-toast" role="status" aria-live="polite">
       <button className="ridge-live-toast-main" type="button" onClick={() => onOpen?.(toast)}>
         <span className="ridge-live-toast-avatar" aria-hidden="true">
-          {toast.avatar ? <img src={toast.avatar} alt="" /> : (toast.title?.charAt(0).toUpperCase() || "?")}
+          {toast.avatar ? <img src={resolveMediaUrl(toast.avatar)} alt="" /> : (toast.title?.charAt(0).toUpperCase() || "?")}
           <svg className="ridge-live-toast-kind" viewBox="0 0 24 24"><path d={ICON_PATHS[toast.kind] || ICON_PATHS.notification} /></svg>
         </span>
         <span className="ridge-live-toast-text">

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { resolveMediaUrl } from "../lib/api.js";
 
 function MediaPicker({ label, kind, file, previewUrl, currentUrl, onFileChange, onRemove }) {
   const inputRef = useRef(null);
@@ -31,7 +32,7 @@ function MediaPicker({ label, kind, file, previewUrl, currentUrl, onFileChange, 
       <span className="settings-file-name" title={file?.name || undefined}>
         {file?.name || (currentUrl ? "Ảnh hiện tại" : "Chưa chọn ảnh")}
       </span>
-      {preview && <img className={isAvatar ? "settings-avatar-preview" : "settings-cover-preview"} src={preview} alt={`Xem trước ${label.toLocaleLowerCase("vi")}`} />}
+      {preview && <img className={isAvatar ? "settings-avatar-preview" : "settings-cover-preview"} src={resolveMediaUrl(preview)} alt={`Xem trước ${label.toLocaleLowerCase("vi")}`} />}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
@@ -537,11 +538,11 @@ function ProfilePage({ profileId, embedded = false }) {
 
       <section className="public-profile-shell">
         <div className={`public-profile-cover ${profile.coverPicture ? "has-cover" : ""}`}>
-          {profile.coverPicture && <img src={profile.coverPicture} alt="Ảnh bìa" />}
+          {profile.coverPicture && <img src={resolveMediaUrl(profile.coverPicture)} alt="Ảnh bìa" />}
         </div>
         <div className="public-profile-summary">
           <div className="public-profile-avatar">
-            {profile.profilePicture ? <img src={profile.profilePicture} alt={`Ảnh đại diện của ${profile.username}`} /> : profile.username?.charAt(0).toUpperCase()}
+            {profile.profilePicture ? <img src={resolveMediaUrl(profile.profilePicture)} alt={`Ảnh đại diện của ${profile.username}`} /> : profile.username?.charAt(0).toUpperCase()}
           </div>
           <div className="public-profile-identity">
             <h1>{profile.username}</h1>
@@ -604,7 +605,7 @@ function ProfilePage({ profileId, embedded = false }) {
           <input id="profile-friend-search" className="profile-friend-search" type="search" placeholder="Tìm bạn bè" value={friendSearch} onChange={(event) => setFriendSearch(event.target.value)} />
           {filteredFriends.length ? <div className="profile-friend-grid">
             {filteredFriends.map((friend) => <Link className="profile-friend-card" to={`/profile/${friend._id}`} key={friend._id}>
-              <span className="profile-friend-photo">{friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : friend.username?.charAt(0).toUpperCase()}</span>
+              <span className="profile-friend-photo">{friend.profilePicture ? <img src={resolveMediaUrl(friend.profilePicture)} alt="" /> : friend.username?.charAt(0).toUpperCase()}</span>
               <strong>{friend.username}</strong>
             </Link>)}
           </div> : <p>Không tìm thấy bạn bè nào.</p>}
@@ -620,7 +621,7 @@ function ProfilePage({ profileId, embedded = false }) {
               <header className="profile-panel-heading"><h2>Ảnh</h2></header>
               {featuredImages.length > 0 ? (
                 <div className="profile-featured-photos">
-                  {featuredImages.map((post, index) => <img src={post.image} alt={`Ảnh trong bài viết ${index + 1}`} key={`${post._id || post.image}-${index}`} loading="lazy" />)}
+                  {featuredImages.map((post, index) => <img src={resolveMediaUrl(post.image)} alt={`Ảnh trong bài viết ${index + 1}`} key={`${post._id || post.image}-${index}`} loading="lazy" />)}
                 </div>
               ) : <p className="profile-empty-bio">Chưa có ảnh.</p>}
             </section>
@@ -628,7 +629,7 @@ function ProfilePage({ profileId, embedded = false }) {
               <header className="profile-panel-heading"><h2>Bạn bè {friendCount !== undefined && <span className="profile-card-count">· {friendCount}</span>}</h2>{profile.friends?.length > 9 && <button className="profile-view-more" type="button" onClick={() => setActiveTab("friends")}>Xem thêm</button>}</header>
               {profile.friends?.length ? <div className="profile-friend-grid profile-friend-grid-compact">
                 {profile.friends.slice(0, 9).map((friend) => <Link className="profile-friend-card" to={`/profile/${friend._id}`} key={friend._id}>
-                  <span className="profile-friend-photo">{friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : friend.username?.charAt(0).toUpperCase()}</span>
+                  <span className="profile-friend-photo">{friend.profilePicture ? <img src={resolveMediaUrl(friend.profilePicture)} alt="" /> : friend.username?.charAt(0).toUpperCase()}</span>
                   <strong>{friend.username}</strong>
                 </Link>)}
               </div> : <p className="profile-empty-bio">Chưa có bạn bè</p>}

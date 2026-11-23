@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media` was merged into main; current task branches: `fix/chat-dark-contrast` and `feat/message-reply` (created from `main`, then merged together).
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media` was merged into main; current task branch: `fix/relative-media-urls` (created from updated `main`).
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Relative media URLs (Round 49): 159 server tests; 5 client tests; client lint/build passed. Migration remains unrun.
 - Chat dark-mode controls and reply contrast (Round 48): 156 server tests, 5 client tests, lint/build passed. Mocked Playwright screenshots for dark/light across default, sea, night, snow, starry, ghost, and berry were inspected; default dark dots measured 11.35:1 contrast and light colors stayed unchanged.
 - Message replies (Round 47): 156 server tests and 5 client tests passed; lint/build passed; reply actions use `messageMenu.js`. No browser started for the reply flow.
 - Dark-mode polish, friends actions, and chat contrast: `node --test` passed 148 tests; client lint/build passed. Shared feed cards, post actions, comment/share surfaces, and friend request buttons use theme variables. Chat headers, composer, received bubbles, and story creation card now use explicit contrast pairs; mocked Chromium force-dark and normal screenshots were visually inspected. No API server or MongoDB was started.
@@ -94,6 +95,7 @@ Reels comments support reading and posting top-level comments only; there is no 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
 ## 7. Round log
+| 49 | Keep uploaded media stable across host changes; add URL migration and resolution | 159 server tests, 5 client tests, lint/build passed; migration not run | this commit |
 | Round | Work | Result | Commit |
 |---|---|---|---|
 | 47 | Merge message replies with dark mode; add reply through `messageMenu.js` | 156 server tests, 5 client tests, lint/build passed; no browser started for the reply flow | pending |
@@ -155,6 +157,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 45 | Fix dark-mode shared posts/actions and friends buttons; correct chat contrast under Chromium force-dark | `node --test`: 148 passed; client lint/build passed; mocked force-dark and normal Playwright captures inspected; no live API/database | pending |
 
 ## 8. Possible next work (project owner chooses)
+Round 49 migration: run `node server/scripts/migrate-media-urls.js` for a dry run, back up the database, then use `--apply` (plus `--i-know-this-is-not-demo` only for a deliberately approved non-demo database).
 Round 48 keeps the quoted reply tint and spacing, and fixes the root cause: hard-coded default chat variables kept dark-mode controls light. Dark mode now uses app tokens only for the default chat palette; themed chats and existing light colors stay intact. Mocked Playwright screenshots covered both modes and all seven themes.
 Round 47 merges message replies with dark mode and preserves the `messageMenu.js` action menu. Tests, lint, and build passed; the reply flow was not browser tested.
 Round 46 adds same-conversation message replies for text, sticker, and media; per-viewer previews hide targets deleted for that viewer, and recalled targets show only the recall label. The composer supports cancel/Escape, and quoted bubbles jump to loaded originals and flash briefly. No browser, API server, or MongoDB was started.

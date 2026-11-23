@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../lib/api.js";
 import { useConfirm } from "./ConfirmDialog.jsx";
@@ -74,7 +75,7 @@ function AdminPanel() {
             {users.map((user) => (
               <div className="friend-request-row ridge-admin-user-row" key={user._id}>
                 <span className="ridge-admin-avatar" aria-hidden="true">
-                  {user.profilePicture ? <img src={user.profilePicture} alt="" /> : (user.username?.charAt(0).toUpperCase() || "?")}
+                  {user.profilePicture ? <img src={resolveMediaUrl(user.profilePicture)} alt="" /> : (user.username?.charAt(0).toUpperCase() || "?")}
                 </span>
                 <span className="ridge-admin-user-info">
                   <span className="ridge-admin-user-name">{user.username}</span>

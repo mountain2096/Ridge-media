@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useOutletContext } from "react-router-dom";
 import ReactionButton from "./ReactionButton.jsx";
@@ -375,7 +376,7 @@ function ReelsView() {
           const authorId = post.authorId?._id;
           const summary = summarizeReactions(mergeLegacyLikes(post.reactions, post.likes), currentUser?._id);
           const video = post.video;
-          const videoSrc = typeof video === "string" ? video : video?.url || video?.src;
+          const videoSrc = resolveMediaUrl(typeof video === "string" ? video : video?.url || video?.src);
           const rawRatio = ratios[post._id] || 9 / 16;
           const ratio = Math.min(1, Math.max(9 / 16, rawRatio));
           return <article className="reel-item" data-index={index} key={post._id}>
@@ -386,7 +387,7 @@ function ReelsView() {
             <div className="reel-overlay">
               <div className="reel-author">
                 <Link to={authorId ? `/profile/${authorId}` : "#"} aria-label={`Trang cá nhân ${post.authorId?.username || "Người dùng"}`}>
-                  <span className="reel-avatar">{post.authorId?.profilePicture ? <img src={post.authorId.profilePicture} alt="" /> : post.authorId?.username?.charAt(0).toUpperCase()}</span>
+                  <span className="reel-avatar">{post.authorId?.profilePicture ? <img src={resolveMediaUrl(post.authorId.profilePicture)} alt="" /> : post.authorId?.username?.charAt(0).toUpperCase()}</span>
                   <span>{post.authorId?.username || "Người dùng"}</span>
                 </Link>
               </div>
@@ -419,7 +420,7 @@ function ReelsView() {
           })}
         </div>
         {replyTo && <div className="ridge-reply-bar" role="status"><span>Đang trả lời <strong>{replyTo.username}</strong></span><button type="button" aria-label="Hủy trả lời" onClick={() => { setReplyTo(null); setCommentContent(""); }}>×</button></div>}
-        <form onSubmit={handleCreateComment}><span className="reel-composer-avatar">{currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : currentUser?.username?.charAt(0).toUpperCase()}</span><input ref={commentInputRef} value={commentContent} maxLength={500} onChange={(event) => setCommentContent(event.target.value)} placeholder={replyTo ? `Trả lời ${replyTo.username}...` : "Viết bình luận..."} aria-label="Viết bình luận..." /><button type="submit" aria-label="Gửi" disabled={sendingComment || !commentContent.trim()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button></form>
+        <form onSubmit={handleCreateComment}><span className="reel-composer-avatar">{currentUser?.profilePicture ? <img src={resolveMediaUrl(currentUser.profilePicture)} alt="" /> : currentUser?.username?.charAt(0).toUpperCase()}</span><input ref={commentInputRef} value={commentContent} maxLength={500} onChange={(event) => setCommentContent(event.target.value)} placeholder={replyTo ? `Trả lời ${replyTo.username}...` : "Viết bình luận..."} aria-label="Viết bình luận..." /><button type="submit" aria-label="Gửi" disabled={sendingComment || !commentContent.trim()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button></form>
       </aside>}
       <ReportDialog key={reportTarget?.targetId || reportPostId || "closed"} open={Boolean(reportPost || reportTarget)} targetType={reportTarget?.targetType || "post"} onClose={() => { setReportPostId(""); setReportTarget(null); }} onSubmit={submitReport} />
       <Toast message={toast} onDismiss={() => setToast("")} />

@@ -153,7 +153,7 @@ test("sendMessage accepts only same-origin upload media and derives its type", a
     const { created, emitted, restore } = stubSendMessage();
     try {
         for (const [extension, type, preview] of [["jpg", "image", "Đã gửi một ảnh"], ["webm", "video", "Đã gửi một video"]]) {
-            const mediaUrl = `http://localhost:5000/uploads/123e4567-e89b-42d3-a456-426614174000.${extension}`;
+            const mediaUrl = `/uploads/123e4567-e89b-42d3-a456-426614174000.${extension}`;
             const res = response();
             await sendMessage({ ...request({ mediaUrl, content: "optional" }), protocol: "http", headers: { host: "localhost:5000" }, get(name) { return this.headers[name.toLowerCase()]; } }, res);
             assert.equal(res.statusCode, 201);
