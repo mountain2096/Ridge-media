@@ -28,10 +28,14 @@ const THEMES = [
   { key: "cat", label: "Mèo", background: "peach", bubbleStyle: "cat-dog", image: "cat" },
   { key: "frog", label: "Ếch", background: "mint", bubbleStyle: "frog", image: "frog" },
   { key: "heart", label: "Tim hồng", background: "pink", bubbleStyle: "pink-heart", image: "heart" },
-  { key: "dolphin", label: "Cá heo", background: "sky", bubbleStyle: "sky-fish", image: "dolphin" },
+  { key: "dolphin", label: "Cá heo", background: "sky", bubbleStyle: "sky-fish", images: ["dolphin", "jellyfish"] },
   { key: "seal", label: "Hải cẩu", background: "lavender", bubbleStyle: "duck", image: "seal" },
   { key: "panda", label: "Gấu trúc", background: "night", bubbleStyle: "dark", image: "panda" },
   { key: "sketch", label: "Phác thảo", background: "paper", bubbleStyle: "sketch", image: "" },
+  { key: "snow", label: "Tuyết", background: "snow", bubbleStyle: "snow", images: ["snowman", "pinetree"] },
+  { key: "starry", label: "Đêm sao", background: "starry", bubbleStyle: "starry", images: ["sparkles", "glowingstar"] },
+  { key: "ghost", label: "Ma", background: "pink", bubbleStyle: "ghost", images: ["ghost"] },
+  { key: "berry", label: "Quả mọng", background: "lavender", bubbleStyle: "berry", images: ["grapes", "blueberries"] },
 ];
 
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
@@ -674,7 +678,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                   <button className="ridge-quick-icon-reset" type="button" onClick={() => void saveQuickIcon("")}>Đặt lại</button>
                   <strong>Chủ đề</strong>
                   <div className="ridge-appearance-options ridge-theme-options" aria-label="Chọn chủ đề">
-                    {THEMES.map(({ key, label, background, bubbleStyle, image }) => <button key={key} className={`ridge-theme-chip chat-bg-${background} bubble-preview-${bubbleStyle}`} type="button" aria-pressed={activeConversation.background === background && activeConversation.bubbleStyle === bubbleStyle} onClick={() => void saveAppearance({ background, bubbleStyle })}>{image && <img src={`/chat-art/${image}.webp`} alt="" />}<span>{label}</span></button>)}
+                    {THEMES.map(({ key, label, background, bubbleStyle, image, images }) => <button key={key} className={`ridge-theme-chip chat-bg-${background} bubble-preview-${bubbleStyle}`} type="button" aria-pressed={activeConversation.background === background && activeConversation.bubbleStyle === bubbleStyle} onClick={() => void saveAppearance({ background, bubbleStyle })}>{(images || (image ? [image] : [])).map((art) => <img key={art} src={`/chat-art/${art}.webp`} alt="" />)}<span>{label}</span></button>)}
                     <button className="ridge-appearance-reset" type="button" aria-pressed={!activeConversation.background && !activeConversation.bubbleStyle} onClick={() => void saveAppearance({ background: "", bubbleStyle: "" })}>Mặc định</button>
                   </div>
                 </div>}

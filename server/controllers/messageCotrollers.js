@@ -428,8 +428,8 @@ const setConversationQuickIcon = async (req, res) => {
     }
 };
 
-const CHAT_BACKGROUNDS = ["mint", "sky", "peach", "lavender", "sunset", "night", "paper", "pink"];
-const CHAT_BUBBLE_STYLES = ["cat-dog", "frog", "pink-heart", "sky-fish", "duck", "sketch", "dark"];
+const CHAT_BACKGROUNDS = ["mint", "sky", "peach", "lavender", "sunset", "night", "paper", "pink", "snow", "starry"];
+const CHAT_BUBBLE_STYLES = ["cat-dog", "frog", "pink-heart", "sky-fish", "duck", "sketch", "dark", "snow", "starry", "ghost", "berry"];
 
 const setConversationAppearance = async (req, res) => {
     try {

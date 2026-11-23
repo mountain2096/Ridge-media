@@ -569,6 +569,50 @@
 .ridge-messages .bubble-style-sketch .ridge-message-compose button,
 .ridge-messages .bubble-style-dark .ridge-message-compose button { border: 1px solid var(--chat-accent-border); background: var(--chat-accent); color: var(--chat-accent-text); }
 
+.ridge-conversation-panel.chat-bg-snow .ridge-conversation-header,.ridge-message-list.chat-bg-snow { background: linear-gradient(145deg, #eef2f6, #f8fbff); }
+.ridge-conversation-panel.chat-bg-starry .ridge-conversation-header,.ridge-message-list.chat-bg-starry { background: linear-gradient(145deg, #0d1b3d, #1a2f66); color: #f1f5ff; }
+.ridge-conversation-panel.chat-bg-starry .ridge-conversation-header .ridge-chat-title { color: #f1f5ff; }
+.ridge-message-list.chat-bg-starry .empty-messages,.ridge-message-list.chat-bg-starry .ridge-message-state,.ridge-message-list.chat-bg-starry .ridge-message-sender-name,.ridge-message-list.chat-bg-starry .ridge-message-status,.ridge-message-list.chat-bg-starry .ridge-typing { color: #e4e9f4; }
+.ridge-message-list.chat-bg-starry .ridge-message-time { color: #c4cee7; }
+.ridge-message-list.chat-bg-starry .ridge-message-bubble.mine .ridge-message-time { color: rgb(255 255 255 / 82%); }
+.ridge-message-list.chat-bg-star‌ry { color: #f1f5ff; }
+.bubble-style-snow { --chat-accent: #cfe3f7; --chat-accent-text: #2b3a4a; --chat-accent-border: #b9c8d8; }
+.bubble-style-starry { --chat-accent: #2c4fa3; --chat-accent-text: #f1f5ff; --chat-accent-border: #3b5bb5; }
+.bubble-style-ghost { --chat-accent: #ffd1e3; --chat-accent-text: #6b2f4a; --chat-accent-border: #f3b4cf; }
+.bubble-style-berry { --chat-accent: #d9c8f5; --chat-accent-text: #3f2a66; --chat-accent-border: #b79ee3; }
+.bubble-style-snow .ridge-conversation-header,.bubble-style-starry .ridge-conversation-header,.bubble-style-ghost .ridge-conversation-header,.bubble-style-berry .ridge-conversation-header { border-bottom-color: var(--chat-accent-border); }
+.bubble-style-snow .ridge-chat-settings-button,.bubble-style-starry .ridge-chat-settings-button,.bubble-style-ghost .ridge-chat-settings-button,.bubble-style-berry .ridge-chat-settings-button { border-color: var(--chat-accent-border); background: var(--chat-accent); color: var(--chat-accent-text); }
+.ridge-messages .bubble-style-snow .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),.ridge-messages .bubble-style-starry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),.ridge-messages .bubble-style-ghost .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),.ridge-messages .bubble-style-berry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { position: relative; }
+.bubble-style-snow .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border-color: #b9c8d8; background: #f1f5f9; color: #2b3a4a; }
+.bubble-style-snow .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #cfe3f7; }
+.bubble-style-starry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border-color: #3b5bb5; background: #1e3470; color: #f1f5ff; }
+.bubble-style-starry .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #2c4fa3; }
+.bubble-style-ghost .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border-color: #f3b4cf; background: #fff0f6; color: #6b2f4a; }
+.bubble-style-ghost .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #ffd1e3; }
+.bubble-style-berry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border-color: #b79ee3; background: #efe7fb; color: #3f2a66; }
+.bubble-style-berry .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #d9c8f5; }
+.ridge-messages .bubble-style-snow .ridge-message-bubble.mine.emoji-only,.ridge-messages .bubble-style-starry .ridge-message-bubble.mine.emoji-only,.ridge-messages .bubble-style-ghost .ridge-message-bubble.mine.emoji-only,.ridge-messages .bubble-style-berry .ridge-message-bubble.mine.emoji-only { border-color: var(--chat-accent-border); background: var(--chat-accent); color: var(--chat-accent-text); }
+.bubble-style-snow .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-ghost .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-berry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time { color: #4b5565; }
+.bubble-style-starry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time { color: #e4e9f4; }
+.bubble-style-snow .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after,.bubble-style-starry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after,.bubble-style-ghost .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after,.bubble-style-berry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after { position: absolute; top: -12px; right: 8px; width: 24px; height: 24px; background: center / contain no-repeat; content: ""; pointer-events: none; }
+.bubble-style-snow .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only)::after { background-image: url("/chat-art/snowman.webp"); }
+.bubble-style-snow .ridge-message-bubble.theirs:not(.post-share):not(.sticker):not(.emoji-only)::after { background-image: url("/chat-art/pinetree.webp"); }
+.bubble-style-starry .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only)::after { background-image: url("/chat-art/sparkles.webp"); }
+.bubble-style-starry .ridge-message-bubble.theirs:not(.post-share):not(.sticker):not(.emoji-only)::after { background-image: url("/chat-art/glowingstar.webp"); }
+.bubble-style-ghost .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after { background-image: url("/chat-art/ghost.webp"); }
+.bubble-style-berry .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only)::after { background-image: url("/chat-art/grapes.webp"); }
+.bubble-style-berry .ridge-message-bubble.theirs:not(.post-share):not(.sticker):not(.emoji-only)::after { background-image: url("/chat-art/blueberries.webp"); }
+.bubble-style-sky-fish .ridge-message-bubble.theirs:not(.post-share):not(.sticker):not(.emoji-only)::after { background-image: url("/chat-art/jellyfish.webp"); }
+.ridge-messages .bubble-style-snow .ridge-message-compose input,.ridge-messages .bubble-style-starry .ridge-message-compose input,.ridge-messages .bubble-style-ghost .ridge-message-compose input,.ridge-messages .bubble-style-berry .ridge-message-compose input { border-color: var(--chat-accent-border); }
+.ridge-messages .bubble-style-snow .ridge-message-compose input:focus-visible,.ridge-messages .bubble-style-starry .ridge-message-compose input:focus-visible,.ridge-messages .bubble-style-ghost .ridge-message-compose input:focus-visible,.ridge-messages .bubble-style-berry .ridge-message-compose input:focus-visible { border-color: var(--chat-accent-border); outline-color: var(--chat-accent-border); }
+.ridge-messages .bubble-style-snow .ridge-message-compose button,.ridge-messages .bubble-style-starry .ridge-message-compose button,.ridge-messages .bubble-style-ghost .ridge-message-compose button,.ridge-messages .bubble-style-berry .ridge-message-compose button { border: 1px solid var(--chat-accent-border); background: var(--chat-accent); color: var(--chat-accent-text); }
+.ridge-theme-chip.bubble-preview-snow { background: linear-gradient(135deg, #cfe3f7 0 50%, #f1f5f9 50%) !important; color: #2b3a4a; }
+.ridge-theme-chip.bubble-preview-starry { background: linear-gradient(135deg, #2c4fa3 0 50%, #1e3470 50%) !important; color: #f1f5ff; }
+.ridge-theme-chip.bubble-preview-ghost { background: linear-gradient(135deg, #ffd1e3 0 50%, #fff0f6 50%) !important; color: #6b2f4a; }
+.ridge-theme-chip.bubble-preview-berry { background: linear-gradient(135deg, #d9c8f5 0 50%, #efe7fb 50%) !important; color: #3f2a66; }
+.chat-bg-swatch.chat-bg-snow { background: linear-gradient(145deg, #eef2f6, #f8fbff); }
+.chat-bg-swatch.chat-bg-starry { background: linear-gradient(145deg, #0d1b3d, #1a2f66); }
+
 .ridge-messages .ridge-message-compose button:hover:not(:disabled) {
   filter: brightness(0.94);
 }

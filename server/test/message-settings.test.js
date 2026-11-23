@@ -90,6 +90,11 @@ test("conversation appearance can be set and reset by either participant", async
     const reset = response();
     await setConversationAppearance({ params: { conversationId: CID }, body: { background: "", bubbleStyle: "" }, user: { _id: OTHER } }, reset);
     assert.deepEqual(reset.body, { background: "", bubbleStyle: "" });
+    for (const [background, bubbleStyle] of [["snow", "snow"], ["starry", "starry"], ["pink", "ghost"], ["lavender", "berry"]]) {
+      const accepted = response();
+      await setConversationAppearance({ params: { conversationId: CID }, body: { background, bubbleStyle }, user: { _id: ME } }, accepted);
+      assert.equal(accepted.statusCode, 200);
+    }
   } finally { Conversation.findById = original; }
 });
 
