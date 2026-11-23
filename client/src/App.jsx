@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { API_BASE } from "./lib/api.js";
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext, Link } from "react-router-dom";
 import AppLayout from "./AppLayout.jsx";
@@ -144,6 +144,14 @@ function AuthRoute(){
   return token ? <Navigate to="/feed" replace/>:<AuthPage/>
 }
 function App() {
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const handleStorage = (event) => {
+      if (event.key === "token" && event.newValue !== token) window.location.reload();
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   return (
     <Routes>
