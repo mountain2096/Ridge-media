@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
 import { getSocket } from "../lib/socket.js";
@@ -63,8 +63,11 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [messageMenuId, setMessageMenuId] = useState(null);
+  const [messageMenuStyle, setMessageMenuStyle] = useState({});
   const [nicknameDrafts, setNicknameDrafts] = useState({ me: "", other: "" });
   const messageListRef = useRef(null);
+  const messageMenuButtonRef = useRef(null);
+  const messageMenuRef = useRef(null);
   const messageInputRef = useRef(null);
   const mediaInputRef = useRef(null);
   const emojiToggleRef = useRef(null);
@@ -85,6 +88,32 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     return () => {
       document.removeEventListener("pointerdown", closeOnOutsideClick);
       document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [messageMenuId]);
+
+  useLayoutEffect(() => {
+    if (!messageMenuId || !messageMenuButtonRef.current || !messageMenuRef.current || !messageListRef.current) return undefined;
+    const placeMenu = () => {
+      const panel = messageListRef.current.getBoundingClientRect();
+      const button = messageMenuButtonRef.current.getBoundingClientRect();
+      const menu = messageMenuRef.current.getBoundingClientRect();
+      const width = Math.min(190, panel.width - 16);
+      const isMine = messageMenuButtonRef.current.closest(".ridge-message-row")?.classList.contains("mine");
+      const left = Math.max(panel.left + 8, Math.min(
+        isMine ? button.right - width : button.left,
+        panel.right - width - 8,
+      ));
+      const above = button.top - panel.top >= menu.height + 8;
+      const top = above ? button.top - menu.height - 8 : button.bottom + 8;
+      setMessageMenuStyle({ left, top, width, minWidth: width, boxSizing: "border-box", "--menu-pointer-x": `${Math.max(12, Math.min(width - 12, button.left + button.width / 2 - left))}px` });
+      messageMenuRef.current.dataset.placement = above ? "above" : "below";
+    };
+    placeMenu();
+    window.addEventListener("resize", placeMenu);
+    window.addEventListener("scroll", placeMenu, true);
+    return () => {
+      window.removeEventListener("resize", placeMenu);
+      window.removeEventListener("scroll", placeMenu, true);
     };
   }, [messageMenuId]);
 
@@ -771,7 +800,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               {!isLoadingMessages && messages.length === 0 && (
                 <p className="empty-messages">Hãy gửi lời chào đầu tiên.</p>
               )}
-              {messages.map((message, index) => {
+              {messages.map((message) => {
                 const isMine = message.senderId?._id === currentUser?._id;
                 const isRecalled = Boolean(message.recalledAt);
                 const reactionSummary = summarizeReactions(isRecalled ? [] : message.reactions, currentUser?._id);
@@ -808,9 +837,9 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                           idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>}
                           onReact={(type) => void handleReactMessage(message, type)}
                         />
-                        <div className={`ridge-msg-menu-wrap${index >= messages.length - 3 ? " flip" : ""}`}>
-                          <button className="ridge-msg-more" type="button" aria-label="Tùy chọn tin nhắn" aria-expanded={messageMenuId === message._id} onClick={() => setMessageMenuId((id) => id === message._id ? null : message._id)}>···</button>
-                          {messageMenuId === message._id && <div className="ridge-msg-menu" role="menu">
+                        <div className="ridge-msg-menu-wrap">
+                          <button ref={messageMenuId === message._id ? messageMenuButtonRef : null} className="ridge-msg-more" type="button" aria-label="Tùy chọn tin nhắn" aria-expanded={messageMenuId === message._id} onClick={() => setMessageMenuId((id) => id === message._id ? null : message._id)}>···</button>
+                          {messageMenuId === message._id && <div ref={messageMenuRef} className="ridge-msg-menu" style={messageMenuStyle} role="menu">
                             {isMine && !message.recalledAt && <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "recall")}>Thu hồi</button>}
                             <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "delete")}>Xóa ở phía tôi</button>
                           </div>}
