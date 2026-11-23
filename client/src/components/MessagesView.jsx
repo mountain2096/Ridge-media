@@ -74,6 +74,20 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const incomingTypingTimerRef = useRef(0);
   const ownTypingRef = useRef({ active: false, lastSentAt: 0, timer: 0 });
 
+  useEffect(() => {
+    if (!messageMenuId) return undefined;
+    const closeOnOutsideClick = (event) => {
+      if (!event.target.closest?.(".ridge-msg-menu-wrap")) setMessageMenuId(null);
+    };
+    const closeOnEscape = (event) => { if (event.key === "Escape") setMessageMenuId(null); };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [messageMenuId]);
+
   const filteredConversations = useMemo(() => conversations.filter((conversation) => {
     const participant = conversation.participants?.find((person) => person._id !== currentUser?._id);
     return normalizeName(nicknameFor(conversation, participant?._id) || participant?.username || "").includes(normalizeName(conversationSearch));
@@ -757,7 +771,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               {!isLoadingMessages && messages.length === 0 && (
                 <p className="empty-messages">Hãy gửi lời chào đầu tiên.</p>
               )}
-              {messages.map((message) => {
+              {messages.map((message, index) => {
                 const isMine = message.senderId?._id === currentUser?._id;
                 const isRecalled = Boolean(message.recalledAt);
                 const reactionSummary = summarizeReactions(isRecalled ? [] : message.reactions, currentUser?._id);
@@ -794,7 +808,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                           idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>}
                           onReact={(type) => void handleReactMessage(message, type)}
                         />
-                        <div className="ridge-msg-menu-wrap">
+                        <div className={`ridge-msg-menu-wrap${index >= messages.length - 3 ? " flip" : ""}`}>
                           <button className="ridge-msg-more" type="button" aria-label="Tùy chọn tin nhắn" aria-expanded={messageMenuId === message._id} onClick={() => setMessageMenuId((id) => id === message._id ? null : message._id)}>···</button>
                           {messageMenuId === message._id && <div className="ridge-msg-menu" role="menu">
                             {isMine && !message.recalledAt && <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "recall")}>Thu hồi</button>}
