@@ -1,4 +1,5 @@
 const Conversation = require("../models/Conversation");
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const Message = require("../models/Message");
 const Notification = require("../models/Notification");
@@ -275,7 +276,8 @@ const getConversations = async (req, res) =>{
 
         const conversationWithUnreadCount = await Promise.all(
             visibleConversations.map(async (conversation) =>{
-                const unreadCount = await Message.countDocuments({
+                const isMuted = (conversation.mutedBy || []).some((id) => idString(id) === idString(userId));
+                const unreadCount = isMuted ? 0 : await Message.countDocuments({
                     conversationId: conversation._id,
                     senderId:{$ne: userId},
                     isRead: false
@@ -284,6 +286,7 @@ const getConversations = async (req, res) =>{
                 return {
                     ...conversation.toObject(),
                     unreadCount,
+                    isMuted,
                 }
             })
         )
@@ -358,6 +361,55 @@ const markMessageIsRead = async (req, res) =>{
     }
 }
 
+const updateNickname = async (req, res) => {
+    try {
+        const { conversationId } = req.params;
+        const { userId, nickname } = req.body;
+        if (typeof nickname !== "string" || nickname.trim().length > 40 || !mongoose.isValidObjectId(userId)) {
+            return res.status(400).json({ message: "Biệt danh không hợp lệ!" });
+        }
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) return res.status(404).json({ message: "Không tìm thấy cuộc trò chuyện!" });
+        if (!conversation.participants.some((id) => idString(id) === idString(req.user._id)) ||
+            !conversation.participants.some((id) => idString(id) === idString(userId))) {
+            return res.status(403).json({ message: "Bạn không thuộc cuộc trò chuyện này!" });
+        }
+        conversation.nicknames = (conversation.nicknames || []).filter((item) => idString(item.user) !== idString(userId));
+        if (nickname.trim()) conversation.nicknames.push({ user: userId, nickname: nickname.trim() });
+        await conversation.save();
+        const otherId = getOtherParticipant(conversation, req.user._id);
+        emitToUser(otherId, "conversation:updated", {
+            conversationId: idString(conversation._id),
+            nicknames: conversation.nicknames,
+            isMuted: (conversation.mutedBy || []).some((id) => idString(id) === idString(otherId)),
+        });
+        return res.status(200).json({ nicknames: conversation.nicknames });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID không hợp lệ!" });
+        return errorResponse(res, error);
+    }
+};
+
+const setConversationMute = async (req, res) => {
+    try {
+        const { conversationId } = req.params;
+        const { muted } = req.body;
+        if (typeof muted !== "boolean") return res.status(400).json({ message: "Trạng thái thông báo không hợp lệ!" });
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) return res.status(404).json({ message: "Không tìm thấy cuộc trò chuyện!" });
+        if (!conversation.participants.some((id) => idString(id) === idString(req.user._id))) {
+            return res.status(403).json({ message: "Bạn không thuộc cuộc trò chuyện này!" });
+        }
+        conversation.mutedBy = (conversation.mutedBy || []).filter((id) => idString(id) !== idString(req.user._id));
+        if (muted) conversation.mutedBy.push(req.user._id);
+        await conversation.save();
+        return res.status(200).json({ isMuted: muted });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID cuộc trò chuyện không hợp lệ!" });
+        return errorResponse(res, error);
+    }
+};
+
 module.exports = {
     createOrGetConversation,
     sendMessage,
@@ -367,4 +419,6 @@ module.exports = {
     getMessage,
     getConversations,
     markMessageIsRead,
+    updateNickname,
+    setConversationMute,
 };

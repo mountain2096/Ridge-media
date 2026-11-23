@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Round 35: `node --test` passed 133 tests; client lint and build passed. Added shared conversation nicknames and personal mute controls, with muted threads excluded from unread counts and message toasts. No API, Vite server, database, or browser was started.
 - Round 34: `node --test` passed 128 tests; client lint and build passed. Added GSAP sidebar active-pill movement, post reaction pop/burst/count animation, and one-shot feed-card entrance animation (max 8); added the client GSAP dependency. No browser, API, Vite server, or database was started.
 - Round 33: client lint/build passed; `node --test` passed 128 tests. Added global button press/hover motion, route/profile-tab entrance motion, and Lenis for window scrolling with reduced-motion and nested-scroll exclusions. No browser, API, Vite server, or database was started.
 - Round 32: `node --test` passed 128 tests; client lint and build passed. Sharing now resolves to the root post, supports captions, and exposes a caption field in the share dialog. No API, Vite server, database, or browser was started.
@@ -121,6 +122,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 32 | Resolve post shares to the root post and support share captions in API and UI | `node --test`: 128 passed; client lint/build passed; no API/Vite server/database/browser started | pending |
 | 33 | Add shared button and route motion and Lenis window scrolling, respecting reduced motion and nested scrollers | `node --test`: 128 passed; client lint/build passed; no API/Vite server/database/browser started | `fddebec` |
 | 34 | Add GSAP sidebar pill, post reaction burst/count, and one-shot feed-card entrance motion | `node --test`: 128 passed; client lint/build passed; no API/Vite server/database/browser started; visual motion not browser-verified | this commit |
+| 35 | Add shared per-user conversation nicknames and personal mute settings, including realtime updates and muted unread/toast handling | `node --test`: 133 passed; client lint/build passed; no API/Vite server/database/browser started | this commit |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
@@ -140,6 +142,7 @@ Round 28 uses the existing 56px app header variable for desktop profile sticky p
 Round 29 uses the protected AppLayout route and existing PostCard handlers for direct post links. Notification reads cap at 50, and deleted post/comment references resolve to null in both loaded and realtime payloads. Client/browser interactions were not manually verified.
 Round 33 leaves route scroll restoration and deep-link handling in React Router, excludes modal and nested scrollers from Lenis, and animates profile tab content without changing profile data behavior. Browser scroll restoration and visual timing were not manually verified.
 Round 34 respects reduced motion and scopes GSAP contexts to the sidebar, feed, and post reaction button; it does not animate Reels or chat reactions. Visual timing and collapsed-sidebar movement were not manually verified in a browser.
+Round 35 keeps mute personal to each participant, broadcasts nickname changes through the existing user-room socket helper, and leaves message delivery, read receipts, stickers, reactions, and shared-post payloads unchanged. No live service or browser was used.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.

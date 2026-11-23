@@ -19,6 +19,10 @@ function normalizeName(value = "") {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d").toLowerCase();
 }
 
+function nicknameFor(conversation, userId) {
+  return conversation?.nicknames?.find((item) => (item.user?._id || item.user) === userId)?.nickname;
+}
+
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const location = useLocation();
   const [conversations, setConversations] = useState([]);
@@ -40,6 +44,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [typingConversationId, setTypingConversationId] = useState(null);
   const [syncTick, setSyncTick] = useState(0);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [nicknameDrafts, setNicknameDrafts] = useState({ me: "", other: "" });
   const messageListRef = useRef(null);
   const messageInputRef = useRef(null);
   const emojiToggleRef = useRef(null);
@@ -51,7 +57,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
 
   const filteredConversations = useMemo(() => conversations.filter((conversation) => {
     const participant = conversation.participants?.find((person) => person._id !== currentUser?._id);
-    return normalizeName(participant?.username || "").includes(normalizeName(conversationSearch));
+    return normalizeName(nicknameFor(conversation, participant?._id) || participant?.username || "").includes(normalizeName(conversationSearch));
   }), [conversations, currentUser?._id, conversationSearch]);
   const filteredFriends = useMemo(() => friends.filter((friend) =>
     normalizeName(friend.username || "").includes(normalizeName(friendSearch))
@@ -65,6 +71,36 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     (participant) => participant._id !== currentUser?._id
   );
   const isOtherTyping = Boolean(activeConversationId) && typingConversationId === activeConversationId;
+  const myNickname = nicknameFor(activeConversation, currentUser?._id);
+  const otherNickname = nicknameFor(activeConversation, otherParticipant?._id);
+  const shownOtherName = otherNickname || otherParticipant?.username || "Người dùng";
+
+  async function saveNicknameChanges(clear = false) {
+    const token = localStorage.getItem("token");
+    const values = [[currentUser?._id, clear ? "" : nicknameDrafts.me], [otherParticipant?._id, clear ? "" : nicknameDrafts.other]];
+    for (const [userId, nickname] of values) {
+      const response = await fetch(`${API_BASE}/api/message/conversation/${activeConversationId}/nickname`, {
+        method: "PATCH", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, nickname }),
+      });
+      const data = await response.json();
+      if (!response.ok) { setConversationActionError(data.message || "Không thể lưu biệt danh."); return; }
+      setConversations((items) => items.map((item) => item._id === activeConversationId ? { ...item, nicknames: data.nicknames } : item));
+    }
+    window.dispatchEvent(new Event("ridge:counts-changed"));
+  }
+
+  async function toggleMute() {
+    const muted = !activeConversation?.isMuted;
+    const response = await fetch(`${API_BASE}/api/message/conversation/${activeConversationId}/mute`, {
+      method: "PUT", headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ muted }),
+    });
+    const data = await response.json();
+    if (!response.ok) { setConversationActionError(data.message || "Không thể cập nhật thông báo."); return; }
+    setConversations((items) => items.map((item) => item._id === activeConversationId ? { ...item, isMuted: data.isMuted, unreadCount: data.isMuted ? 0 : item.unreadCount } : item));
+    window.dispatchEvent(new Event("ridge:counts-changed"));
+  }
   const lastOwnMessageId = useMemo(() => {
     for (let index = messages.length - 1; index >= 0; index -= 1) {
       if (messages[index].senderId?._id === currentUser?._id) return messages[index]._id;
@@ -232,7 +268,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       }
       setConversations((items) => items.map((item) => {
         if (item._id !== conversationId) return item;
-        const countsAsUnread = !isMine && !(isActive && isVisible);
+        const countsAsUnread = !item.isMuted && !isMine && !(isActive && isVisible);
         return {
           ...item,
           lastMessage: message,
@@ -247,6 +283,13 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       setMessages((items) => items.map((item) =>
         item.senderId?._id === myId && !item.isRead ? { ...item, isRead: true, readAt } : item
       ));
+    }
+
+    function handleConversationUpdated({ conversationId, nicknames, isMuted } = {}) {
+      setConversations((items) => items.map((item) => item._id === conversationId
+        ? { ...item, nicknames: nicknames || item.nicknames, isMuted: Boolean(isMuted), unreadCount: isMuted ? 0 : item.unreadCount }
+        : item));
+      window.dispatchEvent(new Event("ridge:counts-changed"));
     }
 
     function handleMessageReaction({ conversationId, messageId, reactions } = {}) {
@@ -279,6 +322,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     }
 
     socket.on("message:new", handleNewMessage);
+    socket.on("conversation:updated", handleConversationUpdated);
     socket.on("message:read", handleMessageRead);
     socket.on("message:reaction", handleMessageReaction);
     socket.on("typing", handleTyping);
@@ -287,6 +331,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     return () => {
       window.clearTimeout(incomingTypingTimerRef.current);
       socket.off("message:new", handleNewMessage);
+      socket.off("conversation:updated", handleConversationUpdated);
       socket.off("message:read", handleMessageRead);
       socket.off("message:reaction", handleMessageReaction);
       socket.off("typing", handleTyping);
@@ -548,8 +593,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                     {participant?.profilePicture ? <img src={participant.profilePicture} alt="" /> : (participant?.username?.charAt(0).toUpperCase() || "?")}
                   </span>
                   <span className="conversation-summary ridge-conversation-summary">
-                    <span className="ridge-conversation-top"><span className="ridge-conversation-name">{participant?.username || "Người dùng"}</span>{conversationTime && <time className="ridge-conversation-time">{conversationTime}</time>}</span>
-                    <span className="ridge-conversation-bottom"><span className="ridge-conversation-preview">{lastMessageText}</span>{conversation.unreadCount > 0 && <span className="unread-count ridge-unread-count" aria-label={`${conversation.unreadCount} tin nhắn chưa đọc`}>{conversation.unreadCount}</span>}</span>
+                    <span className="ridge-conversation-top"><span className="ridge-conversation-name">{nicknameFor(conversation, participant?._id) || participant?.username || "Người dùng"}</span>{conversation.isMuted && <svg className="ridge-muted-icon" viewBox="0 0 24 24" role="img" aria-label="Đã tắt thông báo"><path d="M18 9a6 6 0 0 0-10.8-3.6M6 9c0 7-3 7-3 9h18c0-1.2-1-1.8-1.8-3M3 3l18 18M10 21h4" /></svg>}{conversationTime && <time className="ridge-conversation-time">{conversationTime}</time>}</span>
+                    <span className="ridge-conversation-bottom"><span className="ridge-conversation-preview">{lastMessageText}</span>{!conversation.isMuted && conversation.unreadCount > 0 && <span className="unread-count ridge-unread-count" aria-label={`${conversation.unreadCount} tin nhắn chưa đọc`}>{conversation.unreadCount}</span>}</span>
                   </span>
                 </button>
                 <Link className="ridge-profile-link" to={`/profile/${participant?._id}`} aria-label={`Xem trang cá nhân ${participant?.username || "người dùng"}`}>
@@ -572,7 +617,18 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                   <img src={otherParticipant.profilePicture} alt="" />
                 ) : (otherParticipant?.username?.charAt(0).toUpperCase() || "?")}
               </Link>
-              <Link to={`/profile/${otherParticipant?._id}`}>{otherParticipant?.username || "Người dùng"}</Link>
+              <Link className="ridge-chat-title" to={`/profile/${otherParticipant?._id}`}>{shownOtherName}</Link>
+              <div className="ridge-chat-settings-wrap">
+                <button className="ridge-chat-settings-button" type="button" aria-label="Cài đặt cuộc trò chuyện" aria-expanded={settingsOpen} onClick={() => { setNicknameDrafts({ me: myNickname || "", other: otherNickname || "" }); setSettingsOpen((open) => !open); }}>···</button>
+                {settingsOpen && <div className="ridge-chat-settings" role="dialog" aria-label="Cài đặt cuộc trò chuyện">
+                  <strong>Đặt biệt danh</strong>
+                  {conversationActionError && <p className="ridge-list-error" role="alert">{conversationActionError}</p>}
+                  <label>Bạn <small>{currentUser?.username}</small><input maxLength="40" value={nicknameDrafts.me} onChange={(event) => setNicknameDrafts((draft) => ({ ...draft, me: event.target.value }))} /></label>
+                  <label>{shownOtherName} <small>{otherParticipant?.username}</small><input maxLength="40" value={nicknameDrafts.other} onChange={(event) => setNicknameDrafts((draft) => ({ ...draft, other: event.target.value }))} /></label>
+                  <div className="ridge-chat-settings-actions"><button type="button" onClick={() => void saveNicknameChanges()}>Lưu</button><button type="button" onClick={() => void saveNicknameChanges(true)}>Xóa</button></div>
+                  <label className="ridge-mute-toggle"><input type="checkbox" checked={Boolean(activeConversation.isMuted)} onChange={() => void toggleMute()} />Tắt thông báo</label>
+                </div>}
+              </div>
             </header>
             <div className="message-list ridge-message-list" data-lenis-prevent aria-live="polite" ref={messageListRef}>
               {isLoadingMessages && <p className="ridge-message-state">Đang tải tin nhắn...</p>}
@@ -587,6 +643,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                   <Fragment key={message._id}>
                     <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
                       <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
+                        {!isMine && <span className="ridge-message-sender-name">{shownOtherName}</span>}
                         <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}${message.type === "post_share" ? " post-share" : ""}`}>
                           {sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
                             {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={message.sharedPostId.authorId.profilePicture} alt="" /> : <span className="ridge-shared-post-initial">{message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?"}</span>}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span>{message.sharedPostId.content && <span className="ridge-shared-post-text">{message.sharedPostId.content}</span>}{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={message.sharedPostId.image} alt="" /> : <><video src={message.sharedPostId.video} preload="metadata" muted playsInline /><span className="ridge-shared-post-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span></>}</span>}</> : "Bài viết không còn khả dụng"}
@@ -625,7 +682,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               {isOtherTyping && (
                 <div className="ridge-typing" role="status">
                   <span className="ridge-typing-dots" aria-hidden="true"><span /><span /><span /></span>
-                  <span>{otherParticipant?.username || "Người dùng"} đang nhập...</span>
+                  <span>{shownOtherName} đang nhập...</span>
                 </div>
               )}
             </div>
