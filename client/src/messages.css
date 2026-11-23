@@ -444,6 +444,8 @@
   border-bottom-left-radius: 5px;
   background: var(--news-surface, #fff);
 }
+.ridge-messages .ridge-message-bubble.recalled { align-self: initial; border: 1px dashed var(--news-border, #cbd0dc) !important; border-radius: 14px; background: var(--news-field, #f8f9fc) !important; box-shadow: none; color: var(--news-muted, #5b6478) !important; font-style: italic; }
+.ridge-messages .ridge-message-bubble.recalled::before, .ridge-messages .ridge-message-bubble.recalled::after { display: none !important; content: none !important; }
 
 .ridge-message-time {
   align-self: flex-end;

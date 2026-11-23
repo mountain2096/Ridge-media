@@ -62,6 +62,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [syncTick, setSyncTick] = useState(0);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [messageMenuId, setMessageMenuId] = useState(null);
   const [nicknameDrafts, setNicknameDrafts] = useState({ me: "", other: "" });
   const messageListRef = useRef(null);
   const messageInputRef = useRef(null);
@@ -346,6 +347,20 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       setMessages((items) => items.map((item) => item._id === messageId ? { ...item, reactions } : item));
     }
 
+    function handleMessageRecalled({ conversationId, messageId } = {}) {
+      if (!conversationId || !messageId) return;
+      const recalledAt = new Date().toISOString();
+      const recalled = (message) => ({ ...message, recalledAt, content: "Tin nhắn đã được thu hồi", mediaUrl: null, stickerId: null, sharedPostId: null, reactions: [] });
+      if (conversationId === activeConversationIdRef.current) setMessages((items) => items.map((item) => item._id === messageId ? recalled(item) : item));
+      setConversations((items) => items.map((item) => item._id === conversationId && item.lastMessage?._id === messageId ? { ...item, lastMessage: recalled(item.lastMessage) } : item));
+    }
+
+    function handleMessageDeleted({ conversationId, messageId } = {}) {
+      if (!conversationId || !messageId) return;
+      if (conversationId === activeConversationIdRef.current) setMessages((items) => items.filter((item) => item._id !== messageId));
+      if (conversationsRef.current.some((item) => item._id === conversationId && item.lastMessage?._id === messageId)) void loadConversations();
+    }
+
     function handleTyping({ conversationId, userId, isTyping } = {}) {
       if (!conversationId || userId === myId) return;
       window.clearTimeout(incomingTypingTimerRef.current);
@@ -374,6 +389,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     socket.on("conversation:updated", handleConversationUpdated);
     socket.on("message:read", handleMessageRead);
     socket.on("message:reaction", handleMessageReaction);
+    socket.on("message:recalled", handleMessageRecalled);
+    socket.on("message:deleted", handleMessageDeleted);
     socket.on("typing", handleTyping);
     socket.on("connect", handleConnect);
     document.addEventListener("visibilitychange", handleVisibility);
@@ -383,6 +400,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       socket.off("conversation:updated", handleConversationUpdated);
       socket.off("message:read", handleMessageRead);
       socket.off("message:reaction", handleMessageReaction);
+      socket.off("message:recalled", handleMessageRecalled);
+      socket.off("message:deleted", handleMessageDeleted);
       socket.off("typing", handleTyping);
       socket.off("connect", handleConnect);
       document.removeEventListener("visibilitychange", handleVisibility);
@@ -523,6 +542,32 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       setMessages((items) => items.map((item) => item._id === message._id ? { ...item, reactions: data.reactions } : item));
     } catch (requestError) {
       setError(requestError.message);
+    }
+  }
+
+  async function handleMessageAction(message, action) {
+    const recall = action === "recall";
+    const question = recall ? "Thu hồi tin nhắn này với mọi người?" : "Xóa tin nhắn này chỉ ở phía bạn?";
+    if (!window.confirm(question)) return;
+    setError("");
+    setMessageMenuId(null);
+    try {
+      const response = await fetch(`${API_BASE}/api/message/${message._id}${recall ? "/recall" : ""}`, {
+        method: recall ? "PATCH" : "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || (recall ? "Không thể thu hồi tin nhắn." : "Không thể xóa tin nhắn."));
+      if (recall) {
+        const recalled = { ...message, ...(data.message || {}), recalledAt: data.message?.recalledAt || new Date().toISOString(), content: "Tin nhắn đã được thu hồi", mediaUrl: null, stickerId: null, sharedPostId: null, reactions: [] };
+        setMessages((items) => items.map((item) => item._id === message._id ? recalled : item));
+        setConversations((items) => items.map((item) => item._id === activeConversationIdRef.current && item.lastMessage?._id === message._id ? { ...item, lastMessage: recalled } : item));
+      } else {
+        setMessages((items) => items.filter((item) => item._id !== message._id));
+        if (activeConversation?.lastMessage?._id === message._id) void loadConversations();
+      }
+    } catch (requestError) {
+      setError(requestError.message || (recall ? "Không thể thu hồi tin nhắn." : "Không thể xóa tin nhắn."));
     }
   }
 
@@ -714,20 +759,21 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               )}
               {messages.map((message) => {
                 const isMine = message.senderId?._id === currentUser?._id;
-                const reactionSummary = summarizeReactions(message.reactions, currentUser?._id);
+                const isRecalled = Boolean(message.recalledAt);
+                const reactionSummary = summarizeReactions(isRecalled ? [] : message.reactions, currentUser?._id);
                 const sticker = message.type === "sticker" ? findSticker(message.stickerId) : null;
                 return (
                   <Fragment key={message._id}>
                     <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
                       <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
                         {!isMine && <span className="ridge-message-sender-name">{shownOtherName}</span>}
-                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}${message.type === "post_share" ? " post-share" : ""}${["image", "video"].includes(message.type) ? " media" : ""}${message.type !== "sticker" && message.type !== "post_share" && !["image", "video"].includes(message.type) && Boolean(message.content?.trim()) && /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F\u200D\s]+$/u.test(message.content.trim()) ? " emoji-only" : ""}`}>
-                          {sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
+                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${isRecalled ? " recalled" : ""}${!isRecalled && message.type === "sticker" ? " sticker" : ""}${!isRecalled && message.type === "post_share" ? " post-share" : ""}${!isRecalled && ["image", "video"].includes(message.type) ? " media" : ""}${!isRecalled && message.type !== "sticker" && message.type !== "post_share" && !["image", "video"].includes(message.type) && Boolean(message.content?.trim()) && /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F\u200D\s]+$/u.test(message.content.trim()) ? " emoji-only" : ""}`}>
+                          {isRecalled ? "Tin nhắn đã được thu hồi" : sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
                             {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={message.sharedPostId.authorId.profilePicture} alt="" /> : <span className="ridge-shared-post-initial">{message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?"}</span>}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span>{message.sharedPostId.content && <span className="ridge-shared-post-text">{message.sharedPostId.content}</span>}{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={message.sharedPostId.image} alt="" /> : <><video src={message.sharedPostId.video} preload="metadata" muted playsInline /><span className="ridge-shared-post-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span></>}</span>}</> : "Bài viết không còn khả dụng"}
                           </Link> : message.type === "image" ? <a className="ridge-chat-media-link" href={message.mediaUrl} target="_blank" rel="noreferrer"><img className="ridge-chat-media" src={message.mediaUrl} alt="Ảnh đã gửi" loading="lazy" onLoad={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /></a> : message.type === "video" ? <video className="ridge-chat-media" src={message.mediaUrl} controls preload="metadata" playsInline onLoadedMetadata={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /> : message.content}
                           <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
                         </div>
-                        {reactionSummary.total > 0 && (
+                        {!isRecalled && reactionSummary.total > 0 && (
                           <button
                             type="button"
                             className={`ridge-msg-badge ${reactionSummary.mine ? "mine" : ""}`}
@@ -739,7 +785,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                           </button>
                         )}
                       </div>
-                      <div className="ridge-msg-actions">
+                      {!isRecalled && <div className="ridge-msg-actions">
                         <ReactionButton
                           compact
                           iconOnly
@@ -748,7 +794,14 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                           idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>}
                           onReact={(type) => void handleReactMessage(message, type)}
                         />
-                      </div>
+                        <div className="ridge-msg-menu-wrap">
+                          <button className="ridge-msg-more" type="button" aria-label="Tùy chọn tin nhắn" aria-expanded={messageMenuId === message._id} onClick={() => setMessageMenuId((id) => id === message._id ? null : message._id)}>···</button>
+                          {messageMenuId === message._id && <div className="ridge-msg-menu" role="menu">
+                            {isMine && !message.recalledAt && <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "recall")}>Thu hồi</button>}
+                            <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "delete")}>Xóa ở phía tôi</button>
+                          </div>}
+                        </div>
+                      </div>}
                     </div>
                     {message._id === lastOwnMessageId && (
                       <span className="ridge-message-status">{message.isRead ? "Đã xem" : "Đã gửi"}</span>
