@@ -5,6 +5,7 @@ const Message = require("../models/Message");
 const errorResponse = require("../utils/errorResponse");
 const { emitToUser } = require("../utils/realtime");
 const { isStickerId, STICKER_PREVIEW } = require("../utils/stickers");
+const CHAT_MEDIA_PATH = /^\/uploads\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/;
 const SHARE_PREVIEW = "Đã chia sẻ một bài viết";
 
 async function findOrCreateConversation(senderId, receiverId) {
@@ -124,9 +125,30 @@ const createOrGetConversation = async (req, res) => {
 };
 const sendMessage = async (req, res) => {
     try {
-        const { content, stickerId } = req.body;
+        const { content, stickerId, mediaUrl } = req.body;
         const { conversationId } = req.params;
         const isSticker = stickerId !== undefined && stickerId !== null;
+        const hasMedia = Object.hasOwn(req.body, "mediaUrl");
+        let mediaType;
+
+        if (hasMedia) {
+            try {
+                const url = new URL(mediaUrl);
+                const requestHost = req.get?.("host") || req.headers?.host;
+                const rawPath = typeof mediaUrl === "string" && mediaUrl.match(/^https?:\/\/[^/?#]+(\/[^?#]*)$/i)?.[1];
+                const extension = CHAT_MEDIA_PATH.exec(rawPath || "")?.[1];
+                if (typeof mediaUrl !== "string" || !requestHost || !["http:", "https:"].includes(url.protocol) ||
+                    url.origin !== new URL(`${req.protocol}://${requestHost}`).origin || url.username || url.password ||
+                    url.search || url.hash || !extension) throw new Error();
+                mediaType = ["mp4", "webm"].includes(extension) ? "video" : "image";
+            } catch {
+                return res.status(400).json({ message: "Tệp đính kèm không hợp lệ!" });
+            }
+        }
+
+        if (isSticker && hasMedia) {
+            return res.status(400).json({ message: "Tệp đính kèm không hợp lệ!" });
+        }
 
         if (isSticker) {
             if (!isStickerId(stickerId)) {
@@ -134,7 +156,7 @@ const sendMessage = async (req, res) => {
                     message: "Nhãn dán không hợp lệ!",
                 });
             }
-        } else if (typeof content !== "string" || !content.trim()) {
+        } else if (!hasMedia && (typeof content !== "string" || !content.trim())) {
             return res.status(400).json({
                 message: "Nội dung tin nhắn không được để trống!",
             });
@@ -171,7 +193,9 @@ const sendMessage = async (req, res) => {
         )
         const newMessage = await createAndEmitMessage(conversation, req.user._id, receiverId, isSticker
             ? { type: "sticker", stickerId, content: STICKER_PREVIEW }
-            : { content: content.trim() });
+            : hasMedia
+                ? { type: mediaType, mediaUrl, content: mediaType === "image" ? "Đã gửi một ảnh" : "Đã gửi một video" }
+                : { content: content.trim() });
 
         res.status(201).json({
             message: "Gửi tin nhắn thành công!",

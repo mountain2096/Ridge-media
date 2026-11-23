@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Chat media: `node --test` passed 141 tests; chat messages accept validated same-origin image/video uploads with readable previews; no API server, MongoDB, or browser was started.
 - Chat themes: `node --test` passed 140 tests; client lint/build passed. Added four themes and split sea-theme bubble art by sender; no API, Vite, database, or browser was started.
 - Chat bubble art: client lint and build passed. Replaced bubble decorations with the supplied WebP assets and updated preview labels; no API, database, or browser was started.
 - Chat appearance: `node --test` passed 140 tests; client lint and build passed. Added shared conversation backgrounds and bubble styles with participant validation and realtime updates. No API, Vite server, database, or browser was started.
@@ -139,7 +140,10 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 40 | Replace chat bubble emoji decorations with supplied WebP art and label the picker previews | Client lint/build passed; no API/Vite/database/browser started | this commit |
 | 41 | Add snow, starry, ghost, and berry chat themes; add receiver-side jellyfish art to sea theme | `node --test`: 140 passed; client lint/build passed; no API/Vite/database/browser started | pending |
 
+| 42 | Add validated image/video attachments to chat messages with readable previews and realtime payloads | `node --test`: 141 passed; no API/Vite/database/browser started | pending |
+
 ## 8. Possible next work (project owner chooses)
+Round 42 accepts only same-origin uploaded chat images and videos, derives message type from the extension, and keeps readable content previews; no API server, MongoDB, or browser was started.
 Round 41 adds four themes using the eight supplied WebP assets, extends appearance allowlists, and tests acceptance plus unknown-key rejection. No browser or live service was used.
 Round 40 stores appearance on each conversation, broadcasts both shared values to the other participant, and styles the message list and text bubbles only. Follow-up uses the six supplied WebP assets for bubble decorations and picker previews; no server or database behavior changed. Appearance was not browser-verified.
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.

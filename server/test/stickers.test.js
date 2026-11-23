@@ -148,3 +148,40 @@ test("plain text messages still work and are stored as text", async () => {
         restore();
     }
 });
+
+test("sendMessage accepts only same-origin upload media and derives its type", async () => {
+    const { created, emitted, restore } = stubSendMessage();
+    try {
+        for (const [extension, type, preview] of [["jpg", "image", "Đã gửi một ảnh"], ["webm", "video", "Đã gửi một video"]]) {
+            const mediaUrl = `http://localhost:5000/uploads/123e4567-e89b-42d3-a456-426614174000.${extension}`;
+            const res = response();
+            await sendMessage({ ...request({ mediaUrl, content: "optional" }), protocol: "http", headers: { host: "localhost:5000" }, get(name) { return this.headers[name.toLowerCase()]; } }, res);
+            assert.equal(res.statusCode, 201);
+            assert.equal(created.at(-1).type, type);
+            assert.equal(created.at(-1).mediaUrl, mediaUrl);
+            assert.equal(created.at(-1).content, preview);
+            assert.equal(res.body.newMessage.type, type);
+            assert.equal(res.body.newMessage.mediaUrl, mediaUrl);
+            assert.equal(emitted.at(-1).payload.message.type, type);
+            assert.equal(emitted.at(-1).payload.message.mediaUrl, mediaUrl);
+        }
+
+        for (const mediaUrl of [
+            "https://external.example/uploads/123e4567-e89b-42d3-a456-426614174000.jpg",
+            "http://localhost:5000/uploads/../123e4567-e89b-42d3-a456-426614174000.jpg",
+            "http://localhost:5000/uploads/123e4567-e89b-42d3-a456-426614174000.svg",
+            "javascript:alert(1)",
+        ]) {
+            const res = response();
+            await sendMessage({ ...request({ mediaUrl }), protocol: "http", headers: { host: "localhost:5000" }, get(name) { return this.headers[name.toLowerCase()]; } }, res);
+            assert.equal(res.statusCode, 400, mediaUrl);
+            assert.equal(res.body.message, "Tệp đính kèm không hợp lệ!");
+        }
+
+        const stickerMedia = response();
+        await sendMessage({ ...request({ stickerId: "faces-love", mediaUrl: "http://localhost:5000/uploads/123e4567-e89b-42d3-a456-426614174000.jpg" }), protocol: "http", headers: { host: "localhost:5000" }, get(name) { return this.headers[name.toLowerCase()]; } }, stickerMedia);
+        assert.equal(stickerMedia.statusCode, 400);
+    } finally {
+        restore();
+    }
+});
