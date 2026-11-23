@@ -885,17 +885,6 @@ body {
   background: #f0f2f7;
 }
 
-.notification-dot {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 9px;
-  height: 9px;
-  border: 2px solid white;
-  border-radius: 50%;
-  background: #e53957;
-}
-
 .notification-panel {
   position: absolute;
   z-index: 5;
@@ -1306,7 +1295,7 @@ body {
 .header-icon-link:hover { background: var(--news-hover); }
 .header-icon-link svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .notification-button { padding: 0; }
-.notification-button .notification-dot { top: 2px; right: 2px; }
+.notification-button .header-badge { top: -4px; right: -5px; }
 .header-badge { position: absolute; top: -4px; right: -5px; min-width: 18px; padding: 1px 4px; border-radius: 999px; background: var(--news-danger); color: white; font-size: 10px; font-weight: 700; text-align: center; }
 .profile-menu-wrap { position: relative; }
 .profile-menu-trigger { display: flex; align-items: center; gap: 4px; padding: 2px; border: 0; border-radius: 24px; background: transparent; cursor: pointer; }

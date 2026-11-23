@@ -1,7 +1,6 @@
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 const Message = require("../models/Message");
-const Notification = require("../models/Notification");
 const errorResponse = require("../utils/errorResponse");
 const { emitToUser } = require("../utils/realtime");
 const { isStickerId, STICKER_PREVIEW } = require("../utils/stickers");
@@ -19,11 +18,6 @@ async function createAndEmitMessage(conversation, senderId, receiverId, data) {
     await conversation.save();
     await newMessage.populate("senderId", "username profilePicture");
     if (newMessage.type === "post_share") await newMessage.populate({ path: "sharedPostId", select: "authorId content image video status", populate: { path: "authorId", select: "username profilePicture" } });
-    try {
-        await Notification.create({ recipientId: receiverId, senderId, type: "message" });
-    } catch (notificationError) {
-        console.error("Could not create message notification:", notificationError);
-    }
     const payload = { conversationId: conversation._id.toString(), message: newMessage.toObject() };
     emitToUser(receiverId, "message:new", payload);
     emitToUser(senderId, "message:new", payload);

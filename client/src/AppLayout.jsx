@@ -110,7 +110,7 @@ function AppLayout() {
   const refreshCountsRef = useRef(() => {});
   const currentUserIdRef = useRef("");
   const navigateRef = useRef(navigate);
-  const pathnameRef = useRef(location.pathname);
+  const activeConversationIdRef = useRef(null);
   const isFeed = location.pathname === "/feed";
 
   useEffect(() => {
@@ -190,10 +190,6 @@ function AppLayout() {
   }, [navigate]);
 
   useEffect(() => {
-    pathnameRef.current = location.pathname;
-  }, [location.pathname]);
-
-  useEffect(() => {
     let mounted = true;
     let busy = false;
     async function refreshCounts() {
@@ -240,7 +236,7 @@ function AppLayout() {
     };
 
     function handleNotification({ notification } = {}) {
-      if (!notification?._id) return;
+      if (!notification?._id || notification.type === "message") return;
       setNotifications((items) => items.some((item) => item._id === notification._id) ? items : [notification, ...items]);
       setLiveToast({
         kind: "notification",
@@ -256,11 +252,14 @@ function AppLayout() {
       scheduleRefresh();
       const senderId = message?.senderId?._id;
       if (!senderId || senderId === currentUserIdRef.current) return;
-      if (pathnameRef.current.startsWith("/messages")) return;
+      if (conversationId === activeConversationIdRef.current) return;
+      const preview = message.type === "post_share" ? "Đã gửi một bài viết"
+        : message.type === "sticker" ? "Đã gửi một sticker"
+          : String(message.content || "").slice(0, 80);
       setLiveToast({
         kind: "message",
         title: message.senderId?.username || "Người dùng",
-        body: String(message.content || "").slice(0, 80),
+        body: preview,
         avatar: message.senderId?.profilePicture || "",
         conversationId,
       });
@@ -276,6 +275,8 @@ function AppLayout() {
     socket.on("notification:new", handleNotification);
     socket.on("message:new", handleNewMessage);
     socket.on("connect", handleConnect);
+    const handleActiveConversation = (event) => { activeConversationIdRef.current = event.detail; };
+    window.addEventListener("ridge:active-conversation", handleActiveConversation);
     window.addEventListener("ridge:counts-changed", scheduleRefresh);
 
     // Load existing notifications once so the bell shows unread items before it is opened.
@@ -285,12 +286,13 @@ function AppLayout() {
       signal: controller.signal,
     }).then(async (response) => {
       const data = await response.json();
-      if (response.ok) setNotifications(data.notifications || []);
+      if (response.ok) setNotifications((data.notifications || []).filter((item) => item.type !== "message"));
     }).catch(() => {});
 
     return () => {
       controller.abort();
       window.clearTimeout(refreshTimer);
+      window.removeEventListener("ridge:active-conversation", handleActiveConversation);
       window.removeEventListener("ridge:counts-changed", scheduleRefresh);
       socket.off("notification:new", handleNotification);
       socket.off("message:new", handleNewMessage);
@@ -309,7 +311,7 @@ function AppLayout() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể tải thông báo.");
-      setNotifications(data.notifications || []);
+      setNotifications((data.notifications || []).filter((item) => item.type !== "message"));
     } catch (error) {
       setNotificationError(error.message);
     }
@@ -352,6 +354,7 @@ function AppLayout() {
     }
   }
 
+  const notificationUnreadCount = notifications.filter((item) => item.type !== "message" && !item.isRead).length;
   const navClass = ({ isActive }) => "menu-item " + (isActive ? "active" : "");
   const menuRef = useRef(null);
   const activePillRef = useRef(null);
@@ -401,8 +404,8 @@ function AppLayout() {
         <div className="news-topbar-right">
           <NavLink className="header-icon-link" to="/messages" aria-label="Tin nhắn" title="Tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>{messageCount > 0 && <span className="header-badge">{messageCount > 99 ? "99+" : messageCount}</span>}</NavLink>
           <div className="notification-wrap">
-            <button className="header-icon-link notification-button" type="button" aria-label="Thông báo" aria-expanded={notificationOpen} onClick={toggleNotifications}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{notifications.some((item) => !item.isRead) && <span className="notification-dot" />}</button>
-            {notificationOpen && <div className="notification-panel"><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.length && <p>Chưa có thông báo nào.</p>}{notifications.map((item) => <NotificationItem item={item} key={item._id} onOpen={openNotification} />)}</div>}
+            <button className="header-icon-link notification-button" type="button" aria-label="Thông báo" aria-expanded={notificationOpen} onClick={toggleNotifications}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{notificationUnreadCount > 0 && <span className="header-badge">{notificationUnreadCount > 9 ? "9+" : notificationUnreadCount}</span>}</button>
+            {notificationOpen && <div className="notification-panel" data-lenis-prevent><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.some((item) => item.type !== "message") && <p>Chưa có thông báo nào.</p>}{notifications.filter((item) => item.type !== "message").map((item) => <NotificationItem item={item} key={item._id} onOpen={openNotification} />)}</div>}
           </div>
           <div className="profile-menu-wrap">
             <button className="profile-menu-trigger" type="button" aria-label="Mở menu tài khoản" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>

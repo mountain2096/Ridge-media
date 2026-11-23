@@ -134,6 +134,7 @@ test("sendMessage pushes message:new to the receiver and the sender's other tabs
     const originalNotificationCreate = Notification.create;
     const io = fakeIO();
     setIO(io);
+    let notificationCalls = 0;
 
     const savedMessage = {
         _id: "m1",
@@ -149,7 +150,7 @@ test("sendMessage pushes message:new to the receiver and the sender's other tabs
     });
     User.findById = () => ({ select: async () => ({ _id: RECEIVER_ID, blockList: [] }) });
     Message.create = async () => savedMessage;
-    Notification.create = async () => ({});
+    Notification.create = async () => { notificationCalls += 1; return {}; };
 
     try {
         const res = response();
@@ -166,6 +167,7 @@ test("sendMessage pushes message:new to the receiver and the sender's other tabs
         ]);
         assert.equal(io.emitted[0].payload.conversationId, CONVERSATION_ID);
         assert.equal(io.emitted[0].payload.message._id, "m1");
+        assert.equal(notificationCalls, 0);
     } finally {
         setIO(null);
         Conversation.findById = originalConversationFind;

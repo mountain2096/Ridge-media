@@ -5,7 +5,8 @@ const errorResponse = require("../utils/errorResponse");
 const getNotification = async (req, res) =>{
     try{
         const notifications = await Notification.find({
-            recipientId: req.user._id
+            recipientId: req.user._id,
+            type: { $ne: "message" },
         }).populate("senderId", "username profilePicture")
         .populate({ path: "postId", select: "content image video originalPostId status", match: { status: "active" } })
         .populate({ path: "commentId", select: "content", match: { status: "active" } })
@@ -23,6 +24,7 @@ const markNotificationIsRead = async (req, res) =>{
         const notification = await Notification.findOne({
             _id: req.params.id,
             recipientId: req.user._id,
+            type: { $ne: "message" },
         });
 
         if(!notification){

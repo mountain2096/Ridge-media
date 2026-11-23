@@ -147,6 +147,10 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   useEffect(() => {
     activeConversationIdRef.current = activeConversationId;
   }, [activeConversationId]);
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("ridge:active-conversation", { detail: activeConversationId }));
+    return () => window.dispatchEvent(new CustomEvent("ridge:active-conversation", { detail: null }));
+  }, [activeConversationId]);
 
   useEffect(() => {
     conversationsRef.current = conversations;
