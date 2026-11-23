@@ -93,7 +93,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 ## 7. Round log
 | Round | Work | Result | Commit |
 |---|---|---|---|
-| 46 | Add replies to chat messages with quoted previews, jump-to-original, and recall/deletion masking | `node --test`: 152 passed; client lint/build passed; no API/Vite/database/browser started | pending |
+| 46 | Add replies to chat messages with quoted previews, jump-to-original, and recall/deletion masking | `node --test`: 152 passed; client lint/build passed; no API/Vite/database/browser started | `307a7b0` |
 | 40 | Add shared per-conversation background and bubble appearance settings | `node --test`: 140 passed; client lint/build passed; no API/Vite/database/browser started | pending |
 | 0 | Claude reviewed the repository, branches, and initial state | Initially: 92 tests; lint and build passed | `e64c605` |
 | 1 | Cleaned up the worktree and updated project guidance/status | Worktree clean; pushed | `8c2b008` |
