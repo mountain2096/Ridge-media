@@ -410,6 +410,30 @@ const setConversationMute = async (req, res) => {
     }
 };
 
+const setConversationQuickIcon = async (req, res) => {
+    try {
+        const { conversationId } = req.params;
+        const { icon } = req.body;
+        const isEmoji = typeof icon === "string" && icon.length <= 8 && (!icon || /^(?=.*(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[#*0-9]\uFE0F?\u20E3))(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|\p{Emoji_Modifier}|\uFE0F|\u200D|[#*0-9]\uFE0F?\u20E3)+$/u.test(icon));
+        if (!isEmoji) return res.status(400).json({ message: "Biểu tượng nhanh không hợp lệ!" });
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) return res.status(404).json({ message: "Không tìm thấy cuộc trò chuyện!" });
+        if (!conversation.participants.some((id) => idString(id) === idString(req.user._id))) {
+            return res.status(403).json({ message: "Bạn không thuộc cuộc trò chuyện này!" });
+        }
+        conversation.quickIcon = icon;
+        await conversation.save();
+        emitToUser(getOtherParticipant(conversation, req.user._id), "conversation:updated", {
+            conversationId: idString(conversation._id), quickIcon: conversation.quickIcon,
+            isMuted: (conversation.mutedBy || []).some((id) => idString(id) === idString(getOtherParticipant(conversation, req.user._id))),
+        });
+        return res.status(200).json({ quickIcon: conversation.quickIcon });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID cuộc trò chuyện không hợp lệ!" });
+        return errorResponse(res, error);
+    }
+};
+
 module.exports = {
     createOrGetConversation,
     sendMessage,
@@ -421,4 +445,5 @@ module.exports = {
     markMessageIsRead,
     updateNickname,
     setConversationMute,
+    setConversationQuickIcon,
 };

@@ -23,6 +23,8 @@ function nicknameFor(conversation, userId) {
   return conversation?.nicknames?.find((item) => (item.user?._id || item.user) === userId)?.nickname;
 }
 
+const QUICK_ICONS = ["❤️", "👍", "😂", "😮", "😢", "🙏", "🔥", "⭐", "🎉", "😍", "👏", "💯"];
+
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const location = useLocation();
   const [conversations, setConversations] = useState([]);
@@ -100,6 +102,15 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     if (!response.ok) { setConversationActionError(data.message || "Không thể cập nhật thông báo."); return; }
     setConversations((items) => items.map((item) => item._id === activeConversationId ? { ...item, isMuted: data.isMuted, unreadCount: data.isMuted ? 0 : item.unreadCount } : item));
     window.dispatchEvent(new Event("ridge:counts-changed"));
+  }
+  async function saveQuickIcon(icon) {
+    const response = await fetch(`${API_BASE}/api/message/conversation/${activeConversationId}/quick-icon`, {
+      method: "PATCH", headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ icon }),
+    });
+    const data = await response.json();
+    if (!response.ok) { setConversationActionError(data.message || "Không thể cập nhật biểu tượng nhanh."); return; }
+    setConversations((items) => items.map((item) => item._id === activeConversationId ? { ...item, quickIcon: data.quickIcon } : item));
   }
   const lastOwnMessageId = useMemo(() => {
     for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -285,9 +296,9 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       ));
     }
 
-    function handleConversationUpdated({ conversationId, nicknames, isMuted } = {}) {
+    function handleConversationUpdated({ conversationId, nicknames, isMuted, quickIcon } = {}) {
       setConversations((items) => items.map((item) => item._id === conversationId
-        ? { ...item, nicknames: nicknames || item.nicknames, isMuted: Boolean(isMuted), unreadCount: isMuted ? 0 : item.unreadCount }
+        ? { ...item, nicknames: nicknames || item.nicknames, isMuted: Boolean(isMuted), unreadCount: isMuted ? 0 : item.unreadCount, ...(quickIcon !== undefined ? { quickIcon } : {}) }
         : item));
       window.dispatchEvent(new Event("ridge:counts-changed"));
     }
@@ -519,7 +530,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
 
   async function handleSendMessage(event) {
     event.preventDefault();
-    const content = messageContent.trim();
+    const content = messageContent.trim() || activeConversation?.quickIcon || "";
     if (!content || !activeConversationId) return;
     if (await submitMessage({ content })) setMessageContent("");
   }
@@ -627,6 +638,9 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                   <label>{shownOtherName} <small>{otherParticipant?.username}</small><input maxLength="40" value={nicknameDrafts.other} onChange={(event) => setNicknameDrafts((draft) => ({ ...draft, other: event.target.value }))} /></label>
                   <div className="ridge-chat-settings-actions"><button type="button" onClick={() => void saveNicknameChanges()}>Lưu</button><button type="button" onClick={() => void saveNicknameChanges(true)}>Xóa</button></div>
                   <label className="ridge-mute-toggle"><input type="checkbox" checked={Boolean(activeConversation.isMuted)} onChange={() => void toggleMute()} />Tắt thông báo</label>
+                  <strong>Biểu tượng nhanh</strong>
+                  <div className="ridge-quick-icons" aria-label="Chọn biểu tượng nhanh">{QUICK_ICONS.map((icon) => <button key={icon} type="button" aria-label={icon} aria-pressed={activeConversation.quickIcon === icon} onClick={() => void saveQuickIcon(icon)}>{icon}</button>)}</div>
+                  <button className="ridge-quick-icon-reset" type="button" onClick={() => void saveQuickIcon("")}>Đặt lại</button>
                 </div>}
               </div>
             </header>
@@ -708,8 +722,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                 placeholder="Viết tin nhắn..."
                 maxLength="2000"
               />
-              <button type="submit" aria-label="Gửi" disabled={isSending || !messageContent.trim()}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>
+              <button type="submit" aria-label={messageContent.trim() ? "Gửi" : activeConversation.quickIcon ? `Gửi ${activeConversation.quickIcon}` : "Gửi"} disabled={isSending || (!messageContent.trim() && !activeConversation.quickIcon)}>
+                {messageContent.trim() || !activeConversation.quickIcon ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg> : <span aria-hidden="true">{activeConversation.quickIcon}</span>}
                 <span className="ridge-visually-hidden">{isSending ? "Đang gửi..." : "Gửi"}</span>
               </button>
             </form>

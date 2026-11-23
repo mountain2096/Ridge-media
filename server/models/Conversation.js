@@ -25,6 +25,7 @@ const conversationSchema = mongoose.Schema(
             nickname: { type: String, trim: true, maxlength: 40, required: true },
         }],
         mutedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+        quickIcon: { type: String, default: "" },
     },{
         timestamps: true    
     }

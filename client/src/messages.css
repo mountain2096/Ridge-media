@@ -222,6 +222,11 @@
 .ridge-chat-settings small { color: #737b8d; font-size: 11px; font-weight: 400; }
 .ridge-chat-settings input:not([type="checkbox"]) { width: 100%; min-height: 38px; padding: 0 10px; border: 1px solid #e6e8ef; border-radius: 10px; color: #172033; font: inherit; }
 .ridge-chat-settings-actions { display: flex; gap: 8px; }
+.ridge-quick-icons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.ridge-quick-icons button,.ridge-quick-icon-reset { min-height: 34px; border: 1px solid #e6e8ef; border-radius: 9px; background: #fff; cursor: pointer; }
+.ridge-quick-icons button { font-size: 19px; }
+.ridge-quick-icons button[aria-pressed="true"] { border-color: #2f4be0; background: #eef1ff; }
+.ridge-quick-icon-reset { justify-self: start; padding: 0 12px; color: #2f4be0; }
 .ridge-mute-toggle { display: flex !important; grid-template-columns: auto 1fr; align-items: center; }
 .ridge-mute-toggle input { accent-color: #2f4be0; }
 .ridge-message-sender-name { display: block; margin: 0 0 3px 8px; color: #737b8d; font-size: 11px; }
