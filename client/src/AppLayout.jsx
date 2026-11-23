@@ -47,7 +47,7 @@ function notificationTime(value) {
   return `${Math.floor(minutes / 1440)} ngày`;
 }
 
-function NotificationItem({ item, onOpen }) {
+function NotificationItem({ item, onOpen, onDelete }) {
   const sender = item.senderId && typeof item.senderId === "object" ? item.senderId : {};
   const post = item.postId && typeof item.postId === "object" && item.postId.status !== "deleted" ? item.postId : null;
   const comment = item.commentId && typeof item.commentId === "object" ? item.commentId : null;
@@ -58,12 +58,13 @@ function NotificationItem({ item, onOpen }) {
   const badgePath = ["comment", "reply", "mention"].includes(item.type) ? "M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"
     : item.type === "share" ? "M22 3 11 14M22 3l-7 18-4-7-7-4z"
       : item.type.startsWith("friend_") ? "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21v-1a8 8 0 0 1 16 0v1" : null;
-  return <button className={`notification-item ${item.isRead ? "read" : "unread"}`} type="button" onClick={() => onOpen(item)}>
+  return <div className={`notification-item ${item.isRead ? "read" : "unread"}`} role="button" tabIndex={0} onClick={() => onOpen(item)} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); onOpen(item); } }}>
     <span className="notification-avatar">{sender.profilePicture ? <img src={sender.profilePicture} alt="" /> : (sender.username?.charAt(0).toUpperCase() || "?")}<span className="notification-kind">{reaction || (badgePath ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d={badgePath} /></svg> : "•")}</span></span>
     <span className="notification-copy"><span><strong>{sender.username || "Người dùng"}</strong> {notificationText(item.type, item.reaction, item.commentId)}</span><span className="notification-preview">{preview}</span><time>{notificationTime(item.createdAt)}</time></span>
     {post?.image ? <img className="notification-thumb" src={post.image} alt="" /> : post?.video ? <span className="notification-thumb notification-video" aria-label="Video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z" /></svg></span> : null}
     {!item.isRead && <span className="notification-unread-dot" />}
-  </button>;
+    <button className="notification-delete" type="button" aria-label="Xóa thông báo" onClick={(event) => { event.stopPropagation(); onDelete(item); }}>✕</button>
+  </div>;
 }
 
 function signOutLocal(stopHeartbeat, userId, navigate) {
@@ -342,6 +343,54 @@ function AppLayout() {
     }
   }
 
+  async function deleteNotification(item) {
+    setNotifications((items) => items.filter((notification) => notification._id !== item._id));
+    try {
+      const response = await fetch(`${API_BASE}/api/notification/${item._id}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể xóa thông báo.");
+    } catch (error) {
+      setNotifications((items) => items.some((notification) => notification._id === item._id) ? items : [item, ...items]);
+      setNotificationError(error.message);
+    }
+  }
+
+  async function markAllRead() {
+    const previous = notifications;
+    setNotifications((items) => items.map((item) => ({ ...item, isRead: true })));
+    try {
+      const response = await fetch(`${API_BASE}/api/notification/read-all`, {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể cập nhật thông báo.");
+    } catch (error) {
+      setNotifications(previous);
+      setNotificationError(error.message);
+    }
+  }
+
+  async function deleteAllNotifications() {
+    if (!window.confirm("Xóa tất cả thông báo?")) return;
+    const previous = notifications;
+    setNotifications([]);
+    try {
+      const response = await fetch(`${API_BASE}/api/notification`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể xóa thông báo.");
+    } catch (error) {
+      setNotifications(previous);
+      setNotificationError(error.message);
+    }
+  }
+
   async function openNotification(item) {
     if (!item.isRead) await markRead(item._id);
     setNotificationOpen(false);
@@ -416,7 +465,7 @@ function AppLayout() {
           <NavLink className="header-icon-link" to="/messages" aria-label="Tin nhắn" title="Tin nhắn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>{messageCount > 0 && <span className="header-badge">{messageCount > 99 ? "99+" : messageCount}</span>}</NavLink>
           <div className="notification-wrap">
             <button className="header-icon-link notification-button" type="button" aria-label="Thông báo" aria-expanded={notificationOpen} onClick={toggleNotifications}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>{notificationUnreadCount > 0 && <span className="header-badge">{notificationUnreadCount > 9 ? "9+" : notificationUnreadCount}</span>}</button>
-            {notificationOpen && <div className="notification-panel" data-lenis-prevent><h2>Thông báo</h2>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notificationError && !notifications.some((item) => item.type !== "message") && <p>Chưa có thông báo nào.</p>}{notifications.filter((item) => item.type !== "message").map((item) => <NotificationItem item={item} key={item._id} onOpen={openNotification} />)}</div>}
+            {notificationOpen && <div className="notification-panel" data-lenis-prevent><div className="notification-panel-header"><h2>Thông báo</h2>{notifications.some((item) => item.type !== "message") && <div className="notification-panel-actions"><button type="button" onClick={markAllRead}>Đánh dấu đã đọc</button><button type="button" onClick={deleteAllNotifications}>Xóa tất cả</button></div>}</div>{notificationError && <p className="feedback-message error">{notificationError}</p>}{!notifications.some((item) => item.type !== "message") && <p>Chưa có thông báo nào.</p>}{notifications.filter((item) => item.type !== "message").map((item) => <NotificationItem item={item} key={item._id} onOpen={openNotification} onDelete={deleteNotification} />)}</div>}
           </div>
           <div className="profile-menu-wrap">
             <button className="profile-menu-trigger" type="button" aria-label="Mở menu tài khoản" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>

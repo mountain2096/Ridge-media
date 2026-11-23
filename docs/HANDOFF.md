@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-23, after Round 37 (`fix/notification-panel`).
+> Last updated: 2026-11-23, after notification deletion work (`feat/notification-delete`).
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -10,7 +10,7 @@
 - Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. Current task branch: `fix/notification-panel`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. Current task branch: `feat/notification-delete`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -19,6 +19,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Notification deletion: `node --test` passed 138 tests; client lint and build passed. Added recipient-scoped single/all deletion and read-all endpoints plus optimistic notification controls. No API, Vite server, database, or browser was started.
 - Round 37: `node --test` passed 129 tests; client lint and build passed. Message sends no longer create bell notifications; legacy message notifications are filtered from API and client bell state; the bell count and panel layout were fixed, and message toast previews now reflect text, post shares, and stickers. No API, Vite server, database, or browser was started.
 - Round 36: `node --test` passed 134 tests; client lint and build passed. Added a shared conversation quick icon, realtime updates, and send-button behavior for empty composers. No API, Vite server, database, or browser was started.
 - Round 35: `node --test` passed 133 tests; client lint and build passed. Added shared conversation nicknames and personal mute controls, with muted threads excluded from unread counts and message toasts. No API, Vite server, database, or browser was started.
@@ -127,6 +128,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 37 | Remove message notifications from the bell; add unread count badge, fix panel sizing/avatar crop, and improve message toast previews | `node --test`: 129 passed; client lint/build passed; no API/Vite server/database/browser started | pending |
 | 35 | Add shared per-user conversation nicknames and personal mute settings, including realtime updates and muted unread/toast handling | `node --test`: 133 passed; client lint/build passed; no API/Vite server/database/browser started | this commit |
 | 36 | Add shared conversation quick icons, picker/reset, realtime update, and send-on-empty behavior | `node --test`: 134 passed; client lint/build passed; no API/Vite server/database/browser started | this commit |
+| 38 | Add recipient-scoped notification deletion, delete-all, read-all, and panel controls | `node --test`: 138 passed; client lint/build passed; no API/Vite server/database/browser started | `899405f` |
 
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
@@ -149,6 +151,7 @@ Round 34 respects reduced motion and scopes GSAP contexts to the sidebar, feed, 
 Round 37 keeps message unread counts on the messages icon unchanged, filters legacy message notification records from listing/reading, and suppresses a message toast only for the conversation currently open. Browser behavior was not manually verified.
 Round 35 keeps mute personal to each participant, broadcasts nickname changes through the existing user-room socket helper, and leaves message delivery, read receipts, stickers, reactions, and shared-post payloads unchanged. No live service or browser was used.
 Round 36 validates short emoji-only quick icons, broadcasts them to the other participant, and sends the selected emoji through the existing text-message path when the composer is empty. No live service or browser was used.
+Notification delete/read-all operations are scoped to the authenticated recipient; the client updates the bell immediately and restores optimistic state on request failures. Panel scrolling and service startup were not browser-verified.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
