@@ -26,6 +26,8 @@ const conversationSchema = mongoose.Schema(
         }],
         mutedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
         quickIcon: { type: String, default: "" },
+        background: { type: String, default: "" },
+        bubbleStyle: { type: String, default: "" },
     },{
         timestamps: true    
     }

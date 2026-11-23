@@ -428,6 +428,39 @@ const setConversationQuickIcon = async (req, res) => {
     }
 };
 
+const CHAT_BACKGROUNDS = ["mint", "sky", "peach", "lavender", "sunset", "night", "paper", "pink"];
+const CHAT_BUBBLE_STYLES = ["cat-dog", "frog", "pink-heart", "sky-fish", "duck", "sketch", "dark"];
+
+const setConversationAppearance = async (req, res) => {
+    try {
+        const { conversationId } = req.params;
+        const { background, bubbleStyle } = req.body;
+        if ((!Object.hasOwn(req.body, "background") && !Object.hasOwn(req.body, "bubbleStyle")) ||
+            (Object.hasOwn(req.body, "background") && !["", ...CHAT_BACKGROUNDS].includes(background)) ||
+            (Object.hasOwn(req.body, "bubbleStyle") && !["", ...CHAT_BUBBLE_STYLES].includes(bubbleStyle))) {
+            return res.status(400).json({ message: "Giao diện cuộc trò chuyện không hợp lệ!" });
+        }
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) return res.status(404).json({ message: "Không tìm thấy cuộc trò chuyện!" });
+        if (!conversation.participants.some((id) => idString(id) === idString(req.user._id))) {
+            return res.status(403).json({ message: "Bạn không thuộc cuộc trò chuyện này!" });
+        }
+        if (background !== undefined) conversation.background = background;
+        if (bubbleStyle !== undefined) conversation.bubbleStyle = bubbleStyle;
+        await conversation.save();
+        const otherId = getOtherParticipant(conversation, req.user._id);
+        const appearance = {
+            conversationId: idString(conversation._id), background: conversation.background, bubbleStyle: conversation.bubbleStyle,
+            isMuted: (conversation.mutedBy || []).some((id) => idString(id) === idString(otherId)),
+        };
+        emitToUser(otherId, "conversation:updated", appearance);
+        return res.status(200).json({ background: conversation.background, bubbleStyle: conversation.bubbleStyle });
+    } catch (error) {
+        if (error.name === "CastError") return res.status(400).json({ message: "ID cuộc trò chuyện không hợp lệ!" });
+        return errorResponse(res, error);
+    }
+};
+
 module.exports = {
     createOrGetConversation,
     sendMessage,
@@ -440,4 +473,5 @@ module.exports = {
     updateNickname,
     setConversationMute,
     setConversationQuickIcon,
+    setConversationAppearance,
 };

@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const User = require("../models/User");
-const { updateNickname, setConversationMute, setConversationQuickIcon, getConversations } = require("../controllers/messageCotrollers");
+const { updateNickname, setConversationMute, setConversationQuickIcon, setConversationAppearance, getConversations } = require("../controllers/messageCotrollers");
 
 const ME = "64b000000000000000000001";
 const OTHER = "64b000000000000000000002";
@@ -59,7 +59,7 @@ test("mute changes only the requesting participant's muted state", async () => {
 
 test("getConversations returns nicknames and excludes muted unread messages", async () => {
   const original = { find: Conversation.find, usersFind: User.find, count: Message.countDocuments };
-  const items = [conversation({ mutedBy: [ME], nicknames: [{ user: OTHER, nickname: "Buddy" }], quickIcon: "❤️" }), conversation({ _id: "second", participants: [ME, OUTSIDER] })];
+  const items = [conversation({ mutedBy: [ME], nicknames: [{ user: OTHER, nickname: "Buddy" }], quickIcon: "❤️", background: "mint", bubbleStyle: "frog" }), conversation({ _id: "second", participants: [ME, OUTSIDER] })];
   Conversation.find = () => ({ populate() { return this; }, sort: async () => items });
   User.find = () => ({ select: async () => [{ _id: OTHER, blockList: [] }, { _id: OUTSIDER, blockList: [] }] });
   let countCalls = 0;
@@ -71,9 +71,42 @@ test("getConversations returns nicknames and excludes muted unread messages", as
     assert.equal(res.body.conversations[0].unreadCount, 0);
     assert.deepEqual(res.body.conversations[0].nicknames, [{ user: OTHER, nickname: "Buddy" }]);
     assert.equal(res.body.conversations[0].quickIcon, "❤️");
+    assert.equal(res.body.conversations[0].background, "mint");
+    assert.equal(res.body.conversations[0].bubbleStyle, "frog");
     assert.equal(res.body.conversations[1].unreadCount, 3);
     assert.equal(countCalls, 1);
   } finally { Conversation.find = original.find; User.find = original.usersFind; Message.countDocuments = original.count; }
+});
+
+test("conversation appearance can be set and reset by either participant", async () => {
+  const original = Conversation.findById;
+  const item = conversation();
+  Conversation.findById = async () => item;
+  try {
+    const set = response();
+    await setConversationAppearance({ params: { conversationId: CID }, body: { background: "mint", bubbleStyle: "frog" }, user: { _id: ME } }, set);
+    assert.equal(set.statusCode, 200);
+    assert.deepEqual(set.body, { background: "mint", bubbleStyle: "frog" });
+    const reset = response();
+    await setConversationAppearance({ params: { conversationId: CID }, body: { background: "", bubbleStyle: "" }, user: { _id: OTHER } }, reset);
+    assert.deepEqual(reset.body, { background: "", bubbleStyle: "" });
+  } finally { Conversation.findById = original; }
+});
+
+test("conversation appearance rejects unknown keys and non-participants", async () => {
+  const original = Conversation.findById;
+  Conversation.findById = async () => conversation();
+  try {
+    const badBackground = response();
+    await setConversationAppearance({ params: { conversationId: CID }, body: { background: "ultraviolet" }, user: { _id: ME } }, badBackground);
+    assert.equal(badBackground.statusCode, 400);
+    const badBubble = response();
+    await setConversationAppearance({ params: { conversationId: CID }, body: { bubbleStyle: "unknown" }, user: { _id: ME } }, badBubble);
+    assert.equal(badBubble.statusCode, 400);
+    const forbidden = response();
+    await setConversationAppearance({ params: { conversationId: CID }, body: { background: "sky" }, user: { _id: OUTSIDER } }, forbidden);
+    assert.equal(forbidden.statusCode, 403);
+  } finally { Conversation.findById = original; }
 });
 
 test("quick icon can be set, reset, rejects invalid values and forbids outsiders", async () => {

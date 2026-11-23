@@ -217,7 +217,7 @@
 .ridge-chat-settings-wrap { position: relative; flex: 0 0 auto; }
 .ridge-chat-settings-button,.ridge-chat-settings-actions button { min-height: 38px; padding: 0 13px; border: 1px solid #e6e8ef; border-radius: 999px; background: #fff; color: #2f4be0; font: inherit; font-weight: 600; cursor: pointer; }
 .ridge-chat-settings-button { width: 42px; padding: 0; font-size: 22px; line-height: 1; }
-.ridge-chat-settings { position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; display: grid; width: min(300px, calc(100vw - 40px)); gap: 12px; padding: 16px; border: 1px solid #e6e8ef; border-radius: 16px; background: #fff; font-family: "Be Vietnam Pro",system-ui,sans-serif; }
+.ridge-chat-settings { position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; display: grid; width: min(320px, calc(100vw - 32px)); max-height: min(70dvh, 620px); gap: 12px; overflow-y: auto; padding: 16px; border: 1px solid #e6e8ef; border-radius: 16px; background: #fff; font-family: "Be Vietnam Pro",system-ui,sans-serif; }
 .ridge-chat-settings > label { display: grid; gap: 5px; color: #30384a; font-size: 13px; font-weight: 600; }
 .ridge-chat-settings small { color: #737b8d; font-size: 11px; font-weight: 400; }
 .ridge-chat-settings input:not([type="checkbox"]) { width: 100%; min-height: 38px; padding: 0 10px; border: 1px solid #e6e8ef; border-radius: 10px; color: #172033; font: inherit; }
@@ -229,6 +229,27 @@
 .ridge-quick-icon-reset { justify-self: start; padding: 0 12px; color: #2f4be0; }
 .ridge-mute-toggle { display: flex !important; grid-template-columns: auto 1fr; align-items: center; }
 .ridge-mute-toggle input { accent-color: #2f4be0; }
+.ridge-appearance-options { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.ridge-appearance-options button { min-height: 34px; border: 1px solid #e6e8ef; border-radius: 999px; background: #fff; color: #30384a; cursor: pointer; }
+.ridge-appearance-options button[aria-pressed="true"] { border: 2px solid #2f4be0; }
+.ridge-background-options .chat-bg-swatch { width: 30px; min-height: 30px; padding: 0; }
+.chat-bg-swatch.chat-bg-mint { background: #e5f7ef; }
+.chat-bg-swatch.chat-bg-sky { background: #e7f3ff; }
+.chat-bg-swatch.chat-bg-peach { background: #fff0e5; }
+.chat-bg-swatch.chat-bg-lavender { background: #f0eaff; }
+.chat-bg-swatch.chat-bg-sunset { background: linear-gradient(145deg, #ffe7d9, #fff0e9 55%, #fff7e9); }
+.chat-bg-swatch.chat-bg-night { background: #293145; }
+.chat-bg-swatch.chat-bg-paper { background: #f6f1e6; }
+.chat-bg-swatch.chat-bg-pink { background: #fff0f6; }
+.ridge-appearance-options .ridge-appearance-reset { padding: 0 11px; color: #2f4be0; }
+.ridge-bubble-options .bubble-preview { position: relative; min-width: 47px; padding: 0 10px; font-size: 12px; font-weight: 700; }
+.bubble-preview-cat-dog { background: #fff2d9 !important; color: #5d4230 !important; }
+.bubble-preview-frog { background: #51a777 !important; color: #fff !important; }
+.bubble-preview-pink-heart { background: #ffe1eb !important; color: #7a3451 !important; }
+.bubble-preview-sky-fish { background: #d8f0ff !important; color: #25516f !important; }
+.bubble-preview-duck { background: #fff1b8 !important; color: #574411 !important; }
+.bubble-preview-sketch { border-style: dashed !important; color: #30384a !important; }
+.bubble-preview-dark { background: #343944 !important; color: #fff !important; }
 .ridge-message-sender-name { display: block; margin: 0 0 3px 8px; color: #737b8d; font-size: 11px; }
 
 .ridge-conversation-preview {
@@ -407,6 +428,49 @@
   background: var(--news-field, #f8f9fc);
   color: var(--news-ink, #0f172a);
 }
+
+.ridge-message-list.chat-bg-mint { background: linear-gradient(145deg, #e5f7ef, #f3fbf7); }
+.ridge-message-list.chat-bg-sky { background: linear-gradient(145deg, #e7f3ff, #f5faff); }
+.ridge-message-list.chat-bg-peach { background: linear-gradient(145deg, #fff0e5, #fff9f4); }
+.ridge-message-list.chat-bg-lavender { background: linear-gradient(145deg, #f0eaff, #faf8ff); }
+.ridge-message-list.chat-bg-sunset { background: linear-gradient(145deg, #ffe7d9, #fff0e9 55%, #fff7e9); }
+.ridge-message-list.chat-bg-night { background: linear-gradient(145deg, #202638, #30394d); color: #f8fafc; }
+.ridge-message-list.chat-bg-night .empty-messages,.ridge-message-list.chat-bg-night .ridge-message-state,.ridge-message-list.chat-bg-night .ridge-message-sender-name,.ridge-message-list.chat-bg-night .ridge-message-status,.ridge-message-list.chat-bg-night .ridge-typing { color: #e4e9f4; }
+.ridge-message-list.chat-bg-night .ridge-message-time { color: #626b7c; }
+.ridge-message-list.chat-bg-night .ridge-message-bubble.mine .ridge-message-time { color: rgb(255 255 255 / 82%); }
+.ridge-message-list.chat-bg-paper { background: #f6f1e6; }
+.ridge-message-list.chat-bg-pink { background: linear-gradient(145deg, #fff0f6, #fff8fb); }
+
+.bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),
+.bubble-style-frog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),
+.bubble-style-pink-heart .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),
+.bubble-style-sky-fish .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),
+.bubble-style-duck .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),
+.bubble-style-sketch .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),
+.bubble-style-dark .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { position: relative; }
+.bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border: 1px solid #9b765b; background: #fff2d9; color: #493629; }
+.bubble-style-cat-dog .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #ffe3b2; }
+.bubble-style-frog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border-color: #38865c; background: #51a777; color: #fff; }
+.bubble-style-frog .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #368c5e; }
+.bubble-style-pink-heart .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { background: #ffe1eb; color: #632a42; }
+.bubble-style-pink-heart .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #ffc5d9; }
+.bubble-style-sky-fish .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { background: #d8f0ff; color: #24445c; }
+.bubble-style-sky-fish .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #b5e1ff; }
+.bubble-style-duck .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { background: #fff1b8; color: #493b15; }
+.bubble-style-duck .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #ffe68a; }
+.bubble-style-sketch .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border: 2px dashed #687080; background: #fff; color: #222b3a; }
+.bubble-style-sketch .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #eef0ff; }
+.bubble-style-dark .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border-color: #505765; background: #414653; color: #f8fafc; }
+.bubble-style-dark .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #303541; }
+.bubble-style-frog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::before { position: absolute; top: -6px; left: 12px; content: "••"; color: #fff; font-size: 17px; letter-spacing: 5px; }
+.bubble-style-frog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after { position: absolute; right: 12px; bottom: 2px; left: 12px; height: 2px; border-radius: 2px; background: #ffae55; content: ""; }
+.bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-pink-heart .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-sky-fish .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-duck .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-sketch .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time { color: #4b5565; }
+.bubble-style-frog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-dark .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time { color: #f1f4fa; }
+.bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::before { position: absolute; top: -12px; left: 2px; content: "🐱"; font-size: 14px; }
+.bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after { position: absolute; top: -12px; right: 2px; content: "🐶"; font-size: 14px; }
+.bubble-style-pink-heart .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after { position: absolute; top: -11px; right: 7px; content: "♥"; color: #e35c91; font-size: 15px; }
+.bubble-style-sky-fish .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after { position: absolute; top: -11px; right: 7px; content: "🐟"; font-size: 14px; }
+.bubble-style-duck .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after { position: absolute; top: -11px; right: 7px; content: "🐤"; font-size: 14px; }
 
 .ridge-messages .ridge-message-compose input:focus-visible {
   border-color: var(--news-accent, #2f4be0);

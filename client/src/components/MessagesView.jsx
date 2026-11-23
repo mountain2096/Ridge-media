@@ -24,6 +24,8 @@ function nicknameFor(conversation, userId) {
 }
 
 const QUICK_ICONS = ["❤️", "👍", "😂", "😮", "😢", "🙏", "🔥", "⭐", "🎉", "😍", "👏", "💯"];
+const CHAT_BACKGROUNDS = ["mint", "sky", "peach", "lavender", "sunset", "night", "paper", "pink"];
+const CHAT_BUBBLE_STYLES = ["cat-dog", "frog", "pink-heart", "sky-fish", "duck", "sketch", "dark"];
 
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const location = useLocation();
@@ -111,6 +113,24 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     const data = await response.json();
     if (!response.ok) { setConversationActionError(data.message || "Không thể cập nhật biểu tượng nhanh."); return; }
     setConversations((items) => items.map((item) => item._id === activeConversationId ? { ...item, quickIcon: data.quickIcon } : item));
+  }
+  async function saveAppearance(field, value) {
+    const conversationId = activeConversationId;
+    const previous = activeConversation?.[field] || "";
+    setConversationActionError("");
+    setConversations((items) => items.map((item) => item._id === conversationId ? { ...item, [field]: value } : item));
+    try {
+      const response = await fetch(`${API_BASE}/api/message/conversation/${conversationId}/appearance`, {
+        method: "PATCH", headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể lưu giao diện cuộc trò chuyện.");
+      setConversations((items) => items.map((item) => item._id === conversationId ? { ...item, ...data } : item));
+    } catch (requestError) {
+      setConversations((items) => items.map((item) => item._id === conversationId && item[field] === value ? { ...item, [field]: previous } : item));
+      setConversationActionError(requestError.message || "Không thể lưu giao diện cuộc trò chuyện.");
+    }
   }
   const lastOwnMessageId = useMemo(() => {
     for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -300,9 +320,9 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       ));
     }
 
-    function handleConversationUpdated({ conversationId, nicknames, isMuted, quickIcon } = {}) {
+    function handleConversationUpdated({ conversationId, nicknames, isMuted, quickIcon, background, bubbleStyle } = {}) {
       setConversations((items) => items.map((item) => item._id === conversationId
-        ? { ...item, nicknames: nicknames || item.nicknames, isMuted: Boolean(isMuted), unreadCount: isMuted ? 0 : item.unreadCount, ...(quickIcon !== undefined ? { quickIcon } : {}) }
+        ? { ...item, nicknames: nicknames || item.nicknames, isMuted: Boolean(isMuted), unreadCount: isMuted ? 0 : item.unreadCount, ...(quickIcon !== undefined ? { quickIcon } : {}), ...(background !== undefined ? { background } : {}), ...(bubbleStyle !== undefined ? { bubbleStyle } : {}) }
         : item));
       window.dispatchEvent(new Event("ridge:counts-changed"));
     }
@@ -622,7 +642,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
         </>}
       </aside>
 
-      <section className="conversation-panel ridge-conversation-panel">
+      <section className={`conversation-panel ridge-conversation-panel${activeConversation?.bubbleStyle ? ` bubble-style-${activeConversation.bubbleStyle}` : ""}`}>
         {activeConversation ? (
           <>
             <header className="conversation-header ridge-conversation-header">
@@ -645,10 +665,20 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                   <strong>Biểu tượng nhanh</strong>
                   <div className="ridge-quick-icons" aria-label="Chọn biểu tượng nhanh">{QUICK_ICONS.map((icon) => <button key={icon} type="button" aria-label={icon} aria-pressed={activeConversation.quickIcon === icon} onClick={() => void saveQuickIcon(icon)}>{icon}</button>)}</div>
                   <button className="ridge-quick-icon-reset" type="button" onClick={() => void saveQuickIcon("")}>Đặt lại</button>
+                  <strong>Nền đoạn chat</strong>
+                  <div className="ridge-appearance-options ridge-background-options" aria-label="Chọn nền đoạn chat">
+                    {CHAT_BACKGROUNDS.map((key) => <button key={key} className={`chat-bg-swatch chat-bg-${key}`} type="button" aria-label={key} aria-pressed={activeConversation.background === key} onClick={() => void saveAppearance("background", key)} />)}
+                    <button className="ridge-appearance-reset" type="button" aria-pressed={!activeConversation.background} onClick={() => void saveAppearance("background", "")}>Mặc định</button>
+                  </div>
+                  <strong>Kiểu bong bóng</strong>
+                  <div className="ridge-appearance-options ridge-bubble-options" aria-label="Chọn kiểu bong bóng">
+                    {CHAT_BUBBLE_STYLES.map((key) => <button key={key} className={`bubble-preview bubble-preview-${key}`} type="button" aria-label={key} aria-pressed={activeConversation.bubbleStyle === key} onClick={() => void saveAppearance("bubbleStyle", key)}>Aa</button>)}
+                    <button className="ridge-appearance-reset" type="button" aria-pressed={!activeConversation.bubbleStyle} onClick={() => void saveAppearance("bubbleStyle", "")}>Mặc định</button>
+                  </div>
                 </div>}
               </div>
             </header>
-            <div className="message-list ridge-message-list" data-lenis-prevent aria-live="polite" ref={messageListRef}>
+            <div className={`message-list ridge-message-list${activeConversation.background ? ` chat-bg-${activeConversation.background}` : ""}`} data-lenis-prevent aria-live="polite" ref={messageListRef}>
               {isLoadingMessages && <p className="ridge-message-state">Đang tải tin nhắn...</p>}
               {!isLoadingMessages && messages.length === 0 && (
                 <p className="empty-messages">Hãy gửi lời chào đầu tiên.</p>
@@ -662,7 +692,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                     <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
                       <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
                         {!isMine && <span className="ridge-message-sender-name">{shownOtherName}</span>}
-                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}${message.type === "post_share" ? " post-share" : ""}`}>
+                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}${message.type === "post_share" ? " post-share" : ""}${message.type !== "sticker" && message.type !== "post_share" && Boolean(message.content?.trim()) && /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F\u200D\s]+$/u.test(message.content.trim()) ? " emoji-only" : ""}`}>
                           {sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
                             {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={message.sharedPostId.authorId.profilePicture} alt="" /> : <span className="ridge-shared-post-initial">{message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?"}</span>}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span>{message.sharedPostId.content && <span className="ridge-shared-post-text">{message.sharedPostId.content}</span>}{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={message.sharedPostId.image} alt="" /> : <><video src={message.sharedPostId.video} preload="metadata" muted playsInline /><span className="ridge-shared-post-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span></>}</span>}</> : "Bài viết không còn khả dụng"}
                           </Link> : message.content}
