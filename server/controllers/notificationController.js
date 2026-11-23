@@ -1,4 +1,5 @@
 const Notification = require("../models/Notification");
+const errorResponse = require("../utils/errorResponse");
 
 
 const getNotification = async (req, res) =>{
@@ -12,9 +13,7 @@ const getNotification = async (req, res) =>{
             notifications
         })
     } catch (err){
-        res.status(500).json({
-            message: err.message
-        })
+        return errorResponse(res, err);
     }
 }
 const markNotificationIsRead = async (req, res) =>{
@@ -38,9 +37,8 @@ const markNotificationIsRead = async (req, res) =>{
             message: "Đã đọc!"
         })
     } catch(err){
-        res.status(400).json({
-            message:err.message
-        })
+        if (err.name === "CastError") return res.status(400).json({ message: "ID thông báo không hợp lệ!" });
+        return errorResponse(res, err);
     }
 }
 module.exports = {

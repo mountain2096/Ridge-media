@@ -1,4 +1,5 @@
 const Story = require("../models/Story");
+const errorResponse = require("../utils/errorResponse");
 
 const createStory = async (req, res) => {
     try {
@@ -28,7 +29,7 @@ const createStory = async (req, res) => {
 
         res.status(201).json({ message: "Đã đăng story!", story });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
@@ -44,7 +45,7 @@ const getStories = async (req, res) => {
 
         res.status(200).json({ stories });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
@@ -61,9 +62,8 @@ const deleteStory = async (req, res) => {
         await story.deleteOne();
         res.status(200).json({ message: "Đã xóa story!" });
     } catch (error) {
-        res.status(error.name === "CastError" ? 400 : 500).json({
-            message: error.name === "CastError" ? "ID story không hợp lệ!" : error.message,
-        });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID story không hợp lệ!" });
+        return errorResponse(res, error);
     }
 };
 

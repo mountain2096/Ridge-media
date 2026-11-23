@@ -1,0 +1,515 @@
+.messages-view.ridge-messages {
+  display: grid;
+  width: 100%;
+  height: min(760px, calc(100dvh - 180px));
+  min-height: 560px;
+  grid-template-columns: minmax(250px, 0.82fr) minmax(0, 1.6fr);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--news-radius-card, 16px);
+  background: transparent;
+  color: var(--news-ink, #0f172a);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.ridge-messages,
+.ridge-messages * {
+  box-sizing: border-box;
+}
+
+.ridge-messages button,
+.ridge-messages input {
+  font: inherit;
+}
+
+.ridge-messages button:focus-visible,
+.ridge-messages a:focus-visible,
+.ridge-messages input:focus-visible {
+  outline: 2px solid var(--news-accent, #2f4be0);
+  outline-offset: 2px;
+}
+
+.ridge-messages .ridge-conversation-list,
+.ridge-messages .ridge-conversation-panel {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: var(--news-radius-card, 16px);
+  background: var(--news-surface, #fff);
+}
+
+.ridge-messages .ridge-conversation-list {
+  display: flex;
+  flex-direction: column;
+  margin-right: 12px;
+  padding: 0;
+  border-right: 1px solid var(--news-border, #e6e8ef);
+}
+
+.ridge-list-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--news-border, #e6e8ef);
+}
+
+.ridge-list-header h1 {
+  margin: 0;
+  color: var(--news-ink, #0f172a);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.ridge-new-message-button {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 50%;
+  color: var(--news-ink, #0f172a);
+  background: var(--news-surface, #fff);
+  cursor: pointer;
+}
+
+.ridge-new-message-button:hover { background: var(--news-hover, #eef0f7); }
+.ridge-new-message-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
+.ridge-list-header-picker { justify-content: flex-start; }
+
+.ridge-picker-back {
+  min-height: 36px;
+  flex: 0 0 auto;
+  padding: 0 9px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 9px;
+  color: var(--news-ink, #0f172a);
+  background: var(--news-surface, #fff);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ridge-list-header-picker h1 { min-width: 0; font-size: 18px; }
+.ridge-list-search { flex: 0 0 auto; width: calc(100% - 24px); min-height: 40px; margin: 12px; padding: 0 12px; border: 1px solid var(--news-border, #e6e8ef); border-radius: 10px; color: var(--news-ink, #0f172a); background: var(--news-field, #f8f9fc); font: inherit; font-size: 14px; }
+.ridge-list-search:focus-visible { border-color: var(--news-accent, #2f4be0); }
+.ridge-friend-picker-list { padding-top: 0; }
+.ridge-picker-friend { display: flex; width: 100%; min-height: 62px; align-items: center; gap: 11px; padding: 8px 10px; border: 0; border-radius: 11px; color: var(--news-ink, #0f172a); background: transparent; font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.ridge-picker-friend:hover { background: var(--news-hover, #eef0f7); }
+.ridge-picker-friend .ridge-avatar { width: 42px; height: 42px; min-width: 42px; flex-basis: 42px; }
+.ridge-list-error { margin: 0; padding: 12px; color: var(--news-danger, #b42318); font-size: 13px; overflow-wrap: anywhere; }
+
+.ridge-conversation-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.ridge-list-state,
+.ridge-messages .empty-conversations {
+  margin: 0;
+  padding: 14px 12px;
+  color: var(--news-muted, #5b6478);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ridge-conversation-row {
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.ridge-messages .ridge-conversation-item {
+  display: flex;
+  min-width: 0;
+  min-height: 72px;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--news-ink, #0f172a);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ridge-messages .ridge-conversation-item:hover {
+  background: var(--news-hover, #eef0f7);
+}
+
+.ridge-messages .ridge-conversation-item.active {
+  border-color: #d9def9;
+  background: #f1f3ff;
+}
+
+.ridge-messages .ridge-avatar,
+.ridge-messages .conversation-header .person-avatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: #e8ebf5;
+  color: var(--news-nav, #3a4358);
+  font-size: 17px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.ridge-messages .ridge-avatar img,
+.ridge-messages .conversation-header .person-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ridge-conversation-summary {
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.ridge-conversation-top,
+.ridge-conversation-bottom {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ridge-conversation-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--news-ink, #0f172a);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ridge-conversation-time {
+  flex: 0 0 auto;
+  color: var(--news-muted, #5b6478);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ridge-conversation-preview {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ridge-messages .ridge-unread-count {
+  min-width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: var(--news-accent, #2f4be0);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.ridge-profile-link {
+  display: grid;
+  width: 34px;
+  min-width: 34px;
+  align-self: center;
+  place-items: center;
+  color: var(--news-muted, #5b6478);
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+
+.ridge-conversation-row:hover .ridge-profile-link,
+.ridge-profile-link:focus-visible {
+  color: var(--news-accent, #2f4be0);
+  opacity: 1;
+}
+
+.ridge-profile-link svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ridge-messages .ridge-conversation-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border-radius: var(--news-radius-card, 16px);
+}
+
+.ridge-messages .ridge-conversation-header {
+  display: flex;
+  min-height: 72px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--news-border, #e6e8ef);
+}
+
+.ridge-conversation-header > a:last-child {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--news-ink, #0f172a);
+  font-weight: 650;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ridge-back-button {
+  display: none;
+  min-height: 40px;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 10px;
+  background: var(--news-surface, #fff);
+  color: var(--news-nav, #3a4358);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ridge-messages .ridge-message-list {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 20px;
+  overscroll-behavior: contain;
+  background: var(--news-field, #f8f9fc);
+  scroll-behavior: smooth;
+}
+
+.ridge-messages .empty-messages,
+.ridge-message-state {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  margin: 0;
+  padding: 20px;
+  color: var(--news-muted, #5b6478);
+  text-align: center;
+}
+
+.ridge-messages .ridge-message-bubble {
+  display: flex;
+  max-width: min(76%, 520px);
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 14px 7px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 16px;
+  background: var(--news-surface, #fff);
+  color: var(--news-ink, #0f172a);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+}
+
+.ridge-messages .ridge-message-bubble.mine {
+  align-self: flex-end;
+  border-color: var(--news-accent, #2f4be0);
+  border-bottom-right-radius: 5px;
+  background: var(--news-accent, #2f4be0);
+  color: #fff;
+}
+
+.ridge-messages .ridge-message-bubble.theirs {
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
+  background: var(--news-surface, #fff);
+}
+
+.ridge-message-time {
+  align-self: flex-end;
+  color: var(--news-muted, #5b6478);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.ridge-message-bubble.mine .ridge-message-time {
+  color: rgb(255 255 255 / 78%);
+}
+
+.ridge-messages .ridge-message-compose {
+  display: flex;
+  min-height: 72px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--news-border, #e6e8ef);
+  background: var(--news-surface, #fff);
+}
+
+.ridge-messages .ridge-message-compose input {
+  min-width: 0;
+  min-height: 46px;
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 13px;
+  background: var(--news-field, #f8f9fc);
+  color: var(--news-ink, #0f172a);
+}
+
+.ridge-messages .ridge-message-compose input:focus-visible {
+  border-color: var(--news-accent, #2f4be0);
+}
+
+.ridge-messages .ridge-message-compose button {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 13px;
+  background: var(--news-accent, #2f4be0);
+  color: #fff;
+  cursor: pointer;
+}
+
+.ridge-messages .ridge-message-compose button:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.ridge-messages .ridge-message-compose button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.ridge-message-compose button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ridge-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ridge-messages .ridge-messages-error {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 10px 16px;
+  border-top: 1px solid #f1c6c3;
+  background: #fff7f6;
+  color: var(--news-danger, #b42318);
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .messages-view.ridge-messages {
+    height: min(720px, calc(100dvh - 170px));
+    min-height: 500px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ridge-messages .ridge-conversation-list {
+    margin: 0;
+    border-radius: var(--news-radius-card, 16px);
+  }
+
+  .ridge-messages .ridge-conversation-panel {
+    display: none;
+  }
+
+  .ridge-messages.show-chat .ridge-conversation-list {
+    display: none;
+  }
+
+  .ridge-messages.show-chat .ridge-conversation-panel {
+    display: flex;
+  }
+
+  .ridge-messages .ridge-back-button {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ridge-messages .ridge-conversation-header {
+    gap: 9px;
+    padding: 10px 12px;
+  }
+
+  .ridge-messages .ridge-message-list {
+    padding: 14px 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .messages-view.ridge-messages {
+    height: min(680px, calc(100dvh - 150px));
+    min-height: 460px;
+  }
+
+  .ridge-messages .ridge-conversation-item {
+    gap: 9px;
+    padding-inline: 8px;
+  }
+
+  .ridge-messages .ridge-avatar {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    flex-basis: 42px;
+  }
+
+  .ridge-profile-link {
+    width: 28px;
+    min-width: 28px;
+  }
+
+  .ridge-conversation-time {
+    font-size: 10px;
+  }
+}

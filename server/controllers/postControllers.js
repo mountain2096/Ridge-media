@@ -1,7 +1,9 @@
+const errorResponse = require("../utils/errorResponse");
 const Post = require("../models/Post");
 const Notification = require("../models/Notification")
 const Comment = require("../models/Comment");
 const User = require("../models/User");
+const validateMediaUrl = require("../utils/validateMediaUrl");
 
 const createPost = async (req,res) =>{
     try{
@@ -15,6 +17,9 @@ const createPost = async (req,res) =>{
         if ((image !== undefined && typeof image !== "string") ||
             (video !== undefined && typeof video !== "string")) {
             return res.status(400).json({ message: "Đường dẫn media không hợp lệ!" });
+        }
+        if (!validateMediaUrl(image, req) || !validateMediaUrl(video, req)) {
+            return res.status(400).json({ message: "Media phải là URL hợp lệ từ máy chủ tải lên của chúng tôi." });
         }
         if (!['public', 'friends', 'private'].includes(privacy)) {
             return res.status(400).json({ message: "Quyền riêng tư bài viết không hợp lệ!" });
@@ -31,9 +36,7 @@ const createPost = async (req,res) =>{
             message:"Đã tạo bài viết mới!"
         })
     } catch(err){
-        res.status(500).json({
-            message: err.message
-        })
+        return errorResponse(res, err);
     }
 }
 
@@ -56,32 +59,47 @@ const getPosts = async (req,res) =>{
             { authorId: req.user._id },
             { privacy: "friends", authorId: { $in: req.user.friend || [] } },
         ];
-        const blockedSourcePostIds = blockedUserIds.length
-            ? await Post.find({ authorId: { $in: blockedUserIds } }).distinct("_id")
-            : [];
-        const inactiveSourcePostIds = await Post.find({ status: { $ne: "active" } }).distinct("_id");
         const filter = {
             status: "active",
             authorId: { $nin: blockedUserIds },
-            $and: [
-                { $or: visibleByPrivacy },
-                { $or: [
-                    { originalPostId: null },
-                    { originalPostId: { $nin: [...blockedSourcePostIds, ...inactiveSourcePostIds] } },
-                ] },
-            ],
+            $or: visibleByPrivacy,
         };
+        if (req.query.authorId !== undefined) {
+            if (typeof req.query.authorId !== "string" || !/^[a-f\d]{24}$/i.test(req.query.authorId)) {
+                return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+            }
+            filter.authorId = { $eq: req.query.authorId, $nin: blockedUserIds };
+        }
         const [posts, total] = await Promise.all([
             Post.find(filter)
                 .populate("authorId", "username profilePicture")
-                .populate("originalPostId", "content image video authorId privacy status")
+                .populate({
+                    path: "originalPostId",
+                    select: "content image video authorId privacy status createdAt",
+                    match: {
+                        status: "active",
+                        authorId: { $nin: blockedUserIds },
+                        $or: [
+                            { privacy: "public" },
+                            { authorId: req.user._id },
+                            { privacy: "friends", authorId: { $in: req.user.friend || [] } },
+                        ],
+                    },
+                    populate: { path: "authorId", select: "username profilePicture" },
+                })
                 .sort({ createdAt: -1 })
                 .skip((page - 1) * limit)
                 .limit(limit),
             Post.countDocuments(filter),
         ]);
-        
+        const commentCounts = posts.length ? await Comment.aggregate([
+            { $match: { postId: { $in: posts.map((post) => post._id) }, status: "active" } },
+            { $group: { _id: "$postId", count: { $sum: 1 } } },
+        ]) : [];
+        const commentCountByPost = new Map(commentCounts.map((entry) => [entry._id.toString(), entry.count]));
+
         const postWithLikeStatus = posts.map((post) =>{
+            const hasOriginalReference = Boolean(post.originalPostId || post.populated?.("originalPostId"));
             const postData = post.toObject();
 
             postData.isLiked = post.likes.some(
@@ -92,6 +110,13 @@ const getPosts = async (req,res) =>{
             postData.isSaved = req.user.savedPosts.some(
                 (postId) => postId.toString() === post._id.toString()
             );
+            postData.commentsCount = commentCountByPost.get(post._id.toString()) || 0;
+            postData.originalUnavailable = hasOriginalReference && !postData.originalPostId;
+            if (postData.originalUnavailable) {
+                postData.content = "";
+                postData.image = "";
+                postData.video = "";
+            }
             return postData
         })
         res.status(200).json({
@@ -99,9 +124,7 @@ const getPosts = async (req,res) =>{
             pagination: { page, limit, total, pages: Math.ceil(total / limit) },
         })
     }catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
+        return errorResponse(res, error);
     }
 }
 const getPostById = async (req, res) =>{
@@ -141,9 +164,8 @@ const getPostById = async (req, res) =>{
             post
         })
     } catch(err){
-        res.status(err.name === "CastError" ? 400 : 500).json({
-            message: err.name === "CastError" ? "ID bài viết không hợp lệ!" : err.message,
-        });
+        if (err.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
+        return errorResponse(res, err);
     }
 }
 const updatePost = async (req, res) =>{
@@ -154,6 +176,9 @@ const updatePost = async (req, res) =>{
             (image !== undefined && typeof image !== "string") ||
             (video !== undefined && typeof video !== "string")) {
             return res.status(400).json({ message: "Dữ liệu bài viết không hợp lệ!" });
+        }
+        if (!validateMediaUrl(image, req) || !validateMediaUrl(video, req)) {
+            return res.status(400).json({ message: "Media phải là URL hợp lệ từ máy chủ tải lên của chúng tôi." });
         }
 
         const post = await Post.findOne({ _id: req.params.id, status: "active" });
@@ -193,9 +218,8 @@ const updatePost = async (req, res) =>{
             post,
         });
     } catch(err){
-        res.status(err.name === "CastError" ? 400 : 500).json({
-            message: err.name === "CastError" ? "ID bài viết không hợp lệ!" : err.message,
-        });
+        if (err.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
+        return errorResponse(res, err);
     }
 }
 const deletePost = async (req, res) =>{
@@ -225,9 +249,8 @@ const deletePost = async (req, res) =>{
             message:"Bài viết đã được xóa!"
         })
     } catch(err){
-        res.status(err.name === "CastError" ? 400 : 500).json({
-            message: err.name === "CastError" ? "ID bài viết không hợp lệ!" : err.message,
-        });
+        if (err.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
+        return errorResponse(res, err);
     }
 }
 const likePost = async (req, res) =>{
@@ -267,9 +290,8 @@ const likePost = async (req, res) =>{
             likes: post.likes
         })
     }catch (error) {
-        res.status(error.name === "CastError" ? 400 : 500).json({
-            message: error.name === "CastError" ? "ID bài viết không hợp lệ!" : error.message,
-        });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
+        return errorResponse(res, error);
     }
 }
 const unlikePost = async (req, res) => {
@@ -291,9 +313,8 @@ const unlikePost = async (req, res) => {
             likes: post.likes,
         });
     } catch (error) {
-        res.status(error.name === "CastError" ? 400 : 500).json({
-            message: error.name === "CastError" ? "ID bài viết không hợp lệ!" : error.message,
-        });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
+        return errorResponse(res, error);
     }
 };
 const toggleSavePost = async (req, res) => {
@@ -323,7 +344,7 @@ const toggleSavePost = async (req, res) => {
         if (error.name === "CastError") {
             return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
         }
-        res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
@@ -364,7 +385,8 @@ const sharePost = async (req, res) => {
         }
         return res.status(201).json({ message: "Đã chia sẻ bài viết!", post: sharedPost });
     } catch (error) {
-        return res.status(error.name === "CastError" ? 400 : 500).json({ message: error.message });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID bài viết không hợp lệ!" });
+        return errorResponse(res, error);
     }
 };
 module.exports = {

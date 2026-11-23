@@ -3,6 +3,7 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
+const errorResponse = require("../utils/errorResponse");
 
 const validatePassword = (password) => typeof password === "string" && password.length >= 8 &&
     /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
@@ -67,10 +68,7 @@ const register = async (req, res) =>{
         if (error.code === 11000) {
             return res.status(400).json({ message: "Email đã được sử dụng!" });
         }
-        console.error(error);
-        res.status(500).json({
-            message: error.message
-        })
+        return errorResponse(res, error);
     }
 }
 
@@ -127,9 +125,7 @@ const login = async(req,res) =>{
             }
         });
     } catch(err){
-        res.status(500).json({
-            message: err.message
-        })
+        return errorResponse(res, err);
     }
 }
 const forgotPassword = async (req, res) =>{
@@ -241,9 +237,7 @@ const resetPassword = async (req, res) => {
             message: "Đặt lại mật khẩu thành công!"
         });
     } catch (err) {
-        return res.status(500).json({
-            message: err.message
-        });
+        return errorResponse(res, err);
     }
 };
 
@@ -272,7 +266,7 @@ const changePassword = async (req, res) => {
         await user.save();
         return res.status(200).json({ message: "Đổi mật khẩu thành công!" });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../lib/api.js";
+import "../auth.css";
 function ForgotPasswordPage(){
     const [feedback, setFeedback] = useState({type:"", text:""});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,7 +16,7 @@ function ForgotPasswordPage(){
       const email = formData.get("email");
 
       const response = await fetch(
-        `http://localhost:5000/api/auth/forgot-password`,
+        `${API_BASE}/api/auth/forgot-password`,
         {
           method:"POST",
           headers:{
@@ -43,71 +45,19 @@ function ForgotPasswordPage(){
       setIsSubmitting(false)
     }
   }
-    return(
-        <main className="auth-page">
-        <section className="welcome-panel">
-                <div className="brand">
-                <span className ="brand-icon">R</span>
-                <span>Ridge</span>
-                </div>
-
-                <div className ="welcome-message">
-                <h1>WELCOME TO <br /> RIDGE</h1>
-                <p>Connect, share, and discover with our community!</p>
-                </div>
-
-                <div className="panel-footer">
-                    <div className="avatar-row">
-                    <span className="avatar avatar-one">R</span>
-                    <span className="avatar avatar-two">I</span>
-                    <span className="avatar avatar-three">D</span>
-                    <span className="avatar avatar-four">G</span>
-                    <span className="avatar avatar-five">E</span>
-                    </div>
-                <div className="bottom-brand">Ridge</div>
-                </div>
-            </section>
-
-            <section className="form-panel">
-                <div className="form-placeholders">
-                    <div className="tabs">
-                        <h1>Quên mật khẩu</h1>
-                    </div>
-                <form className='register-form' onSubmit={handleForgotPassword}>
-                <input
-                type="email"
-                name="email"
-                placeholder='Email'
-                required/>
-
-                <button
-                className='submit-button'
-                type="submit"
-                disabled={isSubmitting}
-                >
-                    {isSubmitting ? "Đang xử lý..." : "Gửi liên kết"}
-                </button>
-
-                {feedback.text && (
-                    <p className={`feedback-message ${feedback.type}`}>
-                    {feedback.text}
-                    </p>
-                )}
-
-                <button
-                className='back-button'
-                    type="button"
-                    onClick={() => {
-                    setFeedback({ type: "", text: "" });
-                    navigate("/", {replace: true})
-                    }}
-                >
-                    Quay lại đăng nhập
-                </button>
-                </form>
-                </div>
-            </section>
-        </main>
+    return (
+      <main className="auth-page ridge-auth-page">
+        <section className="ridge-auth-card" aria-labelledby="forgot-title">
+          <div className="ridge-auth-brand" aria-label="Ridge"><span className="ridge-auth-mark" aria-hidden="true">R</span><span>Ridge</span></div>
+          <h1 className="ridge-auth-title" id="forgot-title">Quên mật khẩu</h1>
+          <form className="ridge-auth-form" onSubmit={handleForgotPassword}>
+            <div className="ridge-auth-field"><label htmlFor="forgot-email">Email</label><input id="forgot-email" type="email" name="email" autoComplete="email" required /></div>
+            <button className="ridge-auth-submit" type="submit" disabled={isSubmitting}>{isSubmitting ? "Đang xử lý..." : "Gửi liên kết"}</button>
+            {feedback.text && <p className={`ridge-auth-feedback ${feedback.type}`} role={feedback.type === "error" ? "alert" : "status"} aria-live={feedback.type === "error" ? "assertive" : "polite"}>{feedback.text}</p>}
+            <button className="ridge-auth-back" type="button" onClick={() => { setFeedback({ type: "", text: "" }); navigate("/", {replace: true}) }}>Quay lại đăng nhập</button>
+          </form>
+        </section>
+      </main>
     )
 }
 export default ForgotPasswordPage;

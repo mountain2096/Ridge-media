@@ -1,6 +1,7 @@
 const Report = require("../models/Report");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
+const errorResponse = require("../utils/errorResponse");
 
 const createReport = async (req, res) => {
     try {
@@ -27,7 +28,8 @@ const createReport = async (req, res) => {
         if (error.code === 11000) {
             return res.status(409).json({ message: "Bạn đã báo cáo nội dung này!" });
         }
-        return res.status(error.name === "CastError" ? 400 : 500).json({ message: error.message });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID nội dung không hợp lệ!" });
+        return errorResponse(res, error);
     }
 };
 

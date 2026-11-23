@@ -1,17 +1,38 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import MessagesView from "../components/MessagesView.jsx";
 import ProfileSettings from "../components/ProfileSettings.jsx";
 import AdminPanel from "../components/AdminPanel.jsx";
 import { uploadMedia } from "../lib/uploadMedia.js";
-function FeedPage(){
+import { API_BASE } from "../lib/api.js";
+import { useConfirm } from "../components/ConfirmDialog.jsx";
+import ReportDialog from "../components/ReportDialog.jsx";
+import Toast from "../components/Toast.jsx";
+import PostCard from "../components/PostCard.jsx";
+import StoryComposer from "../components/StoryComposer.jsx";
+import StoryViewer from "../components/StoryViewer.jsx";
+import "../newsfeed.css";
+import "../stories.css";
+
+function FriendPresence({ friend }) {
+  const label = friend.isOnline ? "Đang hoạt động" : "Không hoạt động";
+  return (
+    <span className="friend-presence" title={label}>
+      <span className={`friend-presence-dot ${friend.isOnline ? "is-online" : "is-offline"}`} aria-hidden="true" />
+      <span className="friend-presence-sr-only">{label}</span>
+    </span>
+  );
+}
+
+function FeedPage({ section = "feed" }){
+    const confirmAction = useConfirm();
     const navigate = useNavigate();
     const location = useLocation();
-    const [activeSection, setActiveSection] = useState("feed");
+    const { currentUser, setCurrentUser, searchQuery } = useOutletContext();
+    const activeSection = section;
     const [posts, setPosts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
-    const [profileError, setProfileError] = useState("");
     const [postContent, setPostContent] = useState("");
     const [postPrivacy, setPostPrivacy] = useState("public");
     const [feedPage, setFeedPage] = useState(1);
@@ -35,26 +56,28 @@ function FeedPage(){
     const [isUpdatingComment, setIsUpdatingComment] = useState(false);
     const [postImageFile, setPostImageFile] = useState(null);
     const [postVideoFile, setPostVideoFile] = useState(null);
-    const [openPostMenuId, setOpenPostMenuId] = useState(null);
     const [editingPostId, setEditingPostId] = useState(null);
     const [editingPostContent, setEditingPostContent] = useState("");
     const [postActionError, setPostActionError] = useState("");
     const [isSavingPost, setIsSavingPost] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
-    const [notifications, setNotifications] = useState([]);
-    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-    const [notificationError, setNotificationError] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
     const [people, setPeople] = useState([]);
     const [isLoadingPeople, setIsLoadingPeople] = useState(false);
     const [peopleError, setPeopleError] = useState("");
     const [sentRequestIds, setSentRequestIds] = useState([]);
+    const [sendingFriendRequestIds, setSendingFriendRequestIds] = useState([]);
     const [friendRequests, setFriendRequests] = useState([]);
     const [isLoadingFriendRequests, setIsLoadingFriendRequests] = useState(false);
     const [friendRequestError, setFriendRequestError] = useState("");
     const [friends, setFriends] = useState([]);
-    const [messagesReload, setMessagesReload] = useState(0);
+    const [friendSearch, setFriendSearch] = useState("");
+    const normalizeFriendName = (name = "") => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d").toLowerCase();
+    const filteredFriends = friends.filter((friend) => normalizeFriendName(friend.username || "").includes(normalizeFriendName(friendSearch)));
+    const sortedContactFriends = [...friends].sort((first, second) =>
+      Number(Boolean(second.isOnline)) - Number(Boolean(first.isOnline)) ||
+      String(first.username || "").localeCompare(String(second.username || ""), "vi", { sensitivity: "base" })
+    );
     const [shareFeedback, setShareFeedback] = useState("");
+    const [reportTarget, setReportTarget] = useState(null);
     const [failedImagePostIds, setFailedImagePostIds] = useState([]);
     const [stories, setStories] = useState([]);
     const [storyReloadKey, setStoryReloadKey] = useState(0);
@@ -62,48 +85,9 @@ function FeedPage(){
     const [storyFile, setStoryFile] = useState(null);
     const [isPostingStory, setIsPostingStory] = useState(false);
     const [storyFeedback, setStoryFeedback] = useState("");
+    const [storyToast, setStoryToast] = useState("");
     const [activeStoryGroup, setActiveStoryGroup] = useState(null);
     const [activeStoryIndex, setActiveStoryIndex] = useState(0);
-
-    useEffect(() => {
-      async function loadCurrentUser() {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/user/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.message || "Không thể tải hồ sơ người dùng.");
-          }
-          setCurrentUser(data.user);
-        } catch (requestError) {
-          setProfileError(requestError.message);
-        }
-      }
-
-      loadCurrentUser();
-    }, []);
-
-    useEffect(() => {
-      async function loadNotifications() {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/notification", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.message || "Không thể tải thông báo.");
-          }
-          setNotifications(data.notifications);
-        } catch (requestError) {
-          setNotificationError(requestError.message);
-        }
-      }
-
-      loadNotifications();
-    }, []);
 
     useEffect(() => {
       if (activeSection !== "connections") return undefined;
@@ -113,7 +97,7 @@ function FeedPage(){
         setFriendRequestError("");
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/friend/requests", {
+          const response = await fetch(`${API_BASE}/api/friend/requests`, {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
           });
@@ -140,7 +124,7 @@ function FeedPage(){
       async function loadStories() {
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/story", {
+          const response = await fetch(`${API_BASE}/api/story`, {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
           });
@@ -161,22 +145,31 @@ function FeedPage(){
     }, [storyReloadKey]);
 
     useEffect(() => {
+      let mounted = true;
+      let loading = false;
       async function loadFriends() {
+        if (loading) return;
+        loading = true;
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:5000/api/friend", {
+          const response = await fetch(`${API_BASE}/api/friend`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          if (response.ok) {
-            setFriends(data.friend);
-          }
+          if (mounted && response.ok) setFriends(data.friend || []);
         } catch {
           // Friend suggestions and feed remain usable if this optional list fails.
+        } finally {
+          loading = false;
         }
       }
 
-      loadFriends();
+      void loadFriends();
+      const refreshInterval = window.setInterval(loadFriends, 60_000);
+      return () => {
+        mounted = false;
+        window.clearInterval(refreshInterval);
+      };
     }, []);
 
     useEffect(() => {
@@ -187,7 +180,7 @@ function FeedPage(){
         try {
           const token = localStorage.getItem("token");
           const response = await fetch(
-            `http://localhost:5000/api/user/search?q=${encodeURIComponent(searchQuery)}`,
+            `${API_BASE}/api/user/search?q=${encodeURIComponent(searchQuery)}`,
             {
               headers: { Authorization: `Bearer ${token}` },
               signal: controller.signal,
@@ -224,7 +217,7 @@ function FeedPage(){
         try {
             const token = localStorage.getItem("token");
 
-            const response = await fetch(`http://localhost:5000/api/post?page=${feedPage}&limit=20`, {
+            const response = await fetch(`${API_BASE}/api/post?page=${feedPage}&limit=20`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -290,7 +283,7 @@ function FeedPage(){
         ]);
         const token = localStorage.getItem("token");
 
-        const response = await fetch("http://localhost:5000/api/post", {
+        const response = await fetch(`${API_BASE}/api/post`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -324,7 +317,12 @@ function FeedPage(){
       }
     }
     async function handleDeletePost(postId) {
-      if (!window.confirm("Bạn có chắc muốn xóa bài viết này?")) {
+      if (!(await confirmAction({
+        title: "Xóa bài viết",
+        message: "Bạn có chắc muốn xóa bài viết này?",
+        confirmLabel: "Xóa bài viết",
+        danger: true,
+      }))) {
         return;
       }
 
@@ -332,7 +330,7 @@ function FeedPage(){
 
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/post/${postId}`, {
+        const response = await fetch(`${API_BASE}/api/post/${postId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -343,7 +341,6 @@ function FeedPage(){
         }
 
         setPosts((currentPosts) => currentPosts.filter((post) => post._id !== postId));
-        setOpenPostMenuId(null);
         if (openCommentsFor === postId) {
           setOpenCommentsFor(null);
           setComments([]);
@@ -366,7 +363,7 @@ function FeedPage(){
 
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/post/${postId}`, {
+        const response = await fetch(`${API_BASE}/api/post/${postId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -395,7 +392,7 @@ function FeedPage(){
       setPostActionError("");
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/post/${postId}/save`, {
+        const response = await fetch(`${API_BASE}/api/post/${postId}/save`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -416,7 +413,7 @@ function FeedPage(){
     }
     async function handleSharePost(postId) {
       try {
-        const response = await fetch(`http://localhost:5000/api/post/${postId}/share`, {
+        const response = await fetch(`${API_BASE}/api/post/${postId}/share`, {
           method: "POST",
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
@@ -425,89 +422,43 @@ function FeedPage(){
         setShareFeedback(data.message);
         setFeedPage(1);
         setReloadPosts((currentValue) => currentValue + 1);
-        window.setTimeout(() => setShareFeedback(""), 2500);
       } catch (requestError) {
         setPostActionError(requestError.message);
       }
     }
 
-    async function handleReport(targetType, targetId) {
-      const reason = window.prompt("Chọn lý do: spam, violence, abuse, misinfo, other", "other");
-      if (!reason) return;
-      if (!["spam", "violence", "abuse", "misinfo", "other"].includes(reason)) {
-        setPostActionError("Lý do báo cáo không hợp lệ.");
-        return;
-      }
-      const description = window.prompt("Mô tả lý do báo cáo (không bắt buộc):") || "";
-      try {
-        const response = await fetch("http://localhost:5000/api/report", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-          body: JSON.stringify({ targetType, targetId, reason, description }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Không thể gửi báo cáo.");
-        setShareFeedback(data.message);
-        window.setTimeout(() => setShareFeedback(""), 2500);
-      } catch (requestError) { setPostActionError(requestError.message); }
+    function handleReport(targetType, targetId) {
+      setReportTarget({ targetType, targetId });
+    }
+
+    async function submitReport({ reason, description }) {
+      const response = await fetch(`${API_BASE}/api/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: JSON.stringify({
+          targetType: reportTarget.targetType,
+          targetId: reportTarget.targetId,
+          reason,
+          description,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể gửi báo cáo.");
+      setShareFeedback(data.message);
     }
 
     function handleLoadMorePosts() {
       setIsLoadingMorePosts(true);
       setFeedPage((currentPage) => currentPage + 1);
     }
-    async function handleToggleNotifications() {
-      if (isNotificationOpen) {
-        setIsNotificationOpen(false);
-        return;
-      }
-
-      setIsNotificationOpen(true);
-      setNotificationError("");
-
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/notification", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Không thể tải thông báo.");
-        }
-        setNotifications(data.notifications);
-      } catch (requestError) {
-        setNotificationError(requestError.message);
-      }
-    }
-    async function handleReadNotification(notificationId) {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          `http://localhost:5000/api/notification/${notificationId}/read`,
-          {
-            method: "PATCH",
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Không thể cập nhật thông báo.");
-        }
-        setNotifications((currentNotifications) => currentNotifications.map(
-          (notification) => notification._id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        ));
-      } catch (requestError) {
-        setNotificationError(requestError.message);
-      }
-    }
     async function handleSendFriendRequest(userId) {
+      if (sentRequestIds.includes(userId) || sendingFriendRequestIds.includes(userId)) return;
       setPeopleError("");
+      setSendingFriendRequestIds((currentIds) => [...currentIds, userId]);
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:5000/api/friend/request/${userId}`,
+          `${API_BASE}/api/friend/request/${userId}`,
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
@@ -520,14 +471,21 @@ function FeedPage(){
         setSentRequestIds((currentIds) => [...currentIds, userId]);
       } catch (requestError) {
         setPeopleError(requestError.message);
+      } finally {
+        setSendingFriendRequestIds((currentIds) => currentIds.filter((id) => id !== userId));
       }
     }
     async function handleBlockUser(userId) {
-      if (!window.confirm("Bạn có chắc muốn chặn người dùng này?")) return;
+      if (!(await confirmAction({
+        title: "Chặn người dùng",
+        message: "Bạn có chắc muốn chặn người dùng này?",
+        confirmLabel: "Chặn người dùng",
+        danger: true,
+      }))) return;
       setPeopleError("");
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/user/block/${userId}`, {
+        const response = await fetch(`${API_BASE}/api/user/block/${userId}`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -549,7 +507,7 @@ function FeedPage(){
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:5000/api/friend/request/${requestId}/${action}`,
+          `${API_BASE}/api/friend/request/${requestId}/${action}`,
           {
             method: "PUT",
             headers: { Authorization: `Bearer ${token}` },
@@ -579,7 +537,7 @@ function FeedPage(){
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:5000/api/message/conversation/${userId}`,
+          `${API_BASE}/api/message/conversation/${userId}`,
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
@@ -589,8 +547,29 @@ function FeedPage(){
         if (!response.ok) {
           throw new Error(data.message || "Không thể mở cuộc trò chuyện.");
         }
-        setMessagesReload((currentValue) => currentValue + 1);
-        setActiveSection("messages");
+        navigate("/messages", { state: { openConversationId: data.conversation._id } });
+      } catch (requestError) {
+        setPeopleError(requestError.message);
+      }
+    }
+    async function handleUnfriend(friend) {
+      if (!(await confirmAction({
+        title: "Hủy kết bạn",
+        message: `Bạn có chắc muốn hủy kết bạn với ${friend.username}?`,
+        confirmLabel: "Hủy kết bạn",
+        danger: true,
+      }))) return;
+
+      const userId = friend._id;
+      setPeopleError("");
+      try {
+        const response = await fetch(`${API_BASE}/api/friend/${userId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Không thể hủy kết bạn.");
+        setFriends((currentFriends) => currentFriends.filter((friend) => friend._id !== userId));
       } catch (requestError) {
         setPeopleError(requestError.message);
       }
@@ -606,7 +585,7 @@ function FeedPage(){
         }
         const uploadedStory = await uploadMedia(storyFile);
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/story", {
+        const response = await fetch(`${API_BASE}/api/story`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -621,6 +600,7 @@ function FeedPage(){
         setStoryFile(null);
         form.reset();
         setIsStoryComposerOpen(false);
+        setStoryToast(data.message);
         setStoryReloadKey((value) => value + 1);
       } catch (requestError) {
         setStoryFeedback(requestError.message);
@@ -629,12 +609,10 @@ function FeedPage(){
       }
     }
     async function handleDeleteStory(storyId) {
-      if (!window.confirm("Bạn có chắc muốn xóa story này?")) return;
-
       setStoryFeedback("");
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/story/${storyId}`, {
+        const response = await fetch(`${API_BASE}/api/story/${storyId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -644,8 +622,10 @@ function FeedPage(){
         }
         setActiveStoryGroup(null);
         setStoryReloadKey((value) => value + 1);
+        return true;
       } catch (requestError) {
         setStoryFeedback(requestError.message);
+        return false;
       }
     }
     async function handleLike(postId, hasLiked) {
@@ -655,7 +635,7 @@ function FeedPage(){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/post/${postId}/like`,
+          `${API_BASE}/api/post/${postId}/like`,
           {
             method: hasLiked ? "DELETE" : "POST",
             headers: {
@@ -699,7 +679,7 @@ function FeedPage(){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/comment/${postId}`,
+          `${API_BASE}/api/comment/${postId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -743,7 +723,7 @@ function FeedPage(){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/comment/${postId}`,
+          `${API_BASE}/api/comment/${postId}`,
           {
             method: "POST",
             headers: {
@@ -760,10 +740,14 @@ function FeedPage(){
           throw new Error(data.message || "Không thể gửi bình luận.");
         }
 
+        setPosts((currentPosts) => currentPosts.map((post) => post._id === postId
+          ? { ...post, commentsCount: (post.commentsCount || 0) + 1 }
+          : post));
+
         setCommentContent("");
 
         const commentsResponse = await fetch(
-          `http://localhost:5000/api/comment/${postId}`,
+          `${API_BASE}/api/comment/${postId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -784,8 +768,13 @@ function FeedPage(){
         setIsSendingComment(false);
       }
     }
-    async function handleDeleteComment(commentId) {
-      const confirmed = window.confirm("Bạn có chắc muốn xóa bình luận này?");
+    async function handleDeleteComment(commentId, postId = openCommentsFor) {
+      const confirmed = await confirmAction({
+        title: "Xóa bình luận",
+        message: "Bạn có chắc muốn xóa bình luận này?",
+        confirmLabel: "Xóa bình luận",
+        danger: true,
+      });
 
       if (!confirmed) {
         return;
@@ -797,7 +786,7 @@ function FeedPage(){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/comment/${commentId}`,
+          `${API_BASE}/api/comment/${commentId}`,
           {
             method: "DELETE",
             headers: {
@@ -815,6 +804,9 @@ function FeedPage(){
         setComments((currentComments) =>
           currentComments.filter((comment) => comment._id !== commentId)
         );
+        setPosts((currentPosts) => currentPosts.map((post) => post._id === postId
+          ? { ...post, commentsCount: Math.max(0, (post.commentsCount || 0) - 1) }
+          : post));
       } catch (requestError) {
         setCommentError(requestError.message);
       }
@@ -836,7 +828,7 @@ function FeedPage(){
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/api/comment/${commentId}`,
+          `${API_BASE}/api/comment/${commentId}`,
           {
             method: "PUT",
             headers: {
@@ -869,11 +861,6 @@ function FeedPage(){
         setIsUpdatingComment(false);
       }
     }
-    function handleLogout(){
-        localStorage.removeItem("token");
-        navigate("/", {replace: true})
-    }
-
     const displayedPosts = activeSection === "saved"
       ? posts.filter((post) => post.isSaved)
       : activeSection === "activity"
@@ -894,95 +881,9 @@ function FeedPage(){
     const currentStory = activeStoryGroup?.items[activeStoryIndex];
 
     return (
-        <main className="home-layout">
-            <aside className="home-sidebar">
-            <div className="home-brand">
-                <span className="home-brand-icon">R</span>
-                <span>Ridge</span>
-            </div>
-
-            <nav className="home-menu">
-                <button className={`menu-item ${activeSection === "feed" ? "active" : ""}`} type="button" onClick={() => setActiveSection("feed")}>News Feed</button>
-                <button className={`menu-item ${activeSection === "messages" ? "active" : ""}`} type="button" onClick={() => setActiveSection("messages")}>Messages</button>
-                <button className={`menu-item ${activeSection === "connections" ? "active" : ""}`} type="button" onClick={() => setActiveSection("connections")}>Kết bạn</button>
-                <button className={`menu-item ${activeSection === "reels" ? "active" : ""}`} type="button" onClick={() => setActiveSection("reels")}>Reels</button>
-                <button className={`menu-item ${activeSection === "saved" ? "active" : ""}`} type="button" onClick={() => setActiveSection("saved")}>Saved</button>
-                <button className={`menu-item ${activeSection === "activity" ? "active" : ""}`} type="button" onClick={() => setActiveSection("activity")}>Your Activity</button>
-                <button className={`menu-item ${activeSection === "settings" ? "active" : ""}`} type="button" onClick={() => setActiveSection("settings")}>Setting</button>
-                {currentUser?.isAdmin && <button className={`menu-item ${activeSection === "admin" ? "active" : ""}`} type="button" onClick={() => setActiveSection("admin")}>Quản trị</button>}
-            </nav>
-
-            <button className="logout-button" type="button" onClick={handleLogout}>
-                Đăng xuất
-            </button>
-            </aside>
-
-            <section className="home-content">
-            <header className="home-topbar">
-                <input
-                  type="search"
-                  placeholder="Tìm người dùng..."
-                  value={searchQuery}
-                  onFocus={() => setActiveSection("connections")}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                />
-                <div className="topbar-user">
-                <div className="notification-wrap">
-                  <button
-                    className="notification-button"
-                    type="button"
-                    aria-label="Thông báo"
-                    aria-expanded={isNotificationOpen}
-                    onClick={handleToggleNotifications}
-                  >
-                    🔔
-                    {notifications.some((notification) => !notification.isRead) && (
-                      <span className="notification-dot" />
-                    )}
-                  </button>
-                  {isNotificationOpen && (
-                    <div className="notification-panel">
-                      <h2>Thông báo</h2>
-                      {notificationError && (
-                        <p className="feedback-message error">{notificationError}</p>
-                      )}
-                      {!notificationError && notifications.length === 0 && (
-                        <p>Chưa có thông báo nào.</p>
-                      )}
-                      {notifications.map((notification) => (
-                        <button
-                          className={`notification-item ${notification.isRead ? "read" : "unread"}`}
-                          key={notification._id}
-                          type="button"
-                          onClick={() => handleReadNotification(notification._id)}
-                        >
-                          <strong>{notification.senderId?.username || "Người dùng"}</strong>{" "}
-                          {notification.type === "like" ? "đã thích bài viết của bạn" :
-                           notification.type === "comment" ? "đã bình luận bài viết của bạn" :
-                           notification.type === "friend_request" ? "đã gửi lời mời kết bạn" :
-                           notification.type === "friend_accept" ? "đã chấp nhận lời mời kết bạn" :
-                           notification.type === "message" ? "đã gửi tin nhắn cho bạn" :
-                           notification.type === "share" ? "đã chia sẻ bài viết của bạn" :
-                           "có cập nhật mới"}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <span className="user-avatar">
-                  {currentUser?.profilePicture ? (
-                    <img src={currentUser.profilePicture} alt="Ảnh đại diện" />
-                  ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
-                </span>
-                <span>{currentUser?.username || "Tài khoản"}</span>
-                </div>
-            </header>
-            {profileError && <p className="profile-load-error">{profileError}</p>}
-
-            <div className="home-columns">
-                <section className="feed-column">
+        <><section className={"feed-column " + (section === "feed" ? "" : "feed-column-single")}>
                 {activeSection === "messages" ? (
-                  <MessagesView currentUser={currentUser} reloadKey={messagesReload} />
+                  <MessagesView currentUser={currentUser} initialConversationId={location.state?.openConversationId} />
                 ) : activeSection === "settings" ? (
                   <ProfileSettings
                     key={currentUser?._id || "profile-loading"}
@@ -995,6 +896,24 @@ function FeedPage(){
                   />
                 ) : activeSection === "admin" && currentUser?.isAdmin ? (
                   <AdminPanel />
+                ) : activeSection === "friends" ? (
+                  <section className="friends-page">
+                    <h1 className="section-title">Danh sách bạn bè</h1>
+                    {friends.length === 0 ? <p>Bạn chưa có bạn bè nào.</p> : (
+                      <div className="friends-page-list">
+                        {friends.map((friend) => (
+                          <div className="friend-row" key={friend._id}>
+                            <Link className="friend-avatar" to={`/profile/${friend._id}`} aria-label={`Xem trang cá nhân ${friend.username}`}>
+                              {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                            </Link>
+                            <Link className="friend-name profile-name-link" to={`/profile/${friend._id}`}>{friend.username}</Link>
+                            <FriendPresence friend={friend} />
+                            <button className="btn-outline" type="button" onClick={() => navigate("/messages", { state: { openUserId: friend._id } })}>Nhắn tin</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 ) : activeSection === "connections" ? (
                   <section className="connections-page">
                     <h1 className="section-title">Kết nối với mọi người</h1>
@@ -1009,7 +928,10 @@ function FeedPage(){
                         <div className="people-list">
                           {friendRequests.map((request) => (
                             <div className="friend-request-row" key={request._id}>
-                              <strong>{request.senderId?.username || "Người dùng"}</strong>
+                              <Link className="connection-person-avatar" to={"/profile/" + request.senderId?._id} aria-label={`Xem trang cá nhân ${request.senderId?.username || "người dùng"}`}>
+                                {request.senderId?.profilePicture ? <img src={request.senderId.profilePicture} alt="" /> : (request.senderId?.username?.charAt(0).toUpperCase() || "?")}
+                              </Link>
+                              <Link className="connection-person-name profile-name-link" to={"/profile/" + request.senderId?._id}>{request.senderId?.username || "Người dùng"}</Link>
                               <div>
                                 <button type="button" onClick={() => handleFriendRequestAction(request._id, "accept")}>Chấp nhận</button>
                                 <button
@@ -1023,6 +945,25 @@ function FeedPage(){
                         </div>
                       )}
                     </section>
+                    <section className="side-card connections-friends-card">
+                      <h2>Bạn bè của bạn</h2>
+                      <label className="friends-search-label" htmlFor="connections-friend-search">Tìm bạn bè</label>
+                      <input id="connections-friend-search" className="friends-search-input" type="search" aria-label="Tìm bạn bè" placeholder="Tìm bạn bè" value={friendSearch} onChange={(event) => setFriendSearch(event.target.value)} />
+                      {friends.length === 0 ? <p className="friends-empty">Chưa có bạn bè.</p> : (
+                        filteredFriends.length > 0 ? <div className="connections-friends-list">
+                          {filteredFriends.map((friend) => (
+                            <div className="connection-friend-row" key={friend._id}>
+                              <Link className="connection-person-avatar" to={"/profile/" + friend._id} aria-label={`Xem trang cá nhân ${friend.username}`}>
+                                {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                              </Link>
+                              <Link className="connection-person-name profile-name-link" to={"/profile/" + friend._id}>{friend.username}<FriendPresence friend={friend} /></Link>
+                              <button className="btn-outline" type="button" onClick={() => handleStartConversation(friend._id)}>Nhắn tin</button>
+                              <button className="connection-unfriend-button" type="button" onClick={() => handleUnfriend(friend)}>Hủy kết bạn</button>
+                            </div>
+                          ))}
+                        </div> : <p className="friends-empty">Không tìm thấy bạn bè nào.</p>
+                      )}
+                    </section>
                     <section className="side-card">
                       <h2>{searchQuery ? "Kết quả tìm kiếm" : "Gợi ý kết bạn"}</h2>
                       {isLoadingPeople && <p>Đang tìm người dùng...</p>}
@@ -1033,16 +974,16 @@ function FeedPage(){
                       <div className="people-list">
                         {people.map((person) => (
                           <div className="person-row" key={person._id}>
-                            <span className="person-avatar">
+                            <Link className="person-avatar" to={`/profile/${person._id}`} aria-label={`Xem trang cá nhân ${person.username}`}>
                               {person.profilePicture ? <img src={person.profilePicture} alt="" /> : (person.username?.charAt(0).toUpperCase() || "?")}
-                            </span>
+                            </Link>
                             <div className="person-info">
-                              <strong>{person.username}</strong>
+                              <Link className="profile-name-link" to={`/profile/${person._id}`}>{person.username}</Link>
                               {person.bio && <span>{person.bio}</span>}
                             </div>
                             <button
                               type="button"
-                              disabled={sentRequestIds.includes(person._id)}
+                              disabled={sentRequestIds.includes(person._id) || sendingFriendRequestIds.includes(person._id)}
                               onClick={() => handleSendFriendRequest(person._id)}
                             >{sentRequestIds.includes(person._id) ? "Đã gửi" : "Kết bạn"}</button>
                             <button
@@ -1064,35 +1005,29 @@ function FeedPage(){
                   </h1>
                 )}
                 {activeSection === "feed" && <>
-                <div className="stories-card">
+                <div className="stories-card card">
                   {storyFeedback && <p className="feedback-message error">{storyFeedback}</p>}
                   <div className="story-list">
-                    <button
-                      className="story-item"
-                      type="button"
-                      onClick={() => {
-                        if (myStoryGroup) {
-                          setActiveStoryGroup(myStoryGroup);
-                          setActiveStoryIndex(0);
-                        } else {
-                          setStoryFeedback("");
-                          setIsStoryComposerOpen(true);
-                        }
-                      }}
-                    >
-                      <span className="story-avatar story-self">
-                        {currentUser?.profilePicture ? (
-                          <img src={currentUser.profilePicture} alt="" />
-                        ) : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
-                        <span className="story-add">+</span>
+                    <div className="story-item story-item-self">
+                      <span className="story-avatar-wrap">
+                        <button className="story-avatar-button" type="button" aria-label={myStoryGroup ? "Xem story của bạn" : "Ảnh đại diện của bạn"} onClick={() => { if (myStoryGroup) { setActiveStoryGroup(myStoryGroup); setActiveStoryIndex(0); } }}>
+                          <span className={`story-ring ${myStoryGroup ? "" : "story-ring-add"}`}>
+                            <span className="story-avatar story-self">
+                              {currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
+                            </span>
+                          </span>
+                        </button>
+                        <button className="story-add-button" type="button" aria-label="Thêm story" onClick={() => { setStoryFeedback(""); setStoryFile(null); setIsStoryComposerOpen(true); }}>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                        </button>
                       </span>
-                      <span className="story-name">Your Story</span>
-                    </button>
+                      <span className="story-name">Tin của bạn</span>
+                    </div>
                     {storyGroups
                       .filter((group) => group.author._id !== currentUser?._id)
                       .map((group) => (
                         <button
-                          className="story-item"
+                          className="story-item story-item-friend"
                           key={group.author._id}
                           type="button"
                           onClick={() => {
@@ -1100,10 +1035,12 @@ function FeedPage(){
                             setActiveStoryIndex(0);
                           }}
                         >
-                          <span className="story-avatar story-blue">
-                            {group.author.profilePicture ? (
-                              <img src={group.author.profilePicture} alt="" />
-                            ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
+                          <span className="story-ring">
+                            <span className="story-avatar story-blue">
+                              {group.author.profilePicture ? (
+                                <img src={group.author.profilePicture} alt="" />
+                              ) : (group.author.username?.charAt(0).toUpperCase() || "?")}
+                            </span>
                           </span>
                           <span className="story-name">{group.author.username}</span>
                         </button>
@@ -1111,55 +1048,68 @@ function FeedPage(){
                   </div>
                 </div>
 
-                <form className="create-post-card" onSubmit={handleCreatePost}>
+                <form className="create-post-card card" onSubmit={handleCreatePost}>
                   <h2>Tạo bài viết</h2>
+                  <div className="composer-row">
+                    <span className="composer-avatar">
+                      {currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : (currentUser?.username?.charAt(0).toUpperCase() || "R")}
+                    </span>
+                    <textarea
+                      className="create-post-input"
+                      aria-label="Nội dung bài viết"
+                      placeholder="Bạn đang nghĩ gì?"
+                      rows="3"
+                      maxLength="500"
+                      value={postContent}
+                      onChange={(event) => setPostContent(event.target.value)}
+                    />
+                  </div>
                   <p className="upload-hint">Ảnh hoặc video tùy chọn, tối đa 30 MB mỗi tệp.</p>
-                  <input
-                    className="create-post-image-input"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    aria-label="Chọn ảnh cho bài viết"
-                    onChange={(event) => setPostImageFile(event.target.files?.[0] || null)}
-                  />
-                  <input
-                    className="create-post-image-input"
-                    type="file"
-                    accept="video/mp4,video/webm"
-                    aria-label="Chọn video cho Reels"
-                    onChange={(event) => setPostVideoFile(event.target.files?.[0] || null)}
-                  />
-                  {(postImageFile || postVideoFile) && (
-                    <p className="selected-media-name">
-                      {[postImageFile?.name, postVideoFile?.name].filter(Boolean).join(" · ")}
-                    </p>
-                  )}
-                  <textarea
-                    className="create-post-input"
-                    placeholder="Bạn đang nghĩ gì?"
-                    rows="3"
-                    maxLength="500"
-                    value={postContent}
-                    onChange={(event) => setPostContent(event.target.value)}
-                  />
-                  <label className="post-privacy-field">
-                    Ai có thể xem?
-                    <select value={postPrivacy} onChange={(event) => setPostPrivacy(event.target.value)}>
-                      <option value="public">Mọi người</option>
-                      <option value="friends">Bạn bè</option>
-                      <option value="private">Chỉ mình tôi</option>
-                    </select>
-                  </label>
+                  <div className="composer-actions">
+                    <label className="chip">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m21 16-5-5-9 9" /></svg>
+                      Ảnh
+                      <input
+                        id="post-image-input"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        aria-label="Chọn ảnh cho bài viết"
+                        onChange={(event) => { setPostImageFile(event.target.files?.[0] || null); setPostVideoFile(null); }}
+                      />
+                    </label>
+                    <label className="chip">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="3" /><path d="m16 10 5-3v10l-5-3" /></svg>
+                      Video
+                      <input
+                        id="post-video-input"
+                        type="file"
+                        accept="video/mp4,video/webm"
+                        aria-label="Chọn video cho bài viết"
+                        onChange={(event) => { setPostVideoFile(event.target.files?.[0] || null); setPostImageFile(null); }}
+                      />
+                    </label>
+                    {(postImageFile || postVideoFile) && (
+                      <span className="selected-media-name">
+                        {[postImageFile?.name, postVideoFile?.name].filter(Boolean).join(" · ")}
+                      </span>
+                    )}
+                    <span className="composer-spacer" />
+                    <label className="select-label">
+                      Ai có thể xem?
+                      <select value={postPrivacy} onChange={(event) => setPostPrivacy(event.target.value)}>
+                        <option value="public">Mọi người</option>
+                        <option value="friends">Bạn bè</option>
+                        <option value="private">Chỉ mình tôi</option>
+                      </select>
+                    </label>
+                    <button className="create-post-button btn-primary" type="submit" disabled={isPosting}>
+                      {isPosting ? "Đang đăng..." : "Đăng bài"}
+                    </button>
+                  </div>
 
                   {postError && (
                     <p className="feedback-message error">{postError}</p>
                   )}
-                  <button
-                    className="create-post-button"
-                    type="submit"
-                    disabled={isPosting}
-                  >
-                    {isPosting ? "Đang đăng..." : "Đăng bài"}
-                  </button>
                 </form>
                 </>}
                 {isLoading && <p>Đang tải bài viết...</p>}
@@ -1176,354 +1126,85 @@ function FeedPage(){
     {isLoadingMorePosts ? "Đang tải..." : "Tải thêm bài viết"}
   </button>
 )}
-{shareFeedback && <p className="feedback-message success">{shareFeedback}</p>}
 {likeError && (
   <p className="feedback-message error">{likeError}</p>
 )}
 {postActionError && (
   <p className="feedback-message error">{postActionError}</p>
 )}
-{!isLoading &&
-  !error &&
-  displayedPosts.map((post) => {
-    const username = post.authorId?.username || "Người dùng";
-    const visiblePost = post.originalPostId || post;
-    const visibleAuthor = visiblePost.authorId?.username || username;
-    const hasLiked = likedPostIds.includes(post._id);
-
-    return (
-      <article className="post-card" id={`post-${post._id}`} key={post._id}>
-        <header className="post-header">
-          <div className="post-author">
-            <span className="post-avatar">
-              {post.authorId?.profilePicture ? (
-                <img src={post.authorId.profilePicture} alt="" />
-              ) : username.charAt(0).toUpperCase()}
-            </span>
-
-            <div className="post-author-info">
-              <strong>{username}</strong>
-              <span>Ridge</span>
-            </div>
-          </div>
-
-          <div className="post-menu-wrap">
-            <button
-              className="post-more"
-              type="button"
-              aria-label="Tùy chọn bài viết"
-              aria-expanded={openPostMenuId === post._id}
-              onClick={() => setOpenPostMenuId(
-                openPostMenuId === post._id ? null : post._id
-              )}
-            >
-              •••
-            </button>
-            {openPostMenuId === post._id && (
-              <div className="post-menu">
-                {post.isMine ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingPostId(post._id);
-                        setEditingPostContent(post.content);
-                        setOpenPostMenuId(null);
-                      }}
-                    >
-                      Chỉnh sửa bài viết
-                    </button>
-                    <button
-                      className="post-menu-delete"
-                      type="button"
-                      onClick={() => handleDeletePost(post._id)}
-                    >
-                      Xóa bài viết
-                    </button>
-                  </>
-                ) : (
-                  <span>Chỉ chủ bài viết mới có thể chỉnh sửa hoặc xóa.</span>
-                )}
-              </div>
-            )}
-          </div>
-        </header>
-
-        {activeSection === "reels" && visiblePost.video ? (
-          <video
-            className="post-video"
-            src={visiblePost.video}
-            controls
-            preload="metadata"
-          />
-        ) : visiblePost.image && !failedImagePostIds.includes(post._id) ? (
-          <img
-            className="post-image"
-            src={visiblePost.image}
-            alt={`Bài viết của ${username}`}
-            onError={() => setFailedImagePostIds((ids) => [...ids, post._id])}
-          />
-        ) : (
-          <div className="post-image-placeholder">Bài viết không có ảnh</div>
-        )}
-
-        <div className="post-actions">
-          <div className="post-action-group">
-            <button
-              className={`post-action-button ${hasLiked ? "liked" : ""}`}
-              type="button"
-              aria-label={hasLiked ? "Bỏ thích" : "Thích"}
-              onClick={() => handleLike(post._id, hasLiked)}
-            >
-              {hasLiked ? "♥" : "♡"}
-            </button>
-            <button className="post-action-button" type="button" aria-label="Bình luận" onClick={() => handleToggleComments(post._id)}>
-              ▢
-            </button>
-            <button className="post-action-button" type="button" aria-label="Chia sẻ bài viết" onClick={() => handleSharePost(post._id)}>
-              ➤
-            </button>
-            {!post.isMine && <button className="post-action-button" type="button" aria-label="Báo cáo bài viết" onClick={() => handleReport("post", post._id)}>Báo cáo</button>}
-          </div>
-
-          <button
-            className={`post-action-button ${post.isSaved ? "saved" : ""}`}
-            type="button"
-            aria-label={post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
-            aria-pressed={Boolean(post.isSaved)}
-            onClick={() => handleToggleSavedPost(post._id, Boolean(post.isSaved))}
-          >
-            {post.isSaved ? "▣" : "♧"}
-          </button>
-        </div>
-
-        <p className="post-likes">
-          {post.likes?.length ?? 0} lượt thích
-        </p>
-
-        {editingPostId === post._id ? (
-          <form
-            className="post-edit-form"
-            onSubmit={(event) => handleUpdatePost(event, post._id)}
-          >
-            <textarea
-              value={editingPostContent}
-              onChange={(event) => setEditingPostContent(event.target.value)}
-              maxLength="500"
-              aria-label="Chỉnh sửa nội dung bài viết"
-            />
-            <div>
-              <button type="submit" disabled={isSavingPost}>
-                {isSavingPost ? "Đang lưu..." : "Lưu"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingPostId(null);
-                  setEditingPostContent("");
-                  setPostActionError("");
-                }}
-              >
-                Hủy
-              </button>
-            </div>
-          </form>
-        ) : (
-          <p className="post-caption">
-            <strong>{username}</strong>{" "}
-            {post.originalPostId && <span className="shared-post-by"> Chia sẻ từ {visibleAuthor}: </span>}
-            {visiblePost.content}
-          </p>
-        )}
-        {openCommentsFor === post._id && (
-          <div>
-          <div className="comments-list">
-            {isLoadingComments && <p>Đang tải bình luận...</p>}
-
-            {!isLoadingComments && commentError && (
-              <p className="feedback-message error">{commentError}</p>
-            )}
-
-            {!isLoadingComments && !commentError && comments.length === 0 && (
-              <p>Chưa có bình luận nào.</p>
-            )}
-
-            {!isLoadingComments &&
-              !commentError &&
-              comments.map((comment) => (
-                <div className="comment-item" key={comment._id}>
-                  {editingCommentId === comment._id ? (
-                    <form
-                      className="comment-edit-form"
-                      onSubmit={(event) => handleUpdateComment(event, comment._id)}
-                    >
-                      <input
-                        value={editingCommentContent}
-                        onChange={(event) => setEditingCommentContent(event.target.value)}
-                        maxLength="500"
-                      />
-
-                      <button type="submit" disabled={isUpdatingComment}>
-                        {isUpdatingComment ? "Đang lưu..." : "Lưu"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingCommentId(null);
-                          setEditingCommentContent("");
-                        }}
-                      >
-                        Hủy
-                      </button>
-                    </form>
-                  ) : (
-                    <>
-                      <p>
-                        <strong>{comment.authorId?.username || "Người dùng"}</strong>{" "}
-                        {comment.content}
-                      </p>
-
-                      {!comment.isMine && <button type="button" onClick={() => handleReport("comment", comment._id)}>Báo cáo</button>}
-                      {comment.isMine && (
-                        <div className="comment-controls">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingCommentId(comment._id);
-                              setEditingCommentContent(comment.content);
-                            }}
-                          >
-                            Sửa
-                          </button>
-
-                          <button
-                            className="comment-delete-button"
-                            type="button"
-                            onClick={() => handleDeleteComment(comment._id)}
-                          >
-                            Xóa
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              ))}
-          </div>
-          <form
-            className="comment-form"
-            onSubmit={(event) => handleCreateComment(event, post._id)}
-          >
-            <input
-              type="text"
-              placeholder="Viết bình luận..."
-              maxLength="500"
-              value={commentContent}
-              onChange={(event) => setCommentContent(event.target.value)}
-            />
-
-            <button type="submit" disabled={isSendingComment}>
-              {isSendingComment ? "Đang gửi..." : "Gửi"}
-            </button>
-          </form>
-          </div>
-        )}
-      </article>
-    );
-  })}
+{!isLoading && !error && displayedPosts.map((post) => <PostCard
+  key={post._id}
+  post={post}
+  currentUser={currentUser}
+  isLiked={post.isLiked ?? likedPostIds.includes(post._id)}
+  commentsCount={post.commentsCount ?? 0}
+  failedImagePost={failedImagePostIds.includes(post._id)}
+  editingPostId={editingPostId}
+  editingPostContent={editingPostContent}
+  isSavingPost={isSavingPost}
+  postActionError={postActionError}
+  commentsOpen={openCommentsFor === post._id}
+  comments={comments}
+  isLoadingComments={isLoadingComments}
+  commentError={commentError}
+  commentContent={commentContent}
+  isSendingComment={isSendingComment}
+  editingCommentId={editingCommentId}
+  editingCommentContent={editingCommentContent}
+  isUpdatingComment={isUpdatingComment}
+  onLike={(item) => handleLike(item._id, Boolean(item.isLiked ?? likedPostIds.includes(item._id)))}
+  onToggleComments={(item) => handleToggleComments(item._id)}
+  onShare={(item) => handleSharePost(item._id)}
+  onToggleSaved={(item, saved) => handleToggleSavedPost(item._id, saved)}
+  onStartEdit={(item) => { setEditingPostId(item._id); setEditingPostContent(item.content || ''); }}
+  onEditingPostContentChange={setEditingPostContent}
+  onUpdatePost={(event, item) => handleUpdatePost(event, item._id)}
+  onCancelEditPost={() => { setEditingPostId(null); setEditingPostContent(''); setPostActionError(''); }}
+  onDeletePost={(item) => handleDeletePost(item._id)}
+  onReportPost={(item) => handleReport('post', item._id)}
+  onCommentChange={setCommentContent}
+  onCreateComment={(event, item) => handleCreateComment(event, item._id)}
+  onCommentEdit={(item) => { setEditingCommentId(item._id); setEditingCommentContent(item.content); }}
+  onCommentEditingChange={setEditingCommentContent}
+  onCancelCommentEdit={() => { setEditingCommentId(null); setEditingCommentContent(''); }}
+  onUpdateComment={handleUpdateComment}
+  onDeleteComment={(item) => handleDeleteComment(item._id, post._id)}
+  onReportComment={(item) => handleReport('comment', item._id)}
+  onImageError={(item) => setFailedImagePostIds((ids) => ids.includes(item._id) ? ids : [...ids, item._id])}
+/>)}
                   </>
                 )}
                 </section>
-                <aside className="right-column">
-                {friends.length > 0 && (
-                  <section className="side-card">
-                    <h2>Bạn bè</h2>
-                    <div className="people-list">
-                      {friends.map((friend) => (
-                        <div className="person-row" key={friend._id}>
-                          <span className="person-avatar">
-                            {friend.profilePicture ? (
-                              <img src={friend.profilePicture} alt="" />
-                            ) : (friend.username?.charAt(0).toUpperCase() || "?")}
-                          </span>
-                          <div className="person-info">
-                            <strong>{friend.username}</strong>
-                          </div>
-                          <button type="button" onClick={() => handleStartConversation(friend._id)}>
-                            Nhắn tin
+                {activeSection === "feed" && <aside className="right-column">
+                  <section className="contacts-panel">
+                    <h2>Người liên hệ</h2>
+                    {friends.length === 0 ? <p className="friends-empty">Bạn chưa có bạn bè nào.</p> : (
+                      <div className="contacts-list">
+                        {sortedContactFriends.map((friend) => (
+                          <button className="contact-row" type="button" key={friend._id} onClick={() => handleStartConversation(friend._id)}>
+                            <span className="contact-avatar">
+                              {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                            </span>
+                            <span>{friend.username}</span>
+                            <FriendPresence friend={friend} />
                           </button>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-                </aside>
-            </div>
-            </section>
-            {isStoryComposerOpen && (
-              <div className="modal-backdrop">
-                <section className="story-dialog" role="dialog" aria-modal="true" aria-labelledby="story-dialog-title">
-                  <h2 id="story-dialog-title">Đăng story</h2>
-                  <p>Story sẽ tự hết hạn sau 24 giờ. Chọn ảnh hoặc video tối đa 30 MB từ thiết bị.</p>
-                  <form onSubmit={handleCreateStory}>
-                    <label>
-                      Ảnh hoặc video
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
-                        onChange={(event) => setStoryFile(event.target.files?.[0] || null)}
-                        required
-                      />
-                    </label>
-                    {storyFile && <p className="selected-media-name">{storyFile.name}</p>}
-                    {storyFeedback && <p className="feedback-message error">{storyFeedback}</p>}
-                    <div className="dialog-actions">
-                      <button type="button" onClick={() => setIsStoryComposerOpen(false)}>Hủy</button>
-                      <button type="submit" disabled={isPostingStory}>
-                        {isPostingStory ? "Đang đăng..." : "Đăng story"}
-                      </button>
-                    </div>
-                  </form>
-                </section>
-              </div>
-            )}
-            {activeStoryGroup && currentStory && (
-              <div className="modal-backdrop">
-                <section className="story-viewer" role="dialog" aria-modal="true" aria-label="Xem story">
-                  <header>
-                    <div className="story-viewer-author">
-                      <strong>{activeStoryGroup.author.username}</strong>
-                      <span>{activeStoryIndex + 1} / {activeStoryGroup.items.length}</span>
-                    </div>
-                    <button type="button" aria-label="Đóng story" onClick={() => setActiveStoryGroup(null)}>×</button>
-                  </header>
-                  {currentStory.mediaType === "video" ? (
-                    <video src={currentStory.mediaUrl} controls autoPlay />
-                  ) : (
-                    <img src={currentStory.mediaUrl} alt={`Story của ${activeStoryGroup.author.username}`} />
-                  )}
-                  <footer>
-                    {activeStoryGroup.author._id === currentUser?._id && (
-                      <button className="story-delete-button" type="button" onClick={() => handleDeleteStory(currentStory._id)}>
-                        Xóa story
-                      </button>
+                        ))}
+                      </div>
                     )}
-                    <button
-                      type="button"
-                      disabled={activeStoryIndex === 0}
-                      onClick={() => setActiveStoryIndex((index) => index - 1)}
-                    >Trước</button>
-                    <button
-                      type="button"
-                      disabled={activeStoryIndex >= activeStoryGroup.items.length - 1}
-                      onClick={() => setActiveStoryIndex((index) => index + 1)}
-                    >Tiếp</button>
-                  </footer>
-                </section>
-              </div>
-            )}
-        </main>
+                  </section>
+                </aside>}
+            <StoryComposer open={isStoryComposerOpen} file={storyFile} setFile={setStoryFile} submitting={isPostingStory} error={storyFeedback} onClose={() => { setIsStoryComposerOpen(false); setStoryFile(null); setStoryFeedback(""); }} onSubmit={handleCreateStory} />
+            {activeStoryGroup && currentStory && <StoryViewer groups={storyGroups} activeGroup={activeStoryGroup} activeIndex={activeStoryIndex} currentUserId={currentUser?._id} error={storyFeedback} onChange={(group, index) => { setActiveStoryGroup(group); setActiveStoryIndex(index); }} onClose={() => setActiveStoryGroup(null)} onDelete={handleDeleteStory} />}
+            <ReportDialog
+              key={reportTarget?.targetId || "closed"}
+              open={Boolean(reportTarget)}
+              targetType={reportTarget?.targetType}
+              onClose={() => setReportTarget(null)}
+              onSubmit={submitReport}
+            />
+            <Toast message={shareFeedback} onDismiss={() => setShareFeedback("")} />
+            <Toast message={storyToast} onDismiss={() => setStoryToast("")} />
+        </>
         );
 }
 export default FeedPage;

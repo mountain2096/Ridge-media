@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Report = require("../models/Report");
+const errorResponse = require("../utils/errorResponse");
 
 const listUsers = async (req, res) => {
     try {
@@ -18,7 +19,7 @@ const listUsers = async (req, res) => {
         ]);
         return res.status(200).json({ users, pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
@@ -35,7 +36,8 @@ const setUserLock = (isLocked) => async (req, res) => {
             id: user._id, username: user.username, isAdmin: user.isAdmin, isLocked: user.isLocked,
         } });
     } catch (error) {
-        return res.status(error.name === "CastError" ? 400 : 500).json({ message: error.message });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+        return errorResponse(res, error);
     }
 };
 
@@ -53,7 +55,7 @@ const listReports = async (req, res) => {
             .sort({ createdAt: -1 }).limit(100);
         return res.status(200).json({ reports });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        return errorResponse(res, error);
     }
 };
 
@@ -71,7 +73,8 @@ const updateReport = async (req, res) => {
         await report.save();
         return res.status(200).json({ message: "Đã cập nhật báo cáo!", report });
     } catch (error) {
-        return res.status(error.name === "CastError" ? 400 : 500).json({ message: error.message });
+        if (error.name === "CastError") return res.status(400).json({ message: "ID báo cáo không hợp lệ!" });
+        return errorResponse(res, error);
     }
 };
 

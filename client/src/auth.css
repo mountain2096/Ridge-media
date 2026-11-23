@@ -1,0 +1,324 @@
+.auth-page.ridge-auth-page {
+  display: grid;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 28px 20px;
+  place-items: center;
+  background: var(--news-bg, #f4f5f9);
+  color: var(--news-ink, #0f172a);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.ridge-auth-page,
+.ridge-auth-page * {
+  box-sizing: border-box;
+}
+
+.ridge-auth-card {
+  width: min(100%, 420px);
+  padding: 32px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 20px;
+  background: var(--news-surface, #fff);
+  box-shadow: 0 14px 44px rgb(15 23 42 / 7%);
+}
+
+.ridge-auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 26px;
+  color: var(--news-ink, #0f172a);
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.ridge-auth-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--news-ink, #0f172a);
+  color: #fff;
+  font-size: 22px;
+}
+
+.ridge-auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding: 4px;
+  border-radius: 13px;
+  background: var(--news-bg, #f4f5f9);
+}
+
+.ridge-auth-tab {
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--news-muted, #5b6478);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ridge-auth-tab.is-selected {
+  border-color: var(--news-border, #e6e8ef);
+  background: var(--news-surface, #fff);
+  color: var(--news-ink, #0f172a);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 8%);
+}
+
+.ridge-auth-title {
+  margin: 0 0 20px;
+  color: var(--news-ink, #0f172a);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.ridge-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ridge-auth-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ridge-auth-field label {
+  color: var(--news-ink, #0f172a);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ridge-auth-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 11px;
+  outline: none;
+  background: var(--news-field, #f8f9fc);
+  color: var(--news-ink, #0f172a);
+  font: inherit;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.ridge-auth-field input:focus-visible {
+  border-color: var(--news-accent, #2f4be0);
+  outline: 2px solid var(--news-accent, #2f4be0);
+  outline-offset: 2px;
+  background: var(--news-surface, #fff);
+}
+
+.ridge-auth-password {
+  position: relative;
+}
+
+.ridge-auth-password input {
+  padding-right: 52px;
+}
+
+.ridge-auth-toggle {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--news-muted, #5b6478);
+  cursor: pointer;
+}
+
+.ridge-auth-toggle:hover {
+  background: var(--news-hover, #eef0f7);
+}
+
+.ridge-auth-toggle svg,
+.ridge-auth-social-buttons svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ridge-auth-hint {
+  margin: -4px 0 0;
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ridge-auth-submit {
+  min-height: 48px;
+  margin-top: 2px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--news-accent, #2f4be0);
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  transition: filter 140ms ease, transform 140ms ease;
+}
+
+.ridge-auth-submit:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.ridge-auth-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.ridge-auth-submit:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.ridge-auth-link,
+.ridge-auth-back {
+  border: 0;
+  background: none;
+  color: var(--news-accent, #2f4be0);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ridge-auth-forgot {
+  align-self: flex-end;
+  margin-top: -7px;
+}
+
+.ridge-auth-note {
+  margin: 0;
+  color: var(--news-muted, #5b6478);
+  font-size: 14px;
+  text-align: center;
+}
+
+.ridge-auth-note .ridge-auth-link {
+  padding: 0;
+}
+
+.ridge-auth-feedback {
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 10px;
+  font-size: 14px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.ridge-auth-feedback.error {
+  border-color: #f1c6c3;
+  background: #fff7f6;
+  color: var(--news-danger, #b42318);
+}
+
+.ridge-auth-feedback.success {
+  border-color: #b8e2c2;
+  background: #f4fbf5;
+  color: #18733a;
+}
+
+.ridge-auth-back {
+  align-self: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--news-muted, #5b6478);
+}
+
+.ridge-auth-social {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.ridge-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--news-muted, #5b6478);
+  font-size: 13px;
+}
+
+.ridge-auth-divider span {
+  height: 1px;
+  flex: 1;
+  background: var(--news-border, #e6e8ef);
+}
+
+.ridge-auth-divider p {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.ridge-auth-social-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ridge-auth-social-buttons button {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 11px;
+  background: var(--news-surface, #fff);
+  color: var(--news-muted, #5b6478);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.ridge-auth-page :focus-visible {
+  outline: 2px solid var(--news-accent, #2f4be0);
+  outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
+  .auth-page.ridge-auth-page {
+    padding: 16px 12px;
+  }
+
+  .ridge-auth-card {
+    padding: 25px 20px;
+    border-radius: 16px;
+  }
+}

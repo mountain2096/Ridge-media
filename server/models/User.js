@@ -44,6 +44,9 @@ const userSchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
+        lastActiveAt: {
+            type: Date,
+        },
         isAdmin:{
             type: Boolean,
             default: false,
