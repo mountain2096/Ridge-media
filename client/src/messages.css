@@ -427,10 +427,6 @@
 .ridge-message-compose .ridge-media-uploading { color: var(--news-muted, #5b6478); font-size: 12px; }
 .ridge-message-bubble.media.theirs { margin-top: 0 !important; }
 
-.ridge-message-row:has(.ridge-message-bubble.media) { align-items: flex-start; }
-.ridge-message-row:has(.ridge-message-bubble.media) .ridge-msg-bubble-wrap.has-reactions { margin-bottom: 17px; }
-.ridge-message-row:has(.ridge-message-bubble.media) button.ridge-msg-badge { bottom: 17px; }
-
 .ridge-messages .ridge-message-bubble.mine {
   align-self: flex-end;
   border-color: var(--news-accent, #2f4be0);
@@ -615,18 +611,29 @@
 .bubble-style-starry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time { color: #e4e9f4; }
 .bubble-style-snow .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after,.bubble-style-starry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after,.bubble-style-ghost .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after,.bubble-style-berry .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after { position: absolute; top: -12px; right: 8px; width: 24px; height: 24px; background: center / contain no-repeat; content: ""; pointer-events: none; }
 .ridge-messages .ridge-message-row { min-width: 0; }
-.ridge-messages .ridge-message-bubble.media { box-sizing: border-box; width: 100%; max-width: min(100%, 320px); min-width: 0; }
+.ridge-messages .ridge-message-bubble.media { box-sizing: border-box; width: fit-content; max-width: min(100%, 320px); min-width: 0; }
 .ridge-messages .ridge-message-bubble.media .ridge-chat-media-link,
-.ridge-messages .ridge-message-bubble.media .ridge-chat-media { box-sizing: border-box; width: 100%; max-width: min(100%, 320px); min-width: 0; }
-.ridge-messages .ridge-message-bubble.media .ridge-chat-media-link { align-self: stretch; }
+.ridge-messages .ridge-message-bubble.media .ridge-chat-media { box-sizing: border-box; width: min(320px, 68vw); max-width: min(100%, 320px); min-width: 0; }
+.ridge-messages .ridge-message-bubble.media .ridge-chat-media-link { width: min(320px, 68vw); }
 .ridge-messages .ridge-message-bubble.media .ridge-chat-media-link .ridge-chat-media { max-height: 360px; }
 .ridge-messages .ridge-msg-menu-wrap { align-self: center; }
-.ridge-messages .ridge-msg-actions button.ridge-msg-more { box-sizing: border-box; width: 28px; height: 28px; border: 1px solid #e6e8ef; border-radius: 50%; background: #fff; color: #5b6478; }
-.ridge-messages .ridge-msg-actions button.ridge-msg-more:hover { background: #e6ebff; }
+.ridge-messages .ridge-msg-actions button.ridge-react-main,
+.ridge-messages .ridge-msg-actions button.ridge-msg-more { box-sizing: border-box; width: 28px !important; height: 28px !important; border: 0; border-radius: 50%; background: transparent; color: #8a93a6; }
+.ridge-messages .ridge-msg-actions button.ridge-react-main:hover,
+.ridge-messages .ridge-msg-actions button.ridge-msg-more:hover { background: #eef0f6; }
+.ridge-messages .ridge-msg-actions button.ridge-msg-more { font-size: 0; }
+.ridge-messages .ridge-msg-actions button.ridge-msg-more::after { content: "⋮"; font-size: 20px; line-height: 1; }
 .ridge-messages .ridge-msg-menu { top: calc(100% + 4px); right: 0; bottom: auto; min-width: 160px; gap: 2px; padding: 4px; border-color: #e6e8ef; border-radius: 12px; box-shadow: 0 2px 8px rgb(15 23 42 / 8%); }
-.ridge-messages .ridge-msg-menu-wrap.flip .ridge-msg-menu { top: auto; bottom: calc(100% + 4px); }
+.ridge-messages .ridge-msg-menu-wrap.flip .ridge-msg-menu { top: calc(100% + 4px); bottom: auto; }
 .ridge-messages .ridge-msg-menu button { min-height: 36px; padding: 6px 10px; color: #0f172a; text-align: left; }
 .ridge-messages .ridge-msg-menu button:hover { background: #e6ebff; }
+.ridge-messages .ridge-msg-bubble-wrap.has-reactions { margin-bottom: 14px; }
+.ridge-messages button.ridge-msg-badge { bottom: -14px; }
+.ridge-messages .ridge-message-row.mine button.ridge-msg-badge { right: 8px; left: auto; }
+.ridge-messages .ridge-message-row.theirs button.ridge-msg-badge { right: auto; left: 8px; }
+.ridge-messages .ridge-message-bubble.media .ridge-message-time { color: var(--news-muted, #5b6478) !important; }
+.ridge-message-list.chat-bg-night .ridge-message-bubble.media .ridge-message-time,
+.ridge-message-list.chat-bg-starry .ridge-message-bubble.media .ridge-message-time { color: #e4e9f4 !important; }
 .ridge-messages .bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,
 .ridge-messages .bubble-style-frog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,
 .ridge-messages .bubble-style-pink-heart .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,
