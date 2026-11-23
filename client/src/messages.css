@@ -449,6 +449,13 @@
 .bubble-style-duck .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),
 .bubble-style-sketch .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only),
 .bubble-style-dark .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { position: relative; }
+.bubble-style-cat-dog { --chat-accent: #ffe3b2; --chat-accent-text: #493629; --chat-accent-border: #9b765b; }
+.bubble-style-frog { --chat-accent: #368c5e; --chat-accent-text: #fff; --chat-accent-border: #38865c; }
+.bubble-style-pink-heart { --chat-accent: #ffc5d9; --chat-accent-text: #632a42; --chat-accent-border: #ffc5d9; }
+.bubble-style-sky-fish { --chat-accent: #b5e1ff; --chat-accent-text: #24445c; --chat-accent-border: #b5e1ff; }
+.bubble-style-duck { --chat-accent: #ffe68a; --chat-accent-text: #493b15; --chat-accent-border: #ffe68a; }
+.bubble-style-sketch { --chat-accent: #eef0ff; --chat-accent-text: #222b3a; --chat-accent-border: #687080; }
+.bubble-style-dark { --chat-accent: #303541; --chat-accent-text: #f8fafc; --chat-accent-border: #505765; }
 .bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border: 1px solid #9b765b; background: #fff2d9; color: #493629; }
 .bubble-style-cat-dog .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #ffe3b2; }
 .bubble-style-frog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border-color: #38865c; background: #51a777; color: #fff; }
@@ -463,6 +470,13 @@
 .bubble-style-sketch .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #eef0ff; }
 .bubble-style-dark .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) { border-color: #505765; background: #414653; color: #f8fafc; }
 .bubble-style-dark .ridge-message-bubble.mine:not(.post-share):not(.sticker):not(.emoji-only) { background: #303541; }
+.ridge-messages .bubble-style-cat-dog .ridge-message-bubble.mine.emoji-only,
+.ridge-messages .bubble-style-frog .ridge-message-bubble.mine.emoji-only,
+.ridge-messages .bubble-style-pink-heart .ridge-message-bubble.mine.emoji-only,
+.ridge-messages .bubble-style-sky-fish .ridge-message-bubble.mine.emoji-only,
+.ridge-messages .bubble-style-duck .ridge-message-bubble.mine.emoji-only,
+.ridge-messages .bubble-style-sketch .ridge-message-bubble.mine.emoji-only,
+.ridge-messages .bubble-style-dark .ridge-message-bubble.mine.emoji-only { border-color: var(--chat-accent-border); background: var(--chat-accent); color: var(--chat-accent-text); }
 .bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-pink-heart .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-sky-fish .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-duck .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-sketch .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time { color: #4b5565; }
 .bubble-style-frog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time,.bubble-style-dark .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only) .ridge-message-time { color: #f1f4fa; }
 .bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker):not(.emoji-only)::after,
@@ -482,6 +496,22 @@
   border-color: var(--news-accent, #2f4be0);
 }
 
+.ridge-messages .bubble-style-cat-dog .ridge-message-compose input,
+.ridge-messages .bubble-style-frog .ridge-message-compose input,
+.ridge-messages .bubble-style-pink-heart .ridge-message-compose input,
+.ridge-messages .bubble-style-sky-fish .ridge-message-compose input,
+.ridge-messages .bubble-style-duck .ridge-message-compose input,
+.ridge-messages .bubble-style-sketch .ridge-message-compose input,
+.ridge-messages .bubble-style-dark .ridge-message-compose input { border-color: var(--chat-accent-border); }
+.ridge-messages .bubble-style-cat-dog .ridge-message-compose input:focus-visible,
+.ridge-messages .bubble-style-frog .ridge-message-compose input:focus-visible,
+.ridge-messages .bubble-style-pink-heart .ridge-message-compose input:focus-visible,
+.ridge-messages .bubble-style-sky-fish .ridge-message-compose input:focus-visible,
+.ridge-messages .bubble-style-duck .ridge-message-compose input:focus-visible,
+.ridge-messages .bubble-style-sketch .ridge-message-compose input:focus-visible,
+.ridge-messages .bubble-style-dark .ridge-message-compose input:focus-visible { border-color: var(--chat-accent-border); outline-color: var(--chat-accent-border); }
+.ridge-messages .bubble-style-dark .ridge-message-compose input { background: #414653; color: #f8fafc; }
+
 .ridge-messages .ridge-message-compose button {
   display: grid;
   width: 46px;
@@ -495,6 +525,14 @@
   color: #fff;
   cursor: pointer;
 }
+
+.ridge-messages .bubble-style-cat-dog .ridge-message-compose button,
+.ridge-messages .bubble-style-frog .ridge-message-compose button,
+.ridge-messages .bubble-style-pink-heart .ridge-message-compose button,
+.ridge-messages .bubble-style-sky-fish .ridge-message-compose button,
+.ridge-messages .bubble-style-duck .ridge-message-compose button,
+.ridge-messages .bubble-style-sketch .ridge-message-compose button,
+.ridge-messages .bubble-style-dark .ridge-message-compose button { border: 1px solid var(--chat-accent-border); background: var(--chat-accent); color: var(--chat-accent-text); }
 
 .ridge-messages .ridge-message-compose button:hover:not(:disabled) {
   filter: brightness(0.94);
