@@ -26,6 +26,8 @@ function nicknameFor(conversation, userId) {
 const QUICK_ICONS = ["❤️", "👍", "😂", "😮", "😢", "🙏", "🔥", "⭐", "🎉", "😍", "👏", "💯"];
 const CHAT_BACKGROUNDS = ["mint", "sky", "peach", "lavender", "sunset", "night", "paper", "pink"];
 const CHAT_BUBBLE_STYLES = ["cat-dog", "frog", "pink-heart", "sky-fish", "duck", "sketch", "dark"];
+const CHAT_BUBBLE_LABELS = { "cat-dog": "Mèo & gấu trúc", duck: "Hải cẩu", "sky-fish": "Cá heo" };
+const CHAT_BUBBLE_IMAGES = { "cat-dog": "cat", frog: "frog", "pink-heart": "heart", "sky-fish": "dolphin", duck: "seal" };
 
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const location = useLocation();
@@ -672,7 +674,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                   </div>
                   <strong>Kiểu bong bóng</strong>
                   <div className="ridge-appearance-options ridge-bubble-options" aria-label="Chọn kiểu bong bóng">
-                    {CHAT_BUBBLE_STYLES.map((key) => <button key={key} className={`bubble-preview bubble-preview-${key}`} type="button" aria-label={key} aria-pressed={activeConversation.bubbleStyle === key} onClick={() => void saveAppearance("bubbleStyle", key)}>Aa</button>)}
+                    {CHAT_BUBBLE_STYLES.map((key) => <button key={key} className={`bubble-preview bubble-preview-${key}`} type="button" aria-label={CHAT_BUBBLE_LABELS[key] || key} aria-pressed={activeConversation.bubbleStyle === key} onClick={() => void saveAppearance("bubbleStyle", key)}>{CHAT_BUBBLE_IMAGES[key] && <img src={`/chat-art/${CHAT_BUBBLE_IMAGES[key]}.webp`} alt="" />}Aa</button>)}
                     <button className="ridge-appearance-reset" type="button" aria-pressed={!activeConversation.bubbleStyle} onClick={() => void saveAppearance("bubbleStyle", "")}>Mặc định</button>
                   </div>
                 </div>}
