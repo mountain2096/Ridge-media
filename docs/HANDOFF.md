@@ -20,6 +20,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 
 ## 4. Test status (update each round)
 - Notification deletion: `node --test` passed 138 tests; client lint and build passed. Added recipient-scoped single/all deletion and read-all endpoints plus optimistic notification controls. No API, Vite server, database, or browser was started.
+- Reels comment parity: `node --test` passed 134 tests; client lint and build passed. Replaced the simplified Reels comment list with shared `CommentItem`, including replies, reactions, edit/delete/report, and reply counts. No API, Vite server, database, or browser was started.
 - Round 37: `node --test` passed 129 tests; client lint and build passed. Message sends no longer create bell notifications; legacy message notifications are filtered from API and client bell state; the bell count and panel layout were fixed, and message toast previews now reflect text, post shares, and stickers. No API, Vite server, database, or browser was started.
 - Round 36: `node --test` passed 134 tests; client lint and build passed. Added a shared conversation quick icon, realtime updates, and send-button behavior for empty composers. No API, Vite server, database, or browser was started.
 - Round 35: `node --test` passed 133 tests; client lint and build passed. Added shared conversation nicknames and personal mute controls, with muted threads excluded from unread counts and message toasts. No API, Vite server, database, or browser was started.
@@ -130,6 +131,8 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 36 | Add shared conversation quick icons, picker/reset, realtime update, and send-on-empty behavior | `node --test`: 134 passed; client lint/build passed; no API/Vite server/database/browser started | this commit |
 | 38 | Add recipient-scoped notification deletion, delete-all, read-all, and panel controls | `node --test`: 138 passed; client lint/build passed; no API/Vite server/database/browser started | `899405f` |
 
+| 39 | Match Reels comment panel behavior to feed comments | `node --test`: 134 passed; client lint/build passed; no API/Vite/database/browser started | pending |
+
 ## 8. Possible next work (project owner chooses)
 Next: split `FeedPage.jsx` into hooks; add server-side limits for guests (the login gate is client-only); set `trust proxy` before deploying behind a proxy; revoke live Socket.IO connections when `tokenVersion` changes. Round 20 verified Reels at all requested viewports and kept the API contract unchanged.
 Round 22 keeps post API/data behavior intact and updates the shared feed/profile card plus duplicated guest card styling.
@@ -139,6 +142,7 @@ Responsive feed, friends, and messages layouts were checked at the requested vie
 Post action spacing and the profile reaction picker should be checked manually in the browser; the composer padding already matches on all sides in its active CSS.
 Story strip and playback fixes were statically reviewed; no API, Vite, or database was started.
 Round 25 Reels filtering, de-duplication, and deep-link behavior were covered by backend checks and static client build; no browser or live service was started.
+Round 39 reuses the existing comment API and `CommentItem`; deleting a parent adjusts the Reels count by the server-reported number of removed comments. No API, Vite server, database, or browser was started.
 Round 26 reaction chips/dialogs and brand-link behavior passed client lint/build and backend checks; no browser or live service was started.
 Round 30 reuses conversation and realtime helpers, checks post visibility for both users, and renders unavailable shares without the post payload. The dialog uses the existing modal focus/escape behavior; no live service or browser was used.
 Round 31 keeps chat post-share wrappers transparent on both sides, gives the card explicit dark text and the requested avatar/media treatment, and uses metadata-only muted video previews with navigation through the card link. No live service or browser was used.

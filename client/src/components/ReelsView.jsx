@@ -1,26 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useOutletContext } from "react-router-dom";
 import ReactionButton from "./ReactionButton.jsx";
+import CommentItem from "./CommentItem.jsx";
+import { useConfirm } from "./ConfirmDialog.jsx";
 import ReportDialog from "./ReportDialog.jsx";
 import Toast from "./Toast.jsx";
 import { API_BASE } from "../lib/api.js";
 import { mergeLegacyLikes, sendReaction, summarizeReactions } from "../lib/reactions.js";
+import "../comments.css";
 import "../reels.css";
 
 const PAGE_SIZE = 6;
 
-function relativeTime(value) {
-  if (!value) return "";
-  const elapsed = Math.max(0, Date.now() - new Date(value).getTime());
-  const minutes = Math.floor(elapsed / 60000);
-  if (minutes < 1) return "Vừa xong";
-  if (minutes < 60) return `${minutes} phút trước`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} giờ trước`;
-  return `${Math.floor(hours / 24)} ngày trước`;
-}
-
 function ReelsView() {
+  const confirmAction = useConfirm();
   const { currentUser } = useOutletContext();
   const location = useLocation();
   const [posts, setPosts] = useState([]);
@@ -44,6 +37,11 @@ function ReelsView() {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsError, setCommentsError] = useState("");
   const [commentContent, setCommentContent] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
+  const [isUpdatingComment, setIsUpdatingComment] = useState(false);
+  const [reportTarget, setReportTarget] = useState(null);
   const [sendingComment, setSendingComment] = useState(false);
   const containerRef = useRef(null);
   const videoRefs = useRef(new Map());
@@ -97,6 +95,20 @@ function ReelsView() {
 
   const commentsPost = posts.find((post) => post._id === commentsPostId);
   const reportPost = posts.find((post) => post._id === reportPostId);
+  const commentIds = new Set(comments.map((item) => String(item._id)));
+  const isReplyItem = (item) => Boolean(item.parentId) && commentIds.has(String(item.parentId));
+  const topLevelComments = comments.filter((item) => !isReplyItem(item));
+  const repliesOf = (parent) => comments.filter((item) => isReplyItem(item) && String(item.parentId) === String(parent._id));
+  const renderComment = (comment, isReply = false, threadOptions = {}) => <CommentItem
+    key={comment._id} comment={comment} currentUserId={currentUser?._id} postOwnerId={commentsPost?.authorId?._id} isAdmin={currentUser?.isAdmin}
+    isReply={isReply} {...threadOptions}
+    isEditing={editingCommentId === comment._id} editingContent={editingCommentContent} isUpdating={isUpdatingComment}
+    onEdit={(item) => { setEditingCommentId(item._id); setEditingCommentContent(item.content || ""); }}
+    onEditingChange={setEditingCommentContent} onCancelEdit={() => { setEditingCommentId(null); setEditingCommentContent(""); }}
+    onUpdate={handleUpdateComment} onDelete={() => handleDeleteComment(comment)} onReport={() => setReportTarget({ targetType: "comment", targetId: comment._id })}
+    onReact={(type) => handleReactComment(comment, type)}
+    onReply={(item) => { setReplyTo({ rootId: item.parentId || item._id, username: item.authorId?.username || "người dùng" }); setCommentContent(item.authorId?.username ? `@${item.authorId.username} ` : ""); }}
+  />;
 
   useEffect(() => {
     function onPointerDown(event) { if (!menuRef.current?.contains(event.target)) setMenuPostId(""); }
@@ -182,7 +194,8 @@ function ReelsView() {
   }
 
   async function submitReport({ reason, description }) {
-    const response = await fetch(`${API_BASE}/api/report`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` }, body: JSON.stringify({ targetType: "post", targetId: reportPostId, reason, description }) });
+    const target = reportTarget || { targetType: "post", targetId: reportPostId };
+    const response = await fetch(`${API_BASE}/api/report`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` }, body: JSON.stringify({ ...target, reason, description }) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || "Không thể gửi báo cáo.");
     setToast(data.message);
@@ -209,7 +222,7 @@ function ReelsView() {
     Promise.resolve().then(() => loadComments(commentsPostId));
     commentPanelRef.current?.focus();
     function closeOnEscape(event) {
-      if (event.key === "Escape" && document.querySelector(".reel-post-menu")) return;
+      if (event.key === "Escape" && document.querySelector(".reel-post-menu, .ridge-comment-menu")) return;
       if (event.key === "Escape" && !document.querySelector(".ridge-react-picker")) {
         event.preventDefault();
         setCommentsPostId("");
@@ -233,12 +246,13 @@ function ReelsView() {
       const response = await fetch(`${API_BASE}/api/comment/${commentsPostId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify(replyTo ? { content, parentId: replyTo.rootId } : { content }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể gửi bình luận.");
       setPosts((current) => current.map((post) => post._id === commentsPostId ? { ...post, commentsCount: (post.commentsCount || 0) + 1 } : post));
       setCommentContent("");
+      setReplyTo(null);
       await loadComments(commentsPostId, { silent: true });
       commentInputRef.current?.focus();
     } catch (requestError) {
@@ -246,6 +260,42 @@ function ReelsView() {
     } finally {
       setSendingComment(false);
     }
+  }
+
+  async function handleReactComment(comment, type) {
+    try {
+      const data = await sendReaction(`/api/comment/${comment._id}/reaction`, type);
+      setComments((current) => current.map((item) => item._id === comment._id ? { ...item, reactions: data.reactions } : item));
+    } catch (requestError) { setCommentsError(requestError.message); }
+  }
+
+  async function handleDeleteComment(comment) {
+    if (!(await confirmAction({ title: "Xóa bình luận", message: "Bạn có chắc muốn xóa bình luận này?", confirmLabel: "Xóa bình luận", danger: true }))) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/comment/${comment._id}`, { method: "DELETE", headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể xóa bình luận.");
+      const removedCount = Number(data.removed) || 1;
+      setComments((current) => current.filter((item) => item._id !== comment._id && String(item.parentId || "") !== String(comment._id)));
+      setReplyTo((current) => current && current.rootId === comment._id ? null : current);
+      setPosts((current) => current.map((post) => post._id === commentsPostId ? { ...post, commentsCount: Math.max(0, (post.commentsCount || 0) - removedCount) } : post));
+    } catch (requestError) { setCommentsError(requestError.message); }
+  }
+
+  async function handleUpdateComment(event, commentId) {
+    event.preventDefault();
+    const content = editingCommentContent.trim();
+    if (!content) { setCommentsError("Nội dung bình luận không được để trống."); return; }
+    setIsUpdatingComment(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/comment/${commentId}`, { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` }, body: JSON.stringify({ content }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Không thể sửa bình luận.");
+      setComments((current) => current.map((item) => item._id === commentId ? { ...item, content: data.comment.content } : item));
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+    } catch (requestError) { setCommentsError(requestError.message); }
+    finally { setIsUpdatingComment(false); }
   }
 
   useEffect(() => { Promise.resolve().then(loadPage); }, [loadPage]);
@@ -360,17 +410,18 @@ function ReelsView() {
       <button className="reel-nav reel-nav-prev" type="button" aria-label="Reel trước" disabled={activeIndex === 0} hidden={Boolean(commentsPostId)} onClick={() => containerRef.current?.querySelectorAll(".reel-item")[Math.max(0, activeIndex - 1)]?.scrollIntoView({ behavior: "smooth" })}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" /></svg></button>
       <button className="reel-nav reel-nav-next" type="button" aria-label="Reel tiếp theo" disabled={activeIndex >= posts.length - 1} hidden={Boolean(commentsPostId)} onClick={() => containerRef.current?.querySelectorAll(".reel-item")[Math.min(posts.length - 1, activeIndex + 1)]?.scrollIntoView({ behavior: "smooth" })}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
       {commentsPost && <button type="button" className="reel-comments-backdrop" aria-label="Đóng bình luận" onClick={() => setCommentsPostId("")} />}
-      {commentsPost && <aside className="reel-comments-panel" ref={commentPanelRef} tabIndex={-1} aria-label="Bình luận" onClick={(event) => event.stopPropagation()}>
+      {commentsPost && <aside className="reel-comments-panel" data-lenis-prevent ref={commentPanelRef} tabIndex={-1} aria-label="Bình luận" onClick={(event) => event.stopPropagation()}>
         <header><h2>Bình luận</h2><button type="button" aria-label="Đóng" onClick={() => { setCommentsPostId(""); commentButtonRef.current?.focus(); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></header>
         <div className="reel-comment-list" ref={commentListRef} aria-live="polite">
-          {commentsLoading ? <p>Đang tải bình luận...</p> : commentsError ? <div role="alert"><p>{commentsError}</p><button type="button" onClick={() => loadComments(commentsPostId)}>Thử lại</button></div> : comments.length === 0 ? <div className="reel-comments-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg><p>Chưa có bình luận nào.</p></div> : comments.filter((comment) => !comment.parentId).map((comment) => <div className="reel-comment" key={comment._id}>
-            <span className="reel-comment-avatar">{comment.authorId?.profilePicture ? <img src={comment.authorId.profilePicture} alt="" /> : comment.authorId?.username?.charAt(0).toUpperCase()}</span><Link to={`/profile/${comment.authorId?._id}`}>{comment.authorId?.username || "Người dùng"}</Link><p>{comment.content}</p><time>{relativeTime(comment.createdAt) || (comment.createdAt ? new Date(comment.createdAt).toLocaleString("vi-VN") : "")}</time>
-            {comments.filter((reply) => String(reply.parentId || "") === String(comment._id)).map((reply) => <div className="reel-comment is-reply" key={reply._id}><span className="reel-comment-avatar">{reply.authorId?.profilePicture ? <img src={reply.authorId.profilePicture} alt="" /> : reply.authorId?.username?.charAt(0).toUpperCase()}</span><Link to={`/profile/${reply.authorId?._id}`}>{reply.authorId?.username || "Người dùng"}</Link><p>{reply.content}</p><time>{relativeTime(reply.createdAt) || (reply.createdAt ? new Date(reply.createdAt).toLocaleString("vi-VN") : "")}</time></div>)}
-          </div>)}
+          {commentsLoading ? <p>Đang tải bình luận...</p> : commentsError ? <div role="alert"><p>{commentsError}</p><button type="button" onClick={() => loadComments(commentsPostId)}>Thử lại</button></div> : comments.length === 0 ? <div className="reel-comments-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg><p>Chưa có bình luận nào.</p></div> : topLevelComments.map((comment) => {
+            const replies = repliesOf(comment);
+            return replies.length ? <div className="ridge-comment-thread" key={comment._id}>{renderComment(comment, false, { isThreadParent: true, hasReplies: true })}<div className="ridge-replies">{replies.map((reply, index) => renderComment(reply, true, { isLastReply: index === replies.length - 1 }))}</div></div> : renderComment(comment);
+          })}
         </div>
-        <form onSubmit={handleCreateComment}><span className="reel-composer-avatar">{currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : currentUser?.username?.charAt(0).toUpperCase()}</span><input ref={commentInputRef} value={commentContent} maxLength={500} onChange={(event) => setCommentContent(event.target.value)} placeholder="Viết bình luận..." aria-label="Viết bình luận..." /><button type="submit" aria-label="Gửi" disabled={sendingComment || !commentContent.trim()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button></form>
+        {replyTo && <div className="ridge-reply-bar" role="status"><span>Đang trả lời <strong>{replyTo.username}</strong></span><button type="button" aria-label="Hủy trả lời" onClick={() => { setReplyTo(null); setCommentContent(""); }}>×</button></div>}
+        <form onSubmit={handleCreateComment}><span className="reel-composer-avatar">{currentUser?.profilePicture ? <img src={currentUser.profilePicture} alt="" /> : currentUser?.username?.charAt(0).toUpperCase()}</span><input ref={commentInputRef} value={commentContent} maxLength={500} onChange={(event) => setCommentContent(event.target.value)} placeholder={replyTo ? `Trả lời ${replyTo.username}...` : "Viết bình luận..."} aria-label="Viết bình luận..." /><button type="submit" aria-label="Gửi" disabled={sendingComment || !commentContent.trim()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button></form>
       </aside>}
-      <ReportDialog key={reportPostId || "closed"} open={Boolean(reportPost)} targetType="post" onClose={() => setReportPostId("")} onSubmit={submitReport} />
+      <ReportDialog key={reportTarget?.targetId || reportPostId || "closed"} open={Boolean(reportPost || reportTarget)} targetType={reportTarget?.targetType || "post"} onClose={() => { setReportPostId(""); setReportTarget(null); }} onSubmit={submitReport} />
       <Toast message={toast} onDismiss={() => setToast("")} />
     </section>
   );
