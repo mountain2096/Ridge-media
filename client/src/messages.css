@@ -341,7 +341,7 @@
 .bubble-style-sky-fish .ridge-chat-settings-button,
 .bubble-style-duck .ridge-chat-settings-button,
 .bubble-style-sketch .ridge-chat-settings-button,
-.bubble-style-dark .ridge-chat-settings-button { border-color: var(--chat-accent-border); color: var(--chat-accent-text); }
+.bubble-style-dark .ridge-chat-settings-button { border-color: var(--chat-accent-border); background: var(--chat-accent); color: var(--chat-accent-text); }
 
 .ridge-conversation-header > a:last-child {
   min-width: 0;
