@@ -109,7 +109,7 @@
 .reel-page-error { position: absolute; right: 16px; bottom: 16px; left: 16px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 14px; border-radius: 10px; background: #7f1d1d; color: #fff; }
 .reel-page-error button { min-width: 100px; min-height: 44px; border: 1px solid #fff; border-radius: 22px; background: transparent; color: #fff; cursor: pointer; }
 .reel-error { position: absolute; top: 12px; left: 50%; max-width: calc(100% - 24px); margin: 0; padding: 10px 14px; transform: translateX(-50%); border-radius: 10px; background: #7f1d1d; color: #fff; }
-.reel-comments-panel { position: absolute; z-index: 70; top: 0; right: 0; bottom: 0; display: flex; width: min(380px, 100%); flex-direction: column; background: var(--news-surface, #fff); color: var(--news-ink, #0f172a); box-shadow: -8px 0 30px rgb(0 0 0 / 25%); }
+.reel-comments-panel { position: absolute; z-index: 70; top: 0; right: 0; bottom: 0; display: flex; width: min(380px, 100%); flex-direction: column; overflow: visible; background: var(--news-surface, #fff); color: var(--news-ink, #0f172a); box-shadow: -8px 0 30px rgb(0 0 0 / 25%); }
 .reel-comments-panel:focus { outline: none; }
 .reel-comments-panel header { display: flex; min-height: 60px; align-items: center; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid var(--news-border, #e6e8ef); }
 .reel-comments-panel h2 { margin: 0; font-size: 18px; }
