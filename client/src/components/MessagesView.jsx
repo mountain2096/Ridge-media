@@ -24,10 +24,15 @@ function nicknameFor(conversation, userId) {
 }
 
 const QUICK_ICONS = ["❤️", "👍", "😂", "😮", "😢", "🙏", "🔥", "⭐", "🎉", "😍", "👏", "💯"];
-const CHAT_BACKGROUNDS = ["mint", "sky", "peach", "lavender", "sunset", "night", "paper", "pink"];
-const CHAT_BUBBLE_STYLES = ["cat-dog", "frog", "pink-heart", "sky-fish", "duck", "sketch", "dark"];
-const CHAT_BUBBLE_LABELS = { "cat-dog": "Mèo", dark: "Gấu trúc", duck: "Hải cẩu", "sky-fish": "Cá heo" };
-const CHAT_BUBBLE_IMAGES = { "cat-dog": "cat", frog: "frog", "pink-heart": "heart", "sky-fish": "dolphin", duck: "seal", dark: "panda" };
+const THEMES = [
+  { key: "cat", label: "Mèo", background: "peach", bubbleStyle: "cat-dog", image: "cat" },
+  { key: "frog", label: "Ếch", background: "mint", bubbleStyle: "frog", image: "frog" },
+  { key: "heart", label: "Tim hồng", background: "pink", bubbleStyle: "pink-heart", image: "heart" },
+  { key: "dolphin", label: "Cá heo", background: "sky", bubbleStyle: "sky-fish", image: "dolphin" },
+  { key: "seal", label: "Hải cẩu", background: "lavender", bubbleStyle: "duck", image: "seal" },
+  { key: "panda", label: "Gấu trúc", background: "night", bubbleStyle: "dark", image: "panda" },
+  { key: "sketch", label: "Phác thảo", background: "paper", bubbleStyle: "sketch", image: "" },
+];
 
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const location = useLocation();
@@ -116,21 +121,21 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     if (!response.ok) { setConversationActionError(data.message || "Không thể cập nhật biểu tượng nhanh."); return; }
     setConversations((items) => items.map((item) => item._id === activeConversationId ? { ...item, quickIcon: data.quickIcon } : item));
   }
-  async function saveAppearance(field, value) {
+  async function saveAppearance(appearance) {
     const conversationId = activeConversationId;
-    const previous = activeConversation?.[field] || "";
+    const previous = { background: activeConversation?.background || "", bubbleStyle: activeConversation?.bubbleStyle || "" };
     setConversationActionError("");
-    setConversations((items) => items.map((item) => item._id === conversationId ? { ...item, [field]: value } : item));
+    setConversations((items) => items.map((item) => item._id === conversationId ? { ...item, ...appearance } : item));
     try {
       const response = await fetch(`${API_BASE}/api/message/conversation/${conversationId}/appearance`, {
         method: "PATCH", headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify(appearance),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Không thể lưu giao diện cuộc trò chuyện.");
       setConversations((items) => items.map((item) => item._id === conversationId ? { ...item, ...data } : item));
     } catch (requestError) {
-      setConversations((items) => items.map((item) => item._id === conversationId && item[field] === value ? { ...item, [field]: previous } : item));
+      setConversations((items) => items.map((item) => item._id === conversationId && item.background === appearance.background && item.bubbleStyle === appearance.bubbleStyle ? { ...item, ...previous } : item));
       setConversationActionError(requestError.message || "Không thể lưu giao diện cuộc trò chuyện.");
     }
   }
@@ -667,15 +672,10 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                   <strong>Biểu tượng nhanh</strong>
                   <div className="ridge-quick-icons" aria-label="Chọn biểu tượng nhanh">{QUICK_ICONS.map((icon) => <button key={icon} type="button" aria-label={icon} aria-pressed={activeConversation.quickIcon === icon} onClick={() => void saveQuickIcon(icon)}>{icon}</button>)}</div>
                   <button className="ridge-quick-icon-reset" type="button" onClick={() => void saveQuickIcon("")}>Đặt lại</button>
-                  <strong>Nền đoạn chat</strong>
-                  <div className="ridge-appearance-options ridge-background-options" aria-label="Chọn nền đoạn chat">
-                    {CHAT_BACKGROUNDS.map((key) => <button key={key} className={`chat-bg-swatch chat-bg-${key}`} type="button" aria-label={key} aria-pressed={activeConversation.background === key} onClick={() => void saveAppearance("background", key)} />)}
-                    <button className="ridge-appearance-reset" type="button" aria-pressed={!activeConversation.background} onClick={() => void saveAppearance("background", "")}>Mặc định</button>
-                  </div>
-                  <strong>Kiểu bong bóng</strong>
-                  <div className="ridge-appearance-options ridge-bubble-options" aria-label="Chọn kiểu bong bóng">
-                    {CHAT_BUBBLE_STYLES.map((key) => <button key={key} className={`bubble-preview bubble-preview-${key}`} type="button" aria-label={CHAT_BUBBLE_LABELS[key] || key} aria-pressed={activeConversation.bubbleStyle === key} onClick={() => void saveAppearance("bubbleStyle", key)}>{CHAT_BUBBLE_IMAGES[key] && <img src={`/chat-art/${CHAT_BUBBLE_IMAGES[key]}.webp`} alt="" />}Aa</button>)}
-                    <button className="ridge-appearance-reset" type="button" aria-pressed={!activeConversation.bubbleStyle} onClick={() => void saveAppearance("bubbleStyle", "")}>Mặc định</button>
+                  <strong>Chủ đề</strong>
+                  <div className="ridge-appearance-options ridge-theme-options" aria-label="Chọn chủ đề">
+                    {THEMES.map(({ key, label, background, bubbleStyle, image }) => <button key={key} className={`ridge-theme-chip chat-bg-${background} bubble-preview-${bubbleStyle}`} type="button" aria-pressed={activeConversation.background === background && activeConversation.bubbleStyle === bubbleStyle} onClick={() => void saveAppearance({ background, bubbleStyle })}>{image && <img src={`/chat-art/${image}.webp`} alt="" />}<span>{label}</span></button>)}
+                    <button className="ridge-appearance-reset" type="button" aria-pressed={!activeConversation.background && !activeConversation.bubbleStyle} onClick={() => void saveAppearance({ background: "", bubbleStyle: "" })}>Mặc định</button>
                   </div>
                 </div>}
               </div>

@@ -232,6 +232,16 @@
 .ridge-appearance-options { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 .ridge-appearance-options button { min-height: 34px; border: 1px solid #e6e8ef; border-radius: 999px; background: #fff; color: #30384a; cursor: pointer; }
 .ridge-appearance-options button[aria-pressed="true"] { border: 2px solid #2f4be0; }
+.ridge-theme-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ridge-theme-chip { display: flex; min-height: 48px !important; align-items: center; justify-content: center; gap: 7px; padding: 5px 8px; font-weight: 600; }
+.ridge-theme-chip img { width: 24px; height: 24px; object-fit: contain; }
+.ridge-theme-chip.bubble-preview-cat-dog { background: linear-gradient(135deg, #ffe3b2 0 50%, #fff0e5 50%) !important; }
+.ridge-theme-chip.bubble-preview-frog { background: linear-gradient(135deg, #51a777 0 50%, #e5f7ef 50%) !important; }
+.ridge-theme-chip.bubble-preview-pink-heart { background: linear-gradient(135deg, #ffc5d9 0 50%, #fff0f6 50%) !important; }
+.ridge-theme-chip.bubble-preview-sky-fish { background: linear-gradient(135deg, #b5e1ff 0 50%, #e7f3ff 50%) !important; }
+.ridge-theme-chip.bubble-preview-duck { background: linear-gradient(135deg, #ffe68a 0 50%, #f0eaff 50%) !important; }
+.ridge-theme-chip.bubble-preview-dark { background: linear-gradient(135deg, #303541 0 50%, #293145 50%) !important; color: #fff !important; }
+.ridge-theme-chip.bubble-preview-sketch { background: linear-gradient(135deg, #eef0ff 0 50%, #f6f1e6 50%) !important; }
 .ridge-background-options .chat-bg-swatch { width: 30px; min-height: 30px; padding: 0; }
 .chat-bg-swatch.chat-bg-mint { background: #e5f7ef; }
 .chat-bg-swatch.chat-bg-sky { background: #e7f3ff; }
