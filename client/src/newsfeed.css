@@ -419,12 +419,12 @@
 
 .connection-unfriend-button {
   min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--news-border);
+  padding: 0 18px;
+  border: 1.5px solid var(--news-border);
   border-radius: 999px;
-  color: var(--news-nav);
+  color: var(--news-muted);
   background: var(--news-surface);
-  font: inherit;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -433,6 +433,31 @@
 .connection-unfriend-button:hover {
   background: var(--news-hover);
 }
+
+.connections-page .person-row { flex-wrap: wrap; }
+.connections-page .connection-action {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1.5px solid var(--news-border);
+  border-radius: 999px;
+  background: var(--news-surface);
+  color: var(--news-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.connections-page .connection-action.is-add { border-color: var(--news-accent); color: var(--news-accent); }
+.connections-page .connection-action.is-primary { border-color: var(--news-accent); background: var(--news-accent); color: var(--news-surface); }
+.connections-page .connection-action:hover { background: var(--news-hover); }
+.connections-page .connection-action.is-primary:hover { background: var(--news-accent); }
+.connections-page .connection-action.is-sent:disabled { background: transparent; color: var(--news-muted); opacity: .65; cursor: default; }
+.connections-page .connection-action.is-sent:disabled:hover { background: transparent; }
+.connections-page .connection-action.block-user-button:hover { border-color: var(--news-danger); color: var(--news-danger); }
+.connections-page .friend-request-row > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.connections-page .btn-outline { min-height: 44px; padding: 0 18px; font-weight: 600; white-space: nowrap; }
 
 .friends-head {
   display: flex;

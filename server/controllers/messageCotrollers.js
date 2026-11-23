@@ -18,20 +18,34 @@ async function findOrCreateConversation(senderId, receiverId) {
     return conversation;
 }
 
-async function createAndEmitMessage(conversation, senderId, receiverId, data) {
+async function createAndEmitMessage(conversation, senderId, receiverId, data, replyTo = null) {
     conversation.hiddenFor = (conversation.hiddenFor || []).filter((id) => idString(id) !== idString(receiverId));
-    const newMessage = await Message.create({ conversationId: conversation._id, senderId, ...data });
+    const newMessage = await Message.create({ conversationId: conversation._id, senderId, ...data, ...(replyTo ? { replyTo } : {}) });
     conversation.lastMessage = newMessage._id;
     await conversation.save();
     await newMessage.populate("senderId", "username profilePicture");
     if (newMessage.type === "post_share") await newMessage.populate({ path: "sharedPostId", select: "authorId content image video status", populate: { path: "authorId", select: "username profilePicture" } });
-    const payload = { conversationId: conversation._id.toString(), message: { ...newMessage.toObject(), recalledAt: null } };
-    emitToUser(receiverId, "message:new", payload);
-    emitToUser(senderId, "message:new", payload);
+    if (newMessage.replyTo) await newMessage.populate({ path: "replyTo", select: "senderId content type stickerId mediaUrl recalledAt deletedFor", populate: { path: "senderId", select: "username profilePicture" } });
+    const payloadFor = (viewerId) => {
+        const message = { ...newMessage.toObject(), recalledAt: null };
+        message.replyTo = visibleReplyPreview(message.replyTo, viewerId);
+        if (message.replyTo) delete message.replyTo.deletedFor;
+        return { conversationId: conversation._id.toString(), message };
+    };
+    emitToUser(receiverId, "message:new", payloadFor(receiverId));
+    emitToUser(senderId, "message:new", payloadFor(senderId));
     return newMessage;
 }
 
 const idString = (value) => (value?._id || value).toString();
+
+function visibleReplyPreview(replyTo, viewerId) {
+    if (!replyTo || replyTo.deletedFor?.some((id) => idString(id) === idString(viewerId))) return null;
+    const preview = replyTo.toObject ? replyTo.toObject() : { ...replyTo };
+    delete preview.deletedFor;
+    if (preview.recalledAt) Object.assign(preview, { content: "Tin nhắn đã được thu hồi", mediaUrl: null, stickerId: null, sharedPostId: null });
+    return preview;
+}
 
 const isBlockedBetween = (userId, otherUser, currentUser) => {
     const userIdString = idString(userId);
@@ -131,7 +145,7 @@ const createOrGetConversation = async (req, res) => {
 };
 const sendMessage = async (req, res) => {
     try {
-        const { content, stickerId, mediaUrl } = req.body;
+        const { content, stickerId, mediaUrl, replyToMessageId } = req.body;
         const { conversationId } = req.params;
         const isSticker = stickerId !== undefined && stickerId !== null;
         const hasMedia = Object.hasOwn(req.body, "mediaUrl");
@@ -194,6 +208,13 @@ const sendMessage = async (req, res) => {
 
         if (await rejectIfBlocked(conversation, req, res)) return;
 
+        let replyTo = null;
+        if (replyToMessageId !== undefined && replyToMessageId !== null) {
+            if (!mongoose.isValidObjectId(replyToMessageId)) return res.status(400).json({ message: "Tin nhắn được trả lời không hợp lệ!" });
+            replyTo = await Message.findOne({ _id: replyToMessageId, conversationId, recalledAt: null, deletedFor: { $ne: req.user._id } });
+            if (!replyTo) return res.status(400).json({ message: "Tin nhắn được trả lời không hợp lệ!" });
+        }
+
         const receiverId = conversation.participants.find(
             (id) => id.toString() !== req.user._id.toString()
         )
@@ -201,11 +222,11 @@ const sendMessage = async (req, res) => {
             ? { type: "sticker", stickerId, content: STICKER_PREVIEW }
             : hasMedia
                 ? { type: mediaType, mediaUrl, content: mediaType === "image" ? "Đã gửi một ảnh" : "Đã gửi một video" }
-                : { content: content.trim() });
+                : { content: content.trim() }, replyTo?._id || null);
 
         res.status(201).json({
             message: "Gửi tin nhắn thành công!",
-            newMessage,
+            newMessage: { ...newMessage.toObject(), replyTo: visibleReplyPreview(newMessage.replyTo, req.user._id) },
         });
     } catch (error) {
         if (error.name === "CastError") {
@@ -248,10 +269,14 @@ const getMessage = async (req, res) =>{
 
         const message = await Message.find({conversationId, deletedFor: { $ne: req.user._id }})
         .populate("senderId", "username profilePicture")
+        .populate({ path: "replyTo", select: "senderId content type stickerId mediaUrl recalledAt deletedFor", populate: { path: "senderId", select: "username profilePicture" } })
         .populate({ path: "sharedPostId", select: "authorId content image video status privacy", populate: { path: "authorId", select: "username profilePicture" } })
         .sort({ createdAt: 1})
 
         for (const item of message) {
+            if (item.replyTo?.deletedFor?.some((id) => idString(id) === idString(req.user._id))) item.replyTo = null;
+            else if (item.replyTo?.recalledAt) { item.replyTo.content = "Tin nhắn đã được thu hồi"; item.replyTo.mediaUrl = null; item.replyTo.stickerId = null; item.replyTo.sharedPostId = null; }
+            if (item.replyTo) item.replyTo.deletedFor = undefined;
             if (item.sharedPostId && item.sharedPostId.status !== "active") item.sharedPostId = null;
             else if (item.sharedPostId) {
                 const { canAccessPost } = require("../utils/postAccess");

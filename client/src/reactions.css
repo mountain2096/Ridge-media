@@ -54,9 +54,6 @@
 .ridge-msg-menu-wrap { position: relative; }
 .ridge-messages .ridge-msg-actions button.ridge-msg-more { display: grid; width: 30px; min-width: 0; height: 30px; min-height: 0; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--news-muted, #5b6478); font-size: 18px; line-height: 1; }
 .ridge-msg-more:hover { background: var(--news-hover, #eef0f7); }
-.ridge-msg-menu { position: absolute; z-index: 5; right: 0; bottom: 100%; display: grid; min-width: 150px; padding: 4px; border: 1px solid var(--news-border, #e6e8ef); border-radius: 9px; background: var(--news-surface, #fff); box-shadow: 0 5px 18px rgb(15 23 42 / 14%); }
-.ridge-msg-menu button { min-height: 34px; padding: 6px 9px; border: 0; border-radius: 6px; background: transparent; color: var(--news-ink, #0f172a); text-align: left; white-space: nowrap; }
-.ridge-msg-menu button:hover { background: var(--news-hover, #eef0f7); }
 .ridge-message-row.mine .ridge-react-picker { left: auto; right: 0; }
 @media (prefers-reduced-motion: reduce) { .ridge-react-picker button { transition: none; } .ridge-react-picker button:hover { transform: none; } .ridge-msg-actions { transition: none; } }
 .ridge-reaction-dialog { width: min(100%, 520px); padding: 20px; }
