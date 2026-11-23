@@ -5,6 +5,7 @@ import { getSocket } from "../lib/socket.js";
 import ReactionButton from "./ReactionButton.jsx";
 import EmojiStickerPicker from "./EmojiStickerPicker.jsx";
 import { findSticker } from "../lib/stickers.js";
+import { uploadMedia } from "../lib/uploadMedia.js";
 import { sendReaction, summarizeReactions } from "../lib/reactions.js";
 import "../messages.css";
 
@@ -48,6 +49,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [error, setError] = useState("");
   const [conversationActionError, setConversationActionError] = useState("");
   const [conversationSearch, setConversationSearch] = useState("");
@@ -63,6 +65,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [nicknameDrafts, setNicknameDrafts] = useState({ me: "", other: "" });
   const messageListRef = useRef(null);
   const messageInputRef = useRef(null);
+  const mediaInputRef = useRef(null);
   const emojiToggleRef = useRef(null);
   const handledUserRequestRef = useRef("");
   const activeConversationIdRef = useRef(null);
@@ -575,6 +578,26 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     await submitMessage({ stickerId });
   }
 
+  async function handleMediaPick(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > 30 * 1024 * 1024) {
+      setError("Kích thước tệp không được vượt quá 30 MB.");
+      return;
+    }
+    setIsUploadingMedia(true);
+    setError("");
+    try {
+      const uploaded = await uploadMedia(file);
+      await submitMessage({ mediaUrl: uploaded.url });
+    } catch (uploadError) {
+      setError(uploadError.message || "Không thể tải tệp lên.");
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  }
+
   function handleSelectConversation(conversationId) {
     if (conversationId !== activeConversationId) {
       stopTyping(activeConversationId);
@@ -698,10 +721,10 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                     <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
                       <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
                         {!isMine && <span className="ridge-message-sender-name">{shownOtherName}</span>}
-                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}${message.type === "post_share" ? " post-share" : ""}${message.type !== "sticker" && message.type !== "post_share" && Boolean(message.content?.trim()) && /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F\u200D\s]+$/u.test(message.content.trim()) ? " emoji-only" : ""}`}>
+                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}${message.type === "post_share" ? " post-share" : ""}${["image", "video"].includes(message.type) ? " media" : ""}${message.type !== "sticker" && message.type !== "post_share" && !["image", "video"].includes(message.type) && Boolean(message.content?.trim()) && /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F\u200D\s]+$/u.test(message.content.trim()) ? " emoji-only" : ""}`}>
                           {sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
                             {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={message.sharedPostId.authorId.profilePicture} alt="" /> : <span className="ridge-shared-post-initial">{message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?"}</span>}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span>{message.sharedPostId.content && <span className="ridge-shared-post-text">{message.sharedPostId.content}</span>}{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={message.sharedPostId.image} alt="" /> : <><video src={message.sharedPostId.video} preload="metadata" muted playsInline /><span className="ridge-shared-post-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span></>}</span>}</> : "Bài viết không còn khả dụng"}
-                          </Link> : message.content}
+                          </Link> : message.type === "image" ? <a className="ridge-chat-media-link" href={message.mediaUrl} target="_blank" rel="noreferrer"><img className="ridge-chat-media" src={message.mediaUrl} alt="Ảnh đã gửi" loading="lazy" onLoad={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /></a> : message.type === "video" ? <video className="ridge-chat-media" src={message.mediaUrl} controls preload="metadata" playsInline onLoadedMetadata={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /> : message.content}
                           <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
                         </div>
                         {reactionSummary.total > 0 && (
@@ -741,6 +764,11 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               )}
             </div>
             <form className="message-compose ridge-message-compose" onSubmit={handleSendMessage}>
+              <input ref={mediaInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={handleMediaPick} />
+              <button className="ridge-emoji-toggle" type="button" aria-label={isUploadingMedia ? "Đang tải tệp lên" : "Đính kèm ảnh hoặc video"} title={isUploadingMedia ? "Đang tải lên..." : "Đính kèm ảnh hoặc video"} disabled={isUploadingMedia || isSending} onClick={() => mediaInputRef.current?.click()}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+              </button>
+              {isUploadingMedia && <span className="ridge-media-uploading" role="status">Đang tải lên...</span>}
               <button
                 className="ridge-emoji-toggle"
                 type="button"

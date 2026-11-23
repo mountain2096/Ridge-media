@@ -416,6 +416,15 @@
   box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
 }
 
+.ridge-messages .ridge-message-bubble.media { max-width: min(76%, 320px); gap: 5px; padding: 0; overflow: visible; border: 0 !important; border-radius: 0; background: transparent !important; box-shadow: none; color: var(--news-ink, #0f172a); }
+.ridge-messages .ridge-message-bubble.media.mine { border-color: transparent; color: var(--news-ink, #0f172a); }
+.ridge-messages .ridge-message-bubble.media::before,.ridge-messages .ridge-message-bubble.media::after { display: none !important; content: none !important; }
+.ridge-chat-media-link { display: block; max-width: min(280px, 68vw); overflow: hidden; border-radius: 16px; }
+.ridge-chat-media { display: block; width: 100%; max-width: min(280px, 68vw); max-height: 360px; border-radius: 16px; object-fit: contain; }
+.ridge-message-bubble.media .ridge-message-time { color: var(--news-muted, #5b6478); }
+.ridge-message-compose .ridge-media-uploading { color: var(--news-muted, #5b6478); font-size: 12px; }
+.ridge-message-bubble.media.theirs { margin-top: 0 !important; }
+
 .ridge-messages .ridge-message-bubble.mine {
   align-self: flex-end;
   border-color: var(--news-accent, #2f4be0);
