@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../lib/api.js";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import MediaPicker from "./MediaPicker.jsx";
+import { setTheme } from "../lib/theme.js";
 
 function ProfileSettings({ currentUser, onProfileSaved }) {
+  const [selectedTheme, setSelectedTheme] = useState(document.documentElement.dataset.theme || "light");
   const [username, setUsername] = useState(currentUser?.username || "");
   const [bio, setBio] = useState(currentUser?.bio || "");
   const [profilePicture, setProfilePicture] = useState(currentUser?.profilePicture || "");
@@ -157,6 +159,12 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
 
   return (
     <section className="settings-page" aria-label="Cài đặt">
+      <section className="settings-card card theme-settings">
+        <header className="settings-card-header"><h2>Giao diện</h2></header>
+        <div className="theme-options" role="group" aria-label="Giao diện">
+          {[ ["light", "Sáng"], ["dark", "Tối"] ].map(([theme, label]) => <button key={theme} type="button" aria-pressed={selectedTheme === theme} onClick={() => { setTheme(theme); setSelectedTheme(theme); }}>{label}</button>)}
+        </div>
+      </section>
       <section className="settings-card card">
         <header className="settings-card-header">
           <h1>Cài đặt hồ sơ</h1>

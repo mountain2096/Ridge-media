@@ -426,6 +426,7 @@
 }
 .ridge-messages .ridge-message-bubble.recalled { align-self: initial; border: 1px dashed var(--news-border, #cbd0dc) !important; border-radius: 14px; background: var(--news-field, #f8f9fc) !important; box-shadow: none; color: var(--news-muted, #5b6478) !important; font-style: italic; }
 .ridge-messages .ridge-message-bubble.recalled::before, .ridge-messages .ridge-message-bubble.recalled::after { display: none !important; content: none !important; }
+.ridge-messages .ridge-message-bubble.recalled .ridge-message-time { color: var(--news-muted, #5b6478) !important; }
 
 .ridge-message-time {
   align-self: flex-end;
@@ -607,12 +608,9 @@
 .ridge-messages .ridge-msg-actions button.ridge-msg-more:hover { background: #eef0f6; }
 .ridge-messages .ridge-msg-actions button.ridge-msg-more { font-size: 0; }
 .ridge-messages .ridge-msg-actions button.ridge-msg-more::after { content: "⋮"; font-size: 20px; line-height: 1; }
-.ridge-messages .ridge-msg-menu { position: fixed; z-index: 1000; display: grid; gap: 2px; min-width: 190px; padding: 6px; border: 1px solid #e6e8ef; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: 0 6px 20px rgb(15 23 42 / 14%); }
-.ridge-messages .ridge-msg-menu::after { position: absolute; left: var(--menu-pointer-x); width: 10px; height: 10px; border: solid #e6e8ef; background: #fff; content: ""; transform: translateX(-50%) rotate(45deg); }
-.ridge-messages .ridge-msg-menu[data-placement="above"]::after { bottom: -6px; border-width: 0 1px 1px 0; }
-.ridge-messages .ridge-msg-menu[data-placement="below"]::after { top: -6px; border-width: 1px 0 0 1px; }
-.ridge-messages .ridge-msg-menu button { display: flex; width: 100%; height: 40px; min-height: 40px; align-items: center; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #0f172a; font-family: "Be Vietnam Pro", system-ui, sans-serif; font-size: 14px; font-weight: 600; text-align: left; white-space: nowrap; }
-.ridge-messages .ridge-msg-menu button:hover { background: #f1f3f9; }
+.ridge-msg-menu { position: fixed; z-index: 1000; display: flex; flex-direction: column; height: auto; min-width: 180px; padding: 6px; overflow: visible; border: 1px solid var(--news-border, #e6e8ef); border-radius: 12px; background: var(--news-surface, #fff); color: var(--news-ink, #0f172a); box-shadow: 0 6px 20px rgb(15 23 42 / 14%); }
+.ridge-msg-menu button { display: block; width: 100%; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--news-ink, #0f172a); font-family: "Be Vietnam Pro", system-ui, sans-serif; font-size: 14px; font-weight: 600; text-align: left; white-space: nowrap; cursor: pointer; }
+.ridge-msg-menu button:hover { background: var(--news-hover, #f1f3f9); }
 .ridge-messages .ridge-msg-bubble-wrap.has-reactions { margin-bottom: 14px; }
 .ridge-messages button.ridge-msg-badge { bottom: -14px; }
 .ridge-messages .ridge-message-row.mine button.ridge-msg-badge { right: 8px; left: auto; }
@@ -829,13 +827,14 @@
 .ridge-messages .ridge-message-bubble.post-share{gap:5px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#0f172a}
 .ridge-messages .ridge-message-bubble.post-share.mine{border-color:transparent;background:transparent;color:#0f172a}
 .ridge-message-bubble.post-share .ridge-message-time{color:var(--news-muted,#5b6478)}
-.ridge-shared-post{display:block;width:min(320px,76vw);overflow:hidden;padding:10px;border:1px solid #e6e8ef;border-radius:14px;background:#fff;color:#0f172a;text-decoration:none}
+
+.ridge-shared-post{display:block;width:min(320px,76vw);overflow:hidden;padding:10px;border:1px solid var(--news-border);border-radius:14px;background:var(--news-surface);color:var(--news-ink);text-decoration:none}
 .ridge-shared-post:focus-visible{outline:2px solid var(--news-accent,#2f4be0);outline-offset:2px}
-.ridge-shared-post-author{display:flex;align-items:center;gap:8px;color:#0f172a}
+.ridge-shared-post-author{display:flex;align-items:center;gap:8px;color:var(--news-ink)}
 .ridge-shared-post-author img,.ridge-shared-post-initial{display:grid;width:24px;height:24px;flex:0 0 24px;place-items:center;border-radius:50%;object-fit:cover}
-.ridge-shared-post-initial{background:#e6ebff;color:#2f4be0;font-size:12px;font-weight:700}
-.ridge-shared-post-author strong{color:#0f172a;font-weight:700}
-.ridge-shared-post-text{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:7px 0;color:#0f172a}
+.ridge-shared-post-initial{background:var(--news-hover);color:var(--news-accent);font-size:12px;font-weight:700}
+.ridge-shared-post-author strong{color:var(--news-ink);font-weight:700}
+.ridge-shared-post-text{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:7px 0;color:var(--news-ink)}
 .ridge-shared-post-media{position:relative;display:block;overflow:hidden;border-radius:10px}
 .ridge-shared-post-media img,.ridge-shared-post-media video{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:10px}
 .ridge-shared-post-play{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
@@ -890,3 +889,4 @@
 .bubble-style-ghost { --chat-received-surface: #fff0f6; --chat-received-ink: #6b2f4a; }
 .bubble-style-berry { --chat-received-surface: #efe7fb; --chat-received-ink: #3f2a66; }
 .ridge-message-bubble.theirs:not(.post-share):not(.sticker):not(.emoji-only) { background: var(--chat-received-surface, #fff); color: var(--chat-received-ink, #0f172a); }
+

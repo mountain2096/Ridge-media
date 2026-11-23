@@ -9,6 +9,7 @@ import { findSticker } from "../lib/stickers.js";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import { sendReaction, summarizeReactions } from "../lib/reactions.js";
 import { isOwnMessage, recalledMessageText } from "../lib/messageDisplay.js";
+import { MessageActionMenu } from "../lib/messageMenu.js";
 import { useConfirm } from "./ConfirmDialog.jsx";
 import "../messages.css";
 
@@ -88,15 +89,19 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
 
   useEffect(() => {
     if (!messageMenuId) return undefined;
+    const messageList = messageListRef.current;
     const closeOnOutsideClick = (event) => {
-      if (!event.target.closest?.(".ridge-msg-menu-wrap")) setMessageMenuId(null);
+      if (!messageMenuRef.current?.contains(event.target) && !messageMenuButtonRef.current?.contains(event.target)) setMessageMenuId(null);
     };
     const closeOnEscape = (event) => { if (event.key === "Escape") setMessageMenuId(null); };
+    const closeOnChatScroll = () => setMessageMenuId(null);
     document.addEventListener("pointerdown", closeOnOutsideClick);
     document.addEventListener("keydown", closeOnEscape);
+    messageList?.addEventListener("scroll", closeOnChatScroll);
     return () => {
       document.removeEventListener("pointerdown", closeOnOutsideClick);
       document.removeEventListener("keydown", closeOnEscape);
+      messageList?.removeEventListener("scroll", closeOnChatScroll);
     };
   }, [messageMenuId]);
 
@@ -134,21 +139,19 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   }, [conversationMenuId]);
 
   useLayoutEffect(() => {
-    if (!messageMenuId || !messageMenuButtonRef.current || !messageMenuRef.current || !messageListRef.current) return undefined;
+    if (!messageMenuId || !messageMenuButtonRef.current || !messageMenuRef.current) return undefined;
     const placeMenu = () => {
-      const panel = messageListRef.current.getBoundingClientRect();
       const button = messageMenuButtonRef.current.getBoundingClientRect();
       const menu = messageMenuRef.current.getBoundingClientRect();
-      const width = Math.min(190, panel.width - 16);
+      const width = Math.min(220, window.innerWidth - 16);
       const isMine = messageMenuButtonRef.current.closest(".ridge-message-row")?.classList.contains("mine");
-      const left = Math.max(panel.left + 8, Math.min(
+      const left = Math.max(8, Math.min(
         isMine ? button.right - width : button.left,
-        panel.right - width - 8,
+        window.innerWidth - width - 8,
       ));
-      const above = button.top - panel.top >= menu.height + 8;
-      const top = above ? button.top - menu.height - 8 : button.bottom + 8;
-      setMessageMenuStyle({ left, top, width, minWidth: width, boxSizing: "border-box", "--menu-pointer-x": `${Math.max(12, Math.min(width - 12, button.left + button.width / 2 - left))}px` });
-      messageMenuRef.current.dataset.placement = above ? "above" : "below";
+      const above = button.bottom + menu.height + 8 > window.innerHeight && button.top >= menu.height + 8;
+      const top = Math.max(8, Math.min(above ? button.top - menu.height - 8 : button.bottom + 8, window.innerHeight - menu.height - 8));
+      setMessageMenuStyle({ position: "fixed", left, top, width, minWidth: width, boxSizing: "border-box", zIndex: 1000 });
     };
     placeMenu();
     window.addEventListener("resize", placeMenu);
@@ -917,10 +920,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                         />
                         <div className="ridge-msg-menu-wrap">
                           <button ref={messageMenuId === message._id ? messageMenuButtonRef : null} className="ridge-msg-more" type="button" aria-label="Tùy chọn tin nhắn" aria-expanded={messageMenuId === message._id} onClick={() => setMessageMenuId((id) => id === message._id ? null : message._id)}>···</button>
-                          {messageMenuId === message._id && <div ref={messageMenuRef} className="ridge-msg-menu" style={messageMenuStyle} role="menu">
-                            {isMine && !message.recalledAt && <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "recall")}>Thu hồi</button>}
-                            <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "delete")}>Xóa ở phía tôi</button>
-                          </div>}
+                          {messageMenuId === message._id && createPortal(<MessageActionMenu menuRef={messageMenuRef} style={messageMenuStyle} isMine={isMine} onRecall={() => void handleMessageAction(message, "recall")} onDelete={() => void handleMessageAction(message, "delete")} />, document.body)}
                         </div>
                       </div>}
                     </div>

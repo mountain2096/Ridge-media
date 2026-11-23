@@ -1,0 +1,98 @@
+html[data-theme="dark"] body,
+html[data-theme="dark"] .home-layout,
+html[data-theme="dark"] .guest-layout { background: var(--news-bg); color: var(--news-ink); }
+
+html[data-theme="dark"] .home-topbar,
+html[data-theme="dark"] .home-sidebar,
+html[data-theme="dark"] .post-card,
+html[data-theme="dark"] .guest-post-card,
+html[data-theme="dark"] .home-layout .card,
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .notification-panel,
+html[data-theme="dark"] .user-search-panel,
+html[data-theme="dark"] .ridge-dialog,
+html[data-theme="dark"] .ridge-message-confirm,
+html[data-theme="dark"] .ridge-msg-menu,
+html[data-theme="dark"] .ridge-chat-settings,
+html[data-theme="dark"] .ridge-conversation-list,
+html[data-theme="dark"] .ridge-conversation-panel,
+html[data-theme="dark"] .side-card,
+html[data-theme="dark"] .profile-menu,
+html[data-theme="dark"] .profile-about-menu,
+html[data-theme="dark"] .public-profile-shell,
+html[data-theme="dark"] .guest-profile-shell,
+html[data-theme="dark"] .profile-bio-edit,
+html[data-theme="dark"] .ridge-chat-settings,
+html[data-theme="dark"] .auth-page,
+html[data-theme="dark"] .form-panel { background-color: var(--news-surface); color: var(--news-ink); border-color: var(--news-border); }
+
+html[data-theme="dark"] .post-card h2,
+html[data-theme="dark"] .post-card h3,
+html[data-theme="dark"] .comment-item,
+html[data-theme="dark"] .ridge-dialog,
+html[data-theme="dark"] .ridge-dialog h2,
+html[data-theme="dark"] .ridge-confirm-dialog,
+html[data-theme="dark"] .ridge-message-confirm,
+html[data-theme="dark"] .ridge-message-confirm h2,
+html[data-theme="dark"] .ridge-chat-settings > label,
+html[data-theme="dark"] .ridge-chat-settings input,
+html[data-theme="dark"] .ridge-msg-menu button { color: var(--news-ink); }
+html[data-theme="dark"] .public-profile-page,
+html[data-theme="dark"] .guest-profile-content,
+html[data-theme="dark"] .public-profile-shell,
+html[data-theme="dark"] .ridge-admin-card,
+html[data-theme="dark"] .ridge-admin-card h2,
+html[data-theme="dark"] .ridge-admin-user-name,
+html[data-theme="dark"] .profile-menu,
+html[data-theme="dark"] .profile-about-menu { color: var(--news-ink); }
+
+html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select,
+html[data-theme="dark"] .ridge-list-search { background-color: var(--news-field); color: var(--news-ink); border-color: var(--news-border); }
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder,
+html[data-theme="dark"] .ridge-chat-settings small { color: var(--news-muted); }
+
+html[data-theme="dark"] .home-layout .menu-item.active,
+html[data-theme="dark"] .home-layout .home-menu:not(.has-active-pill) .menu-item.active,
+html[data-theme="dark"] .home-layout .sidebar-active-pill { background: #303858; color: #c4ccff; }
+html[data-theme="dark"] .home-layout .home-brand-icon { background: var(--news-accent); }
+html[data-theme="dark"] .ridge-message-list { background-color: var(--news-bg); color: var(--news-ink); }
+html[data-theme="dark"] .ridge-conversation-header,
+html[data-theme="dark"] .ridge-chat-settings,
+html[data-theme="dark"] .ridge-msg-menu { color: var(--news-ink); }
+html[data-theme="dark"] .ridge-msg-menu button:hover,
+html[data-theme="dark"] .ridge-conversation-list .active { background: var(--news-hover); }
+
+html[data-theme="dark"] .shared-post-card { border-color: var(--news-border); background: var(--news-bg); color: var(--news-ink); }
+html[data-theme="dark"] .shared-post-card .profile-name-link { color: var(--news-ink); }
+html[data-theme="dark"] .shared-post-card time,
+html[data-theme="dark"] .post-action-button:not(.liked):not(.saved),
+html[data-theme="dark"] .post-more { color: var(--news-muted); }
+html[data-theme="dark"] .post-action-button:not(.liked):not(.saved):hover,
+html[data-theme="dark"] .post-more:hover,
+html[data-theme="dark"] .post-menu button:hover { background: var(--news-hover); }
+html[data-theme="dark"] .post-actions { border-color: var(--news-border); }
+html[data-theme="dark"] .ridge-share-dialog { border-color: var(--news-border); background: var(--news-surface); color: var(--news-ink); }
+html[data-theme="dark"] .ridge-share-preview { border-color: var(--news-border); background: var(--news-bg); color: var(--news-ink); }
+html[data-theme="dark"] .ridge-shared-post { border-color: var(--news-border); background: var(--news-surface); color: var(--news-ink); }
+html[data-theme="dark"] .ridge-shared-post-author,
+html[data-theme="dark"] .ridge-shared-post-author strong,
+html[data-theme="dark"] .ridge-shared-post-text { color: var(--news-ink); }
+
+/* Conversation bubble palettes are intentionally independent of the app theme. */
+html[data-theme="dark"] .ridge-message-list.chat-bg-starry .ridge-message-bubble:not(.post-share),
+html[data-theme="dark"] .ridge-message-list.chat-bg-night .ridge-message-bubble:not(.post-share),
+html[data-theme="dark"] .bubble-style-starry .ridge-message-bubble:not(.post-share):not(.sticker) { color: #f1f5ff; }
+html[data-theme="dark"] .bubble-style-snow .ridge-message-bubble:not(.post-share):not(.sticker),
+html[data-theme="dark"] .bubble-style-ghost .ridge-message-bubble:not(.post-share):not(.sticker),
+html[data-theme="dark"] .bubble-style-berry .ridge-message-bubble:not(.post-share):not(.sticker),
+html[data-theme="dark"] .bubble-style-cat-dog .ridge-message-bubble:not(.post-share):not(.sticker),
+html[data-theme="dark"] .bubble-style-pink-heart .ridge-message-bubble:not(.post-share):not(.sticker),
+html[data-theme="dark"] .bubble-style-sky-fish .ridge-message-bubble:not(.post-share):not(.sticker),
+html[data-theme="dark"] .bubble-style-duck .ridge-message-bubble:not(.post-share):not(.sticker) { color: #293142; }
+
+html[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--news-bg); }
+html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #4b5260; border-color: var(--news-bg); }
+html[data-theme="dark"] ::selection { background: #5265ca; color: #fff; }

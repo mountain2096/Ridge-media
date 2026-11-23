@@ -21,10 +21,10 @@ export default function ConnectionsView({ friendRequests, friendRequestError, is
                 </Link>
                 <Link className="connection-person-name profile-name-link" to={"/profile/" + request.senderId?._id}>{request.senderId?.username || "Người dùng"}</Link>
                 <div>
-                  <button type="button" onClick={() => handleFriendRequestAction(request._id, "accept")}>Chấp nhận</button>
+                  <button className="connection-action is-primary" type="button" onClick={() => handleFriendRequestAction(request._id, "accept")}>Chấp nhận</button>
                   <button
                     type="button"
-                    className="reject-request"
+                    className="reject-request connection-action"
                     onClick={() => handleFriendRequestAction(request._id, "reject")}
                   >Từ chối</button>
                 </div>
@@ -73,9 +73,10 @@ export default function ConnectionsView({ friendRequests, friendRequestError, is
                 type="button"
                 disabled={sentRequestIds.includes(person._id) || sendingFriendRequestIds.includes(person._id)}
                 onClick={() => handleSendFriendRequest(person._id)}
+                className={`connection-action ${sentRequestIds.includes(person._id) ? "is-sent" : "is-add"}`}
               >{sentRequestIds.includes(person._id) ? "Đã gửi" : "Kết bạn"}</button>
               <button
-                className="block-user-button"
+                className="block-user-button connection-action"
                 type="button"
                 onClick={() => handleBlockUser(person._id)}
               >Chặn</button>
