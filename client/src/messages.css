@@ -318,6 +318,31 @@
   border-bottom: 1px solid var(--news-border, #e6e8ef);
 }
 
+.ridge-conversation-panel.chat-bg-mint .ridge-conversation-header { background: linear-gradient(145deg, #e5f7ef, #f3fbf7); }
+.ridge-conversation-panel.chat-bg-sky .ridge-conversation-header { background: linear-gradient(145deg, #e7f3ff, #f5faff); }
+.ridge-conversation-panel.chat-bg-peach .ridge-conversation-header { background: linear-gradient(145deg, #fff0e5, #fff9f4); }
+.ridge-conversation-panel.chat-bg-lavender .ridge-conversation-header { background: linear-gradient(145deg, #f0eaff, #faf8ff); }
+.ridge-conversation-panel.chat-bg-sunset .ridge-conversation-header { background: linear-gradient(145deg, #ffe7d9, #fff0e9 55%, #fff7e9); }
+.ridge-conversation-panel.chat-bg-night .ridge-conversation-header { background: linear-gradient(145deg, #202638, #30394d); color: #f8fafc; }
+.ridge-conversation-panel.chat-bg-night .ridge-conversation-header .ridge-chat-title { color: #f8fafc; }
+.ridge-conversation-panel.chat-bg-paper .ridge-conversation-header { background: #f6f1e6; }
+.ridge-conversation-panel.chat-bg-pink .ridge-conversation-header { background: linear-gradient(145deg, #fff0f6, #fff8fb); }
+
+.bubble-style-cat-dog .ridge-conversation-header,
+.bubble-style-frog .ridge-conversation-header,
+.bubble-style-pink-heart .ridge-conversation-header,
+.bubble-style-sky-fish .ridge-conversation-header,
+.bubble-style-duck .ridge-conversation-header,
+.bubble-style-sketch .ridge-conversation-header,
+.bubble-style-dark .ridge-conversation-header { border-bottom-color: var(--chat-accent-border); }
+.bubble-style-cat-dog .ridge-chat-settings-button,
+.bubble-style-frog .ridge-chat-settings-button,
+.bubble-style-pink-heart .ridge-chat-settings-button,
+.bubble-style-sky-fish .ridge-chat-settings-button,
+.bubble-style-duck .ridge-chat-settings-button,
+.bubble-style-sketch .ridge-chat-settings-button,
+.bubble-style-dark .ridge-chat-settings-button { border-color: var(--chat-accent-border); color: var(--chat-accent-text); }
+
 .ridge-conversation-header > a:last-child {
   min-width: 0;
   overflow: hidden;

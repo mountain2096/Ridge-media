@@ -644,7 +644,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
         </>}
       </aside>
 
-      <section className={`conversation-panel ridge-conversation-panel${activeConversation?.bubbleStyle ? ` bubble-style-${activeConversation.bubbleStyle}` : ""}`}>
+      <section className={`conversation-panel ridge-conversation-panel${activeConversation?.bubbleStyle ? ` bubble-style-${activeConversation.bubbleStyle}` : ""}${activeConversation?.background ? ` chat-bg-${activeConversation.background}` : ""}`}>
         {activeConversation ? (
           <>
             <header className="conversation-header ridge-conversation-header">
