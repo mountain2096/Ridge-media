@@ -441,6 +441,7 @@
 
 .ridge-messages .ridge-message-compose {
   display: flex;
+  flex-wrap: wrap;
   min-height: 72px;
   flex: 0 0 auto;
   align-items: center;
@@ -450,6 +451,18 @@
   border-top: 1px solid var(--news-border, #e6e8ef);
   background: var(--news-surface, #fff);
 }
+
+.ridge-messages .ridge-reply-bar { display: flex; width: 100%; flex: 1 0 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-left: 3px solid var(--chat-accent-border, #5268d8); border-radius: 8px; background: var(--chat-quote-bg, #f1f5f9); color: var(--chat-quote-text, #243047); color-scheme: light; }
+.ridge-messages .ridge-reply-bar div { display: grid; min-width: 0; gap: 2px; }
+.ridge-messages .ridge-reply-bar strong,.ridge-messages .ridge-reply-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ridge-messages .ridge-reply-bar strong { font-size: 12px; }
+.ridge-messages .ridge-reply-bar span { color: currentColor; opacity: .78; font-size: 12px; }
+.ridge-messages .ridge-message-compose .ridge-reply-bar button { width: 30px; height: 30px; flex: 0 0 30px; border: 0; border-radius: 50%; background: transparent; color: currentColor; font-size: 22px; }
+.ridge-messages .ridge-message-reply-quote { display: grid; width: 100%; max-width: 100%; gap: 2px; margin: 0 0 7px; padding: 5px 8px; border: 0; border-left: 3px solid var(--chat-accent-border, #5268d8); border-radius: 4px; background: var(--chat-quote-bg, #f1f5f9); color: var(--chat-quote-text, #243047); color-scheme: light; text-align: left; cursor: pointer; forced-color-adjust: none; }
+.ridge-messages .ridge-message-reply-quote strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.ridge-messages .ridge-message-reply-quote span { display: -webkit-box; overflow: hidden; opacity: .82; font-size: 12px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.ridge-messages .ridge-message-row.reply-flash .ridge-message-bubble { animation: ridge-reply-flash 1.5s ease-out; }
+@keyframes ridge-reply-flash { 0%, 35% { outline: 3px solid var(--chat-accent-border, #5268d8); } 100% { outline: 3px solid transparent; } }
 
 .ridge-messages .ridge-message-compose input {
   min-width: 0;

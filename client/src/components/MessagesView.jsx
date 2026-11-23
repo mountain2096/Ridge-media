@@ -8,7 +8,7 @@ import EmojiStickerPicker from "./EmojiStickerPicker.jsx";
 import { findSticker } from "../lib/stickers.js";
 import { uploadMedia } from "../lib/uploadMedia.js";
 import { sendReaction, summarizeReactions } from "../lib/reactions.js";
-import { isOwnMessage, recalledMessageText } from "../lib/messageDisplay.js";
+import { isOwnMessage, messageSnippet, recalledMessageText } from "../lib/messageDisplay.js";
 import { useConfirm } from "./ConfirmDialog.jsx";
 import "../messages.css";
 
@@ -50,6 +50,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [showChatPane, setShowChatPane] = useState(Boolean(initialConversationId));
   const [messages, setMessages] = useState([]);
   const [messageContent, setMessageContent] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [flashingMessageId, setFlashingMessageId] = useState(null);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -84,6 +86,17 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const activeConversationIdRef = useRef(null);
   const conversationsRef = useRef([]);
   const incomingTypingTimerRef = useRef(0);
+  useEffect(() => {
+    if (!flashingMessageId) return undefined;
+    const timer = window.setTimeout(() => setFlashingMessageId(null), 1500);
+    return () => window.clearTimeout(timer);
+  }, [flashingMessageId]);
+  useEffect(() => {
+    if (!replyingTo) return undefined;
+    const cancelReply = (event) => { if (event.key === "Escape") setReplyingTo(null); };
+    document.addEventListener("keydown", cancelReply);
+    return () => document.removeEventListener("keydown", cancelReply);
+  }, [replyingTo]);
   const ownTypingRef = useRef({ active: false, lastSentAt: 0, timer: 0 });
 
   useEffect(() => {
@@ -225,7 +238,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.message || "Không thể xóa cuộc trò chuyện.");
       setConversations((items) => items.filter((item) => item._id !== conversationId));
-      if (activeConversationIdRef.current === conversationId) { setMessages([]); setActiveConversationId(null); setShowChatPane(false); }
+      if (activeConversationIdRef.current === conversationId) { setMessages([]); setReplyingTo(null); setActiveConversationId(null); setShowChatPane(false); }
       setConversationMenuId(null); setConversationActionError("");
       window.dispatchEvent(new Event("ridge:counts-changed"));
     } catch (requestError) { setConversationActionError(requestError.message || "Không thể xóa cuộc trò chuyện."); }
@@ -307,6 +320,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
         }, ...items];
       });
       setMessages([]);
+      setReplyingTo(null);
       setActiveConversationId(conversation._id);
       setShowChatPane(true);
       setIsPickerOpen(false);
@@ -458,8 +472,12 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     function handleMessageRecalled({ conversationId, messageId } = {}) {
       if (!conversationId || !messageId) return;
       const recalledAt = new Date().toISOString();
+      setReplyingTo((item) => item?._id === messageId ? null : item);
       const recalled = (message) => ({ ...message, recalledAt, content: "Tin nhắn đã được thu hồi", mediaUrl: null, stickerId: null, sharedPostId: null, reactions: [] });
-      if (conversationId === activeConversationIdRef.current) setMessages((items) => items.map((item) => item._id === messageId ? recalled(item) : item));
+      if (conversationId === activeConversationIdRef.current) setMessages((items) => items.map((item) => {
+        if (item._id === messageId) return recalled(item);
+        return item.replyTo && String(item.replyTo._id || item.replyTo) === String(messageId) ? { ...item, replyTo: recalled(item.replyTo) } : item;
+      }));
       setConversations((items) => items.map((item) => item._id === conversationId && item.lastMessage?._id === messageId ? { ...item, lastMessage: recalled(item.lastMessage) } : item));
     }
 
@@ -653,6 +671,19 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     }
   }
 
+  function startReply(message) {
+    setReplyingTo(message);
+    setMessageMenuId(null);
+    requestAnimationFrame(() => messageInputRef.current?.focus());
+  }
+
+  function jumpToMessage(messageId) {
+    const target = document.getElementById(`ridge-message-${messageId}`);
+    if (!target || !messages.some((item) => item._id === messageId)) return;
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    setFlashingMessageId(messageId);
+  }
+
   async function handleMessageAction(message, action) { setMessageConfirm({ message, action, error: "", busy: false }); }
 
   async function confirmMessageAction() {
@@ -665,8 +696,9 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.message || fallback);
       if (recall) {
+        setReplyingTo((item) => item?._id === message._id ? null : item);
         const recalled = { ...message, ...(data.message || {}), recalledAt: data.message?.recalledAt || new Date().toISOString(), content: "Tin nhắn đã được thu hồi", mediaUrl: null, stickerId: null, sharedPostId: null, reactions: [] };
-        setMessages((items) => items.map((item) => item._id === message._id ? recalled : item));
+        setMessages((items) => items.map((item) => item._id === message._id ? recalled : item.replyTo && String(item.replyTo._id || item.replyTo) === String(message._id) ? { ...item, replyTo: { ...recalled } } : item));
         setConversations((items) => items.map((item) => item._id === activeConversationIdRef.current && item.lastMessage?._id === message._id ? { ...item, lastMessage: recalled } : item));
       } else { setMessages((items) => items.filter((item) => item._id !== message._id)); if (activeConversation?.lastMessage?._id === message._id) void loadConversations(); }
       setMessageConfirm(null);
@@ -689,7 +721,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ ...body, ...(replyingTo ? { replyToMessageId: replyingTo._id } : {}) }),
         }
       );
       const data = await response.json();
@@ -704,6 +736,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
           ? { ...item, lastMessage: data.newMessage, updatedAt: data.newMessage.createdAt }
           : item
       ).sort((left, right) => new Date(right.updatedAt) - new Date(left.updatedAt)));
+      setReplyingTo(null);
       return true;
     } catch (requestError) {
       setError(requestError.message);
@@ -750,6 +783,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       stopTyping(activeConversationId);
       setMessages([]);
       setIsPickerOpen(false);
+      setReplyingTo(null);
     }
     setActiveConversationId(conversationId);
     setShowChatPane(true);
@@ -885,10 +919,14 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                 const sticker = message.type === "sticker" ? findSticker(message.stickerId) : null;
                 return (
                   <Fragment key={message._id}>
-                    <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
+                    <div id={`ridge-message-${message._id}`} className={`ridge-message-row ${isMine ? "mine" : "theirs"}${flashingMessageId === message._id ? " reply-flash" : ""}`}>
                       <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
                         {!isMine && <span className="ridge-message-sender-name">{shownOtherName}</span>}
                         <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${isRecalled ? " recalled" : ""}${!isRecalled && message.type === "sticker" ? " sticker" : ""}${!isRecalled && message.type === "post_share" ? " post-share" : ""}${!isRecalled && ["image", "video"].includes(message.type) ? " media" : ""}${!isRecalled && message.type !== "sticker" && message.type !== "post_share" && !["image", "video"].includes(message.type) && Boolean(message.content?.trim()) && /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F\u200D\s]+$/u.test(message.content.trim()) ? " emoji-only" : ""}`}>
+                          {message.replyTo && typeof message.replyTo === "object" && <button type="button" className="ridge-message-reply-quote" onClick={() => jumpToMessage(message.replyTo._id)}>
+                            <strong>{isOwnMessage(message.replyTo, currentUser?._id) ? "Bạn" : message.replyTo.senderId?.username || shownOtherName}</strong>
+                            <span>{messageSnippet(message.replyTo)}</span>
+                          </button>}
                           {isRecalled ? recalledMessageText(message, currentUser?._id, otherParticipant?.username) : sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
                             {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={message.sharedPostId.authorId.profilePicture} alt="" /> : <span className="ridge-shared-post-initial">{message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?"}</span>}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span>{message.sharedPostId.content && <span className="ridge-shared-post-text">{message.sharedPostId.content}</span>}{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={message.sharedPostId.image} alt="" /> : <><video src={message.sharedPostId.video} preload="metadata" muted playsInline /><span className="ridge-shared-post-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span></>}</span>}</> : "Bài viết không còn khả dụng"}
                           </Link> : message.type === "image" ? <a className="ridge-chat-media-link" href={message.mediaUrl} target="_blank" rel="noreferrer"><img className="ridge-chat-media" src={message.mediaUrl} alt="Ảnh đã gửi" loading="lazy" onLoad={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /></a> : message.type === "video" ? <video className="ridge-chat-media" src={message.mediaUrl} controls preload="metadata" playsInline onLoadedMetadata={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /> : message.content}
@@ -918,6 +956,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                         <div className="ridge-msg-menu-wrap">
                           <button ref={messageMenuId === message._id ? messageMenuButtonRef : null} className="ridge-msg-more" type="button" aria-label="Tùy chọn tin nhắn" aria-expanded={messageMenuId === message._id} onClick={() => setMessageMenuId((id) => id === message._id ? null : message._id)}>···</button>
                           {messageMenuId === message._id && <div ref={messageMenuRef} className="ridge-msg-menu" style={messageMenuStyle} role="menu">
+                            {!message.recalledAt && <button type="button" role="menuitem" onClick={() => startReply(message)}>Trả lời</button>}
                             {isMine && !message.recalledAt && <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "recall")}>Thu hồi</button>}
                             <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "delete")}>Xóa ở phía tôi</button>
                           </div>}
@@ -938,6 +977,10 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               )}
             </div>
             <form className="message-compose ridge-message-compose" onSubmit={handleSendMessage}>
+              {replyingTo && <div className="ridge-reply-bar" aria-label={`Đang trả lời ${isOwnMessage(replyingTo, currentUser?._id) ? "chính bạn" : replyingTo.senderId?.username || shownOtherName}`}>
+                <div><strong>Đang trả lời {isOwnMessage(replyingTo, currentUser?._id) ? "chính bạn" : replyingTo.senderId?.username || shownOtherName}</strong><span>{messageSnippet(replyingTo)}</span></div>
+                <button type="button" aria-label="Hủy trả lời" onClick={() => setReplyingTo(null)}>×</button>
+              </div>}
               <input ref={mediaInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={handleMediaPick} />
               <button className="ridge-emoji-toggle" type="button" aria-label={isUploadingMedia ? "Đang tải tệp lên" : "Đính kèm ảnh hoặc video"} title={isUploadingMedia ? "Đang tải lên..." : "Đính kèm ảnh hoặc video"} disabled={isUploadingMedia || isSending} onClick={() => mediaInputRef.current?.click()}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
