@@ -419,11 +419,17 @@
 .ridge-messages .ridge-message-bubble.media { max-width: min(76%, 320px); gap: 5px; padding: 0; overflow: visible; border: 0 !important; border-radius: 0; background: transparent !important; box-shadow: none; color: var(--news-ink, #0f172a); }
 .ridge-messages .ridge-message-bubble.media.mine { border-color: transparent; color: var(--news-ink, #0f172a); }
 .ridge-messages .ridge-message-bubble.media::before,.ridge-messages .ridge-message-bubble.media::after { display: none !important; content: none !important; }
-.ridge-chat-media-link { display: block; max-width: min(280px, 68vw); overflow: hidden; border-radius: 16px; }
-.ridge-chat-media { display: block; width: 100%; max-width: min(280px, 68vw); max-height: 360px; border-radius: 16px; object-fit: contain; }
+.ridge-chat-media-link { display: block; width: min(320px, 68vw); max-height: 360px; overflow: hidden; border-radius: 16px; }
+.ridge-chat-media-link .ridge-chat-media { width: 100%; object-fit: cover; }
+.ridge-chat-media { display: block; width: min(320px, 68vw); max-width: 320px; max-height: 360px; border-radius: 16px; object-fit: contain; }
+.ridge-message-bubble.media video.ridge-chat-media { background: #111827; }
 .ridge-message-bubble.media .ridge-message-time { color: var(--news-muted, #5b6478); }
 .ridge-message-compose .ridge-media-uploading { color: var(--news-muted, #5b6478); font-size: 12px; }
 .ridge-message-bubble.media.theirs { margin-top: 0 !important; }
+
+.ridge-message-row:has(.ridge-message-bubble.media) { align-items: flex-start; }
+.ridge-message-row:has(.ridge-message-bubble.media) .ridge-msg-bubble-wrap.has-reactions { margin-bottom: 17px; }
+.ridge-message-row:has(.ridge-message-bubble.media) button.ridge-msg-badge { bottom: 17px; }
 
 .ridge-messages .ridge-message-bubble.mine {
   align-self: flex-end;
@@ -483,6 +489,7 @@
 .ridge-message-list.chat-bg-night .empty-messages,.ridge-message-list.chat-bg-night .ridge-message-state,.ridge-message-list.chat-bg-night .ridge-message-sender-name,.ridge-message-list.chat-bg-night .ridge-message-status,.ridge-message-list.chat-bg-night .ridge-typing { color: #e4e9f4; }
 .ridge-message-list.chat-bg-night .ridge-message-time { color: #626b7c; }
 .ridge-message-list.chat-bg-night .ridge-message-bubble.mine .ridge-message-time { color: rgb(255 255 255 / 82%); }
+.ridge-message-list.chat-bg-night .ridge-message-bubble.media .ridge-message-time { color: #e4e9f4; }
 .ridge-message-list.chat-bg-paper { background: #f6f1e6; }
 .ridge-message-list.chat-bg-pink { background: linear-gradient(145deg, #fff0f6, #fff8fb); }
 
@@ -584,6 +591,7 @@
 .ridge-message-list.chat-bg-starry .empty-messages,.ridge-message-list.chat-bg-starry .ridge-message-state,.ridge-message-list.chat-bg-starry .ridge-message-sender-name,.ridge-message-list.chat-bg-starry .ridge-message-status,.ridge-message-list.chat-bg-starry .ridge-typing { color: #e4e9f4; }
 .ridge-message-list.chat-bg-starry .ridge-message-time { color: #c4cee7; }
 .ridge-message-list.chat-bg-starry .ridge-message-bubble.mine .ridge-message-time { color: rgb(255 255 255 / 82%); }
+.ridge-message-list.chat-bg-starry .ridge-message-bubble.media .ridge-message-time { color: #e4e9f4; }
 .ridge-message-list.chat-bg-star‌ry { color: #f1f5ff; }
 .bubble-style-snow { --chat-accent: #cfe3f7; --chat-accent-text: #2b3a4a; --chat-accent-border: #b9c8d8; }
 .bubble-style-starry { --chat-accent: #2c4fa3; --chat-accent-text: #f1f5ff; --chat-accent-border: #3b5bb5; }
