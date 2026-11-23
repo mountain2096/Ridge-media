@@ -1,11 +1,15 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
 import { getSocket } from "../lib/socket.js";
 import ReactionButton from "./ReactionButton.jsx";
 import EmojiStickerPicker from "./EmojiStickerPicker.jsx";
 import { findSticker } from "../lib/stickers.js";
+import { uploadMedia } from "../lib/uploadMedia.js";
 import { sendReaction, summarizeReactions } from "../lib/reactions.js";
+import { isOwnMessage, recalledMessageText } from "../lib/messageDisplay.js";
+import { useConfirm } from "./ConfirmDialog.jsx";
 import "../messages.css";
 
 function formatMessageTime(value) {
@@ -40,6 +44,7 @@ const THEMES = [
 
 function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const location = useLocation();
+  const confirm = useConfirm();
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [showChatPane, setShowChatPane] = useState(Boolean(initialConversationId));
@@ -48,6 +53,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [error, setError] = useState("");
   const [conversationActionError, setConversationActionError] = useState("");
   const [conversationSearch, setConversationSearch] = useState("");
@@ -60,15 +66,108 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   const [syncTick, setSyncTick] = useState(0);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [conversationMenuId, setConversationMenuId] = useState(null);
+  const [conversationMenuStyle, setConversationMenuStyle] = useState({});
+  const [messageMenuId, setMessageMenuId] = useState(null);
+  const [messageConfirm, setMessageConfirm] = useState(null);
+  const messageConfirmButtonRef = useRef(null);
+  const [messageMenuStyle, setMessageMenuStyle] = useState({});
   const [nicknameDrafts, setNicknameDrafts] = useState({ me: "", other: "" });
   const messageListRef = useRef(null);
+  const messageMenuButtonRef = useRef(null);
+  const messageMenuRef = useRef(null);
+  const conversationMenuButtonRef = useRef(null);
   const messageInputRef = useRef(null);
+  const mediaInputRef = useRef(null);
   const emojiToggleRef = useRef(null);
   const handledUserRequestRef = useRef("");
   const activeConversationIdRef = useRef(null);
   const conversationsRef = useRef([]);
   const incomingTypingTimerRef = useRef(0);
   const ownTypingRef = useRef({ active: false, lastSentAt: 0, timer: 0 });
+
+  useEffect(() => {
+    if (!messageMenuId) return undefined;
+    const closeOnOutsideClick = (event) => {
+      if (!event.target.closest?.(".ridge-msg-menu-wrap")) setMessageMenuId(null);
+    };
+    const closeOnEscape = (event) => { if (event.key === "Escape") setMessageMenuId(null); };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [messageMenuId]);
+
+  useEffect(() => {
+    if (!settingsOpen) return undefined;
+    const closeOnOutsideClick = (event) => { if (!event.target.closest?.(".ridge-chat-settings-wrap")) setSettingsOpen(false); };
+    const closeOnEscape = (event) => { if (event.key === "Escape") setSettingsOpen(false); };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => { document.removeEventListener("pointerdown", closeOnOutsideClick); document.removeEventListener("keydown", closeOnEscape); };
+  }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!conversationMenuId) return undefined;
+    const closeOnOutsideClick = (event) => {
+      if (!event.target.closest?.(".ridge-conversation-menu-wrap") && !event.target.closest?.(".ridge-conversation-menu")) setConversationMenuId(null);
+    };
+    const closeOnEscape = (event) => { if (event.key === "Escape") setConversationMenuId(null); };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => { document.removeEventListener("pointerdown", closeOnOutsideClick); document.removeEventListener("keydown", closeOnEscape); };
+  }, [conversationMenuId]);
+
+  useLayoutEffect(() => {
+    if (!conversationMenuId || !conversationMenuButtonRef.current) return undefined;
+    const placeMenu = () => {
+      const button = conversationMenuButtonRef.current?.getBoundingClientRect();
+      if (!button) return;
+      setConversationMenuStyle({ position: "fixed", top: Math.max(8, Math.min(button.bottom + 4, window.innerHeight - 190)), right: Math.max(8, window.innerWidth - button.right), zIndex: 1000 });
+    };
+    placeMenu();
+    window.addEventListener("resize", placeMenu);
+    window.addEventListener("scroll", placeMenu, true);
+    return () => { window.removeEventListener("resize", placeMenu); window.removeEventListener("scroll", placeMenu, true); };
+  }, [conversationMenuId]);
+
+  useLayoutEffect(() => {
+    if (!messageMenuId || !messageMenuButtonRef.current || !messageMenuRef.current || !messageListRef.current) return undefined;
+    const placeMenu = () => {
+      const panel = messageListRef.current.getBoundingClientRect();
+      const button = messageMenuButtonRef.current.getBoundingClientRect();
+      const menu = messageMenuRef.current.getBoundingClientRect();
+      const width = Math.min(190, panel.width - 16);
+      const isMine = messageMenuButtonRef.current.closest(".ridge-message-row")?.classList.contains("mine");
+      const left = Math.max(panel.left + 8, Math.min(
+        isMine ? button.right - width : button.left,
+        panel.right - width - 8,
+      ));
+      const above = button.top - panel.top >= menu.height + 8;
+      const top = above ? button.top - menu.height - 8 : button.bottom + 8;
+      setMessageMenuStyle({ left, top, width, minWidth: width, boxSizing: "border-box", "--menu-pointer-x": `${Math.max(12, Math.min(width - 12, button.left + button.width / 2 - left))}px` });
+      messageMenuRef.current.dataset.placement = above ? "above" : "below";
+    };
+    placeMenu();
+    window.addEventListener("resize", placeMenu);
+    window.addEventListener("scroll", placeMenu, true);
+    return () => {
+      window.removeEventListener("resize", placeMenu);
+      window.removeEventListener("scroll", placeMenu, true);
+    };
+  }, [messageMenuId]);
+
+  const isMessageConfirmOpen = Boolean(messageConfirm);
+
+  useEffect(() => {
+    if (!isMessageConfirmOpen) return undefined;
+    messageConfirmButtonRef.current?.focus();
+    const closeOnEscape = (event) => { if (event.key === "Escape" && !messageConfirm.busy) setMessageConfirm(null); };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isMessageConfirmOpen, messageConfirm?.busy]);
 
   const filteredConversations = useMemo(() => conversations.filter((conversation) => {
     const participant = conversation.participants?.find((person) => person._id !== currentUser?._id);
@@ -105,16 +204,31 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     window.dispatchEvent(new Event("ridge:counts-changed"));
   }
 
-  async function toggleMute() {
-    const muted = !activeConversation?.isMuted;
-    const response = await fetch(`${API_BASE}/api/message/conversation/${activeConversationId}/mute`, {
+  async function toggleMute(conversationId = activeConversationId) {
+    const targetConversation = conversations.find((item) => item._id === conversationId);
+    const muted = !targetConversation?.isMuted;
+    const response = await fetch(`${API_BASE}/api/message/conversation/${conversationId}/mute`, {
       method: "PUT", headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" },
       body: JSON.stringify({ muted }),
     });
     const data = await response.json();
     if (!response.ok) { setConversationActionError(data.message || "Không thể cập nhật thông báo."); return; }
-    setConversations((items) => items.map((item) => item._id === activeConversationId ? { ...item, isMuted: data.isMuted, unreadCount: data.isMuted ? 0 : item.unreadCount } : item));
+    setConversations((items) => items.map((item) => item._id === conversationId ? { ...item, isMuted: data.isMuted, unreadCount: data.isMuted ? 0 : item.unreadCount } : item));
     window.dispatchEvent(new Event("ridge:counts-changed"));
+  }
+  async function deleteConversation(conversationId = activeConversationId) {
+    if (!await confirm({ title: "Xóa cuộc trò chuyện?", message: "Cuộc trò chuyện sẽ bị xóa ở phía bạn. Người kia vẫn giữ được tin nhắn.", danger: true, confirmLabel: "Xóa" })) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/message/conversation/${conversationId}`, {
+        method: "DELETE", headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "Không thể xóa cuộc trò chuyện.");
+      setConversations((items) => items.filter((item) => item._id !== conversationId));
+      if (activeConversationIdRef.current === conversationId) { setMessages([]); setActiveConversationId(null); setShowChatPane(false); }
+      setConversationMenuId(null); setConversationActionError("");
+      window.dispatchEvent(new Event("ridge:counts-changed"));
+    } catch (requestError) { setConversationActionError(requestError.message || "Không thể xóa cuộc trò chuyện."); }
   }
   async function saveQuickIcon(icon) {
     const response = await fetch(`${API_BASE}/api/message/conversation/${activeConversationId}/quick-icon`, {
@@ -258,6 +372,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
   }, [initialConversationId]);
 
   const markConversationRead = useCallback(async (conversationId) => {
+    setConversations((items) => items.map((item) => item._id === conversationId ? { ...item, unreadCount: 0 } : item));
+    window.dispatchEvent(new Event("ridge:counts-changed"));
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE}/api/message/conversation/${conversationId}/read`, {
@@ -265,10 +381,6 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) return;
-      setConversations((items) => items.map((item) =>
-        item._id === conversationId ? { ...item, unreadCount: 0 } : item
-      ));
-      window.dispatchEvent(new Event("ridge:counts-changed"));
     } catch {
       // The next sync or incoming message retries.
     }
@@ -343,6 +455,20 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       setMessages((items) => items.map((item) => item._id === messageId ? { ...item, reactions } : item));
     }
 
+    function handleMessageRecalled({ conversationId, messageId } = {}) {
+      if (!conversationId || !messageId) return;
+      const recalledAt = new Date().toISOString();
+      const recalled = (message) => ({ ...message, recalledAt, content: "Tin nhắn đã được thu hồi", mediaUrl: null, stickerId: null, sharedPostId: null, reactions: [] });
+      if (conversationId === activeConversationIdRef.current) setMessages((items) => items.map((item) => item._id === messageId ? recalled(item) : item));
+      setConversations((items) => items.map((item) => item._id === conversationId && item.lastMessage?._id === messageId ? { ...item, lastMessage: recalled(item.lastMessage) } : item));
+    }
+
+    function handleMessageDeleted({ conversationId, messageId } = {}) {
+      if (!conversationId || !messageId) return;
+      if (conversationId === activeConversationIdRef.current) setMessages((items) => items.filter((item) => item._id !== messageId));
+      if (conversationsRef.current.some((item) => item._id === conversationId && item.lastMessage?._id === messageId)) void loadConversations();
+    }
+
     function handleTyping({ conversationId, userId, isTyping } = {}) {
       if (!conversationId || userId === myId) return;
       window.clearTimeout(incomingTypingTimerRef.current);
@@ -371,6 +497,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     socket.on("conversation:updated", handleConversationUpdated);
     socket.on("message:read", handleMessageRead);
     socket.on("message:reaction", handleMessageReaction);
+    socket.on("message:recalled", handleMessageRecalled);
+    socket.on("message:deleted", handleMessageDeleted);
     socket.on("typing", handleTyping);
     socket.on("connect", handleConnect);
     document.addEventListener("visibilitychange", handleVisibility);
@@ -380,6 +508,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
       socket.off("conversation:updated", handleConversationUpdated);
       socket.off("message:read", handleMessageRead);
       socket.off("message:reaction", handleMessageReaction);
+      socket.off("message:recalled", handleMessageRecalled);
+      socket.off("message:deleted", handleMessageDeleted);
       socket.off("typing", handleTyping);
       socket.off("connect", handleConnect);
       document.removeEventListener("visibilitychange", handleVisibility);
@@ -523,6 +653,26 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     }
   }
 
+  async function handleMessageAction(message, action) { setMessageConfirm({ message, action, error: "", busy: false }); }
+
+  async function confirmMessageAction() {
+    if (!messageConfirm || messageConfirm.busy) return;
+    const { message, action } = messageConfirm, recall = action === "recall";
+    const fallback = recall ? "Kh\u00f4ng th\u1ec3 thu h\u1ed3i tin nh\u1eafn." : "Kh\u00f4ng th\u1ec3 x\u00f3a tin nh\u1eafn.";
+    setMessageConfirm((state) => ({ ...state, busy: true, error: "" })); setError(""); setMessageMenuId(null);
+    try {
+      const response = await fetch(`${API_BASE}/api/message/message/${message._id}${recall ? "/recall" : ""}`, { method: recall ? "PATCH" : "DELETE", headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || fallback);
+      if (recall) {
+        const recalled = { ...message, ...(data.message || {}), recalledAt: data.message?.recalledAt || new Date().toISOString(), content: "Tin nhắn đã được thu hồi", mediaUrl: null, stickerId: null, sharedPostId: null, reactions: [] };
+        setMessages((items) => items.map((item) => item._id === message._id ? recalled : item));
+        setConversations((items) => items.map((item) => item._id === activeConversationIdRef.current && item.lastMessage?._id === message._id ? { ...item, lastMessage: recalled } : item));
+      } else { setMessages((items) => items.filter((item) => item._id !== message._id)); if (activeConversation?.lastMessage?._id === message._id) void loadConversations(); }
+      setMessageConfirm(null);
+    } catch (requestError) { setMessageConfirm((state) => ({ ...state, busy: false, error: requestError.message || fallback })); }
+  }
+
   // Sends a text message ({ content }) or a sticker ({ stickerId }). Returns true on success.
   async function submitMessage(body) {
     if (!activeConversationId) return false;
@@ -575,6 +725,26 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
     await submitMessage({ stickerId });
   }
 
+  async function handleMediaPick(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > 30 * 1024 * 1024) {
+      setError("Kích thước tệp không được vượt quá 30 MB.");
+      return;
+    }
+    setIsUploadingMedia(true);
+    setError("");
+    try {
+      const uploaded = await uploadMedia(file);
+      await submitMessage({ mediaUrl: uploaded.url });
+    } catch (uploadError) {
+      setError(uploadError.message || "Không thể tải tệp lên.");
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  }
+
   function handleSelectConversation(conversationId) {
     if (conversationId !== activeConversationId) {
       stopTyping(activeConversationId);
@@ -625,7 +795,10 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
             const participant = conversation.participants?.find(
               (person) => person._id !== currentUser?._id
             );
-            const lastMessageText = conversation.lastMessage?.content || "Chưa có tin nhắn";
+            const lastMessage = conversation.lastMessage;
+            const lastMessageText = lastMessage?.recalledAt
+              ? recalledMessageText(lastMessage, currentUser?._id, participant?.username)
+              : lastMessage?.content || "Chưa có tin nhắn";
             const conversationTime = formatMessageTime(conversation.lastMessage?.createdAt || conversation.updatedAt);
             return (
               <div className="ridge-conversation-row" key={conversation._id}>
@@ -643,9 +816,25 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                     <span className="ridge-conversation-bottom"><span className="ridge-conversation-preview">{lastMessageText}</span>{!conversation.isMuted && conversation.unreadCount > 0 && <span className="unread-count ridge-unread-count" aria-label={`${conversation.unreadCount} tin nhắn chưa đọc`}>{conversation.unreadCount}</span>}</span>
                   </span>
                 </button>
-                <Link className="ridge-profile-link" to={`/profile/${participant?._id}`} aria-label={`Xem trang cá nhân ${participant?.username || "người dùng"}`}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>
-                </Link>
+                <span className="ridge-conversation-menu-wrap">
+                  <button
+                    ref={conversationMenuId === conversation._id ? conversationMenuButtonRef : null}
+                    className="ridge-conversation-menu-button"
+                    type="button"
+                    aria-label={`Tùy chọn cuộc trò chuyện với ${participant?.username || "người dùng"}`}
+                    aria-expanded={conversationMenuId === conversation._id}
+                    onClick={(event) => { event.stopPropagation(); setConversationMenuId((id) => id === conversation._id ? null : conversation._id); }}
+                  >···</button>
+                </span>
+                {conversationMenuId === conversation._id && createPortal(
+                  <div className="ridge-conversation-menu" role="menu" style={conversationMenuStyle}>
+                    <Link role="menuitem" to={`/profile/${participant?._id}`} onClick={() => setConversationMenuId(null)}>Xem trang cá nhân</Link>
+                    <button type="button" role="menuitem" onClick={() => { void toggleMute(conversation._id); setConversationMenuId(null); }}>{conversation.isMuted ? "Bật thông báo" : "Tắt thông báo"}</button>
+                    <button type="button" role="menuitem" onClick={() => { void markConversationRead(conversation._id); setConversationMenuId(null); }}>Đánh dấu đã đọc</button>
+                    <button className="ridge-conversation-menu-delete" type="button" role="menuitem" onClick={() => void deleteConversation(conversation._id)}>Xóa cuộc trò chuyện</button>
+                  </div>,
+                  document.body,
+                )}
               </div>
             );
             })}
@@ -690,21 +879,22 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                 <p className="empty-messages">Hãy gửi lời chào đầu tiên.</p>
               )}
               {messages.map((message) => {
-                const isMine = message.senderId?._id === currentUser?._id;
-                const reactionSummary = summarizeReactions(message.reactions, currentUser?._id);
+                const isMine = isOwnMessage(message, currentUser?._id);
+                const isRecalled = Boolean(message.recalledAt);
+                const reactionSummary = summarizeReactions(isRecalled ? [] : message.reactions, currentUser?._id);
                 const sticker = message.type === "sticker" ? findSticker(message.stickerId) : null;
                 return (
                   <Fragment key={message._id}>
                     <div className={`ridge-message-row ${isMine ? "mine" : "theirs"}`}>
                       <div className={`ridge-msg-bubble-wrap ${reactionSummary.total > 0 ? "has-reactions" : ""}`}>
                         {!isMine && <span className="ridge-message-sender-name">{shownOtherName}</span>}
-                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${message.type === "sticker" ? " sticker" : ""}${message.type === "post_share" ? " post-share" : ""}${message.type !== "sticker" && message.type !== "post_share" && Boolean(message.content?.trim()) && /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F\u200D\s]+$/u.test(message.content.trim()) ? " emoji-only" : ""}`}>
-                          {sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
+                        <div className={`message-bubble ridge-message-bubble ${isMine ? "mine" : "theirs"}${isRecalled ? " recalled" : ""}${!isRecalled && message.type === "sticker" ? " sticker" : ""}${!isRecalled && message.type === "post_share" ? " post-share" : ""}${!isRecalled && ["image", "video"].includes(message.type) ? " media" : ""}${!isRecalled && message.type !== "sticker" && message.type !== "post_share" && !["image", "video"].includes(message.type) && Boolean(message.content?.trim()) && /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\uFE0F\u200D\s]+$/u.test(message.content.trim()) ? " emoji-only" : ""}`}>
+                          {isRecalled ? recalledMessageText(message, currentUser?._id, otherParticipant?.username) : sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
                             {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={message.sharedPostId.authorId.profilePicture} alt="" /> : <span className="ridge-shared-post-initial">{message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?"}</span>}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span>{message.sharedPostId.content && <span className="ridge-shared-post-text">{message.sharedPostId.content}</span>}{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={message.sharedPostId.image} alt="" /> : <><video src={message.sharedPostId.video} preload="metadata" muted playsInline /><span className="ridge-shared-post-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span></>}</span>}</> : "Bài viết không còn khả dụng"}
-                          </Link> : message.content}
+                          </Link> : message.type === "image" ? <a className="ridge-chat-media-link" href={message.mediaUrl} target="_blank" rel="noreferrer"><img className="ridge-chat-media" src={message.mediaUrl} alt="Ảnh đã gửi" loading="lazy" onLoad={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /></a> : message.type === "video" ? <video className="ridge-chat-media" src={message.mediaUrl} controls preload="metadata" playsInline onLoadedMetadata={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /> : message.content}
                           <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
                         </div>
-                        {reactionSummary.total > 0 && (
+                        {!isRecalled && reactionSummary.total > 0 && (
                           <button
                             type="button"
                             className={`ridge-msg-badge ${reactionSummary.mine ? "mine" : ""}`}
@@ -716,7 +906,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                           </button>
                         )}
                       </div>
-                      <div className="ridge-msg-actions">
+                      {!isRecalled && <div className="ridge-msg-actions">
                         <ReactionButton
                           compact
                           iconOnly
@@ -725,7 +915,14 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                           idleIcon={<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>}
                           onReact={(type) => void handleReactMessage(message, type)}
                         />
-                      </div>
+                        <div className="ridge-msg-menu-wrap">
+                          <button ref={messageMenuId === message._id ? messageMenuButtonRef : null} className="ridge-msg-more" type="button" aria-label="Tùy chọn tin nhắn" aria-expanded={messageMenuId === message._id} onClick={() => setMessageMenuId((id) => id === message._id ? null : message._id)}>···</button>
+                          {messageMenuId === message._id && <div ref={messageMenuRef} className="ridge-msg-menu" style={messageMenuStyle} role="menu">
+                            {isMine && !message.recalledAt && <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "recall")}>Thu hồi</button>}
+                            <button type="button" role="menuitem" onClick={() => void handleMessageAction(message, "delete")}>Xóa ở phía tôi</button>
+                          </div>}
+                        </div>
+                      </div>}
                     </div>
                     {message._id === lastOwnMessageId && (
                       <span className="ridge-message-status">{message.isRead ? "Đã xem" : "Đã gửi"}</span>
@@ -741,6 +938,11 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               )}
             </div>
             <form className="message-compose ridge-message-compose" onSubmit={handleSendMessage}>
+              <input ref={mediaInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={handleMediaPick} />
+              <button className="ridge-emoji-toggle" type="button" aria-label={isUploadingMedia ? "Đang tải tệp lên" : "Đính kèm ảnh hoặc video"} title={isUploadingMedia ? "Đang tải lên..." : "Đính kèm ảnh hoặc video"} disabled={isUploadingMedia || isSending} onClick={() => mediaInputRef.current?.click()}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+              </button>
+              {isUploadingMedia && <span className="ridge-media-uploading" role="status">Đang tải lên...</span>}
               <button
                 className="ridge-emoji-toggle"
                 type="button"
@@ -781,6 +983,14 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
         )}
         {(error || (conversationActionError && !isFriendPickerOpen)) && <p className="feedback-message error messages-error ridge-messages-error" role="alert">{conversationActionError || error}</p>}
       </section>
+      {messageConfirm && <div className="ridge-message-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !messageConfirm.busy) setMessageConfirm(null); }}>
+        <section className="ridge-message-confirm" role="dialog" aria-modal="true" aria-labelledby="ridge-message-confirm-title">
+          <h2 id="ridge-message-confirm-title">{messageConfirm.action === "recall" ? "Thu hồi tin nhắn?" : "Xóa tin nhắn?"}</h2>
+          <p>{messageConfirm.action === "recall" ? "Tin nhắn sẽ được thu hồi với mọi người trong cuộc trò chuyện." : "Tin nhắn chỉ bị xóa ở phía bạn, người kia vẫn thấy."}</p>
+          {messageConfirm.error && <p className="ridge-message-confirm-error" role="alert">{messageConfirm.error}</p>}
+          <div className="ridge-message-confirm-actions"><button type="button" disabled={messageConfirm.busy} onClick={() => setMessageConfirm(null)}>Hủy</button><button ref={messageConfirmButtonRef} className={messageConfirm.action === "delete" ? "destructive" : ""} type="button" disabled={messageConfirm.busy} onClick={() => void confirmMessageAction()}>{messageConfirm.busy ? "Đang xử lý..." : messageConfirm.action === "recall" ? "Thu hồi" : "Xóa"}</button></div>
+        </section>
+      </div>}
     </section>
   );
 }
