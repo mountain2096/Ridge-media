@@ -851,3 +851,42 @@
 .ridge-message-confirm-actions button.destructive{border-color:#d92d20;background:#d92d20}
 .ridge-message-confirm-actions button:disabled{cursor:wait;opacity:.6}
 .ridge-message-confirm-actions button:focus-visible{outline:2px solid #2F4BE0;outline-offset:2px}
+
+/* Keep chat text and controls paired with each conversation background under forced dark mode. */
+.ridge-conversation-panel { --chat-ink: #0f172a; --chat-muted: #5b6478; --chat-surface: #fff; --chat-field: #f8f9fc; --chat-border: #e6e8ef; }
+.ridge-conversation-panel.chat-bg-snow { --chat-ink: #2b3a4a; --chat-muted: #4b5565; --chat-surface: #f8fbff; --chat-field: #fff; --chat-border: #b9c8d8; }
+.ridge-conversation-panel.chat-bg-mint { --chat-ink: #1b3a2a; --chat-muted: #456457; --chat-surface: #f3fbf7; --chat-field: #fff; --chat-border: #b8d8c8; }
+.ridge-conversation-panel.chat-bg-sky { --chat-ink: #1f3a56; --chat-muted: #49657d; --chat-surface: #f5faff; --chat-field: #fff; --chat-border: #bfd4e8; }
+.ridge-conversation-panel.chat-bg-peach { --chat-ink: #533723; --chat-muted: #74563f; --chat-surface: #fff9f4; --chat-field: #fff; --chat-border: #e8cbb5; }
+.ridge-conversation-panel.chat-bg-lavender { --chat-ink: #3f2a66; --chat-muted: #66547f; --chat-surface: #faf8ff; --chat-field: #fff; --chat-border: #d2c4e8; }
+.ridge-conversation-panel.chat-bg-sunset { --chat-ink: #4c3024; --chat-muted: #765647; --chat-surface: #fff7e9; --chat-field: #fff; --chat-border: #e6c6ad; }
+.ridge-conversation-panel.chat-bg-night { --chat-ink: #f8fafc; --chat-muted: #e4e9f4; --chat-surface: #30394d; --chat-field: #252d40; --chat-border: #50596c; }
+.ridge-conversation-panel.chat-bg-starry { --chat-ink: #f1f5ff; --chat-muted: #d5def4; --chat-surface: #1a2f66; --chat-field: #13244e; --chat-border: #3b5bb5; }
+.ridge-conversation-panel.chat-bg-paper { --chat-ink: #3c362a; --chat-muted: #625b4d; --chat-surface: #f6f1e6; --chat-field: #fffdf7; --chat-border: #d6cebd; }
+.ridge-conversation-panel.chat-bg-pink { --chat-ink: #632a42; --chat-muted: #7a4b60; --chat-surface: #fff8fb; --chat-field: #fff; --chat-border: #e8c4d2; }
+.ridge-conversation-panel .ridge-conversation-header { color: var(--chat-ink); }
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-conversation-header .ridge-chat-title,
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-chat-settings-button { color: var(--chat-ink); }
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-chat-settings-button { border-color: var(--chat-border); background: var(--chat-field); }
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-message-sender-name,
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-message-time,
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-message-status,
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-message-state,
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-typing,
+.ridge-conversation-panel[class*="chat-bg-"] .ridge-media-uploading { color: var(--chat-muted); }
+.ridge-messages .ridge-conversation-panel[class*="chat-bg-"] .ridge-message-compose { border-color: var(--chat-border); background: var(--chat-surface); }
+.ridge-messages .ridge-conversation-panel[class*="chat-bg-"] .ridge-message-compose input { border-color: var(--chat-border); background: var(--chat-field); color: var(--chat-ink); }
+.ridge-messages .ridge-conversation-panel[class*="chat-bg-"] .ridge-message-compose input::placeholder { color: var(--chat-muted); }
+.ridge-messages .ridge-conversation-panel[class*="chat-bg-"] .ridge-message-compose button { border: 1px solid var(--chat-border); background: var(--chat-field); color: var(--chat-ink); }
+.bubble-style-cat-dog { --chat-received-surface: #fff2d9; --chat-received-ink: #493629; }
+.bubble-style-frog { --chat-received-surface: #dff5e8; --chat-received-ink: #173b28; }
+.bubble-style-pink-heart { --chat-received-surface: #ffe1eb; --chat-received-ink: #632a42; }
+.bubble-style-sky-fish { --chat-received-surface: #d8f0ff; --chat-received-ink: #24445c; }
+.bubble-style-duck { --chat-received-surface: #fff1b8; --chat-received-ink: #493b15; }
+.bubble-style-sketch { --chat-received-surface: #fff; --chat-received-ink: #222b3a; }
+.bubble-style-dark { --chat-received-surface: #414653; --chat-received-ink: #f8fafc; }
+.bubble-style-snow { --chat-received-surface: #f1f5f9; --chat-received-ink: #2b3a4a; }
+.bubble-style-starry { --chat-received-surface: #1e3470; --chat-received-ink: #f1f5ff; }
+.bubble-style-ghost { --chat-received-surface: #fff0f6; --chat-received-ink: #6b2f4a; }
+.bubble-style-berry { --chat-received-surface: #efe7fb; --chat-received-ink: #3f2a66; }
+.ridge-message-bubble.theirs:not(.post-share):not(.sticker):not(.emoji-only) { background: var(--chat-received-surface, #fff); color: var(--chat-received-ink, #0f172a); }
