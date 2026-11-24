@@ -5,6 +5,7 @@ const isMainModule = require.main === module;
 if (isMainModule) require('dotenv').config();
 
 const connectDB = require("./config/db");
+const mailer = require("./config/mailer");
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
@@ -79,6 +80,7 @@ app.get("/", (req,res) =>{
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
+    mailer.warnIfUnconfigured();
     await connectDB();
     // Loaded here so tests that import `app` do not need socket.io installed.
     const http = require("node:http");

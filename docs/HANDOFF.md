@@ -1,16 +1,17 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-24, after relative media URLs and the external message-media validation fix.
+> Last updated: 2026-11-24, after Phase C password-reset mail handling.
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
 - Project directory on the owner's machine: `C:\Ridge Project` (Windows, PowerShell). The project owner speaks Vietnamese; the app UI is in Vietnamese.
 - Run: `npm install` → `npm install --prefix client` → create `.env` from `.env.example` → `npm run dev:all` (web :5173, API :5000). The client reads its API URL from `VITE_API_URL` (default `http://localhost:5000`) via `client/src/lib/api.js`.
-- Checks: `node --test` (backend), `npm run lint --prefix client`, `npm run build --prefix client`. There are no client tests yet.
+- How to run with one tunnel: `cloudflared tunnel --url http://localhost:5173`
+- Checks: `node --test` (server), `node --test client/test/*.test.js` (client), `npm run lint --prefix client`, `npm run build --prefix client`.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media` was merged into main; current task branch: `fix/relative-media-urls` (created from updated `main`).
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media` was merged into main; current task branch: `fix/forgot-password` (created from `main`). Phase B is on `fix/vite-proxy-single-tunnel`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -19,6 +20,8 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Forgot-password mail (Phase C): 164 server tests passed; 6 client tests passed; client lint/build passed. Forgot-password response is generic for registered and unknown addresses; mailer and transport are mocked in coverage.
+- Single-tunnel proxy (Phase B, `fix/vite-proxy-single-tunnel`): 161 server tests passed; 5 client tests passed; client lint/build passed. A real upload matched through Vite :5173 and API :5000; missing Post.video files: 0.
 - Relative media URLs (Round 49): 160 server tests; 5 client tests; client lint/build passed. Migration applied to `ridge_demo`; dry run reports zero remaining URLs in every field. Backup: `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`. Story expiry uses `expiresAt` (24 hours).
 - Chat dark-mode controls and reply contrast (Round 48): 156 server tests, 5 client tests, lint/build passed. Mocked Playwright screenshots for dark/light across default, sea, night, snow, starry, ghost, and berry were inspected; default dark dots measured 11.35:1 contrast and light colors stayed unchanged.
 - Message replies (Round 47): 156 server tests and 5 client tests passed; lint/build passed; reply actions use `messageMenu.js`. No browser started for the reply flow.
@@ -98,6 +101,8 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 49 | Keep uploaded media stable across host changes; add URL migration and resolution; reject external message attachments | 160 server tests, 5 client tests, lint/build passed; migration applied to `ridge_demo` with backup at `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`; stories expire via `expiresAt` after 24 hours | `a309408` |
 | Round | Work | Result | Commit |
 |---|---|---|---|
+| Phase B | Route uploads through Vite and allow development Cloudflare tunnel origins | 161 server tests; 5 client tests; lint/build passed; real upload matched through both ports; missing Post.video files: 0 | `7bdda31` |
+| Phase C | Create Gmail transport lazily, warn without exposing credentials, and send generic forgot-password responses with HTML reset links | 164 server tests; 6 client tests; lint/build passed | pending |
 | 47 | Merge message replies with dark mode; add reply through `messageMenu.js` | 156 server tests, 5 client tests, lint/build passed; no browser started for the reply flow | pending |
 | 48 | Fix default chat palette inheritance in dark mode and preserve light control colors; verify chat controls and reply quotes in seven themes | 156 server tests, 5 client tests, lint/build passed; mocked Playwright screenshots inspected in dark/light; default dark dots 11.35:1 | this commit |
 | 46 | Add replies to chat messages with quoted previews, jump-to-original, and recall/deletion masking | `node --test`: 152 passed; client lint/build passed; no API/Vite/database/browser started | `307a7b0` |
@@ -157,6 +162,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 45 | Fix dark-mode shared posts/actions and friends buttons; correct chat contrast under Chromium force-dark | `node --test`: 148 passed; client lint/build passed; mocked force-dark and normal Playwright captures inspected; no live API/database | pending |
 
 ## 8. Possible next work (project owner chooses)
+Configure `EMAIL_USER` and a Gmail App Password in `.env`, then restart the server to enable password-reset email. The current server should warn when either setting is missing or remains a placeholder.
 Round 49 migration is complete on `ridge_demo`; its backup is `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`. Story TTL is represented by `expiresAt` and set to 24 hours on creation.
 Round 48 keeps the quoted reply tint and spacing, and fixes the root cause: hard-coded default chat variables kept dark-mode controls light. Dark mode now uses app tokens only for the default chat palette; themed chats and existing light colors stay intact. Mocked Playwright screenshots covered both modes and all seven themes.
 Round 47 merges message replies with dark mode and preserves the `messageMenu.js` action menu. Tests, lint, and build passed; the reply flow was not browser tested.
