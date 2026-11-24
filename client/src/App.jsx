@@ -19,18 +19,19 @@ import { initializeGoogleIdentity, clearGoogleCredentialHandler } from "./lib/go
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-function GoogleSignInButton({ activeTab, disabled, onCredential, formRef }) {
+function GoogleSignInButton({ activeTab, disabled, onCredential }) {
   const containerRef = useRef(null);
+  const slotRef = useRef(null);
   const [width, setWidth] = useState(0);
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dark" ||
     (!document.documentElement.dataset.theme && window.matchMedia("(prefers-color-scheme: dark)").matches));
 
   useEffect(() => {
-    if (!formRef.current) return undefined;
+    if (!slotRef.current) return undefined;
     const observer = new ResizeObserver(([entry]) => setWidth(Math.min(400, Math.round(entry.contentRect.width))));
-    observer.observe(formRef.current);
+    observer.observe(slotRef.current);
     return () => observer.disconnect();
-  }, [formRef]);
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -49,8 +50,7 @@ function GoogleSignInButton({ activeTab, disabled, onCredential, formRef }) {
     initializeGoogleIdentity(GOOGLE_CLIENT_ID, onCredential).then((identity) => {
       if (cancelled) return;
       identity.renderButton(container, {
-        type: "standard", theme: dark ? "filled_black" : "outline", size: "large",
-        shape: "rectangular", logo_alignment: "center",
+        type: "standard", theme: "outline", size: "large", shape: "rectangular",
         text: activeTab === "register" ? "signup_with" : "signin_with", width, locale: "vi",
       });
     }).catch((error) => {
@@ -59,13 +59,12 @@ function GoogleSignInButton({ activeTab, disabled, onCredential, formRef }) {
     return () => { cancelled = true; container.replaceChildren(); clearGoogleCredentialHandler(onCredential); };
   }, [activeTab, dark, onCredential, width]);
 
-  return <div className="ridge-auth-google-wrap">
-    {GOOGLE_CLIENT_ID ? <div ref={containerRef} className={`ridge-auth-google${disabled ? " is-disabled" : ""}`} aria-disabled={disabled} /> :
-      <button className="ridge-auth-google-fallback" type="button" disabled title="Chưa cấu hình Google" aria-label="Tiếp tục với Google, chưa cấu hình">
-        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4 1.9-6.9 1.9-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3l5.8-5.8A19.4 19.4 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"/></svg>
-        <span>Tiếp tục với Google</span>
-      </button>}
-    {disabled && GOOGLE_CLIENT_ID && <span className="ridge-auth-google-blocker" aria-hidden="true" />}
+  return <div ref={slotRef} className={`ridge-google-slot${disabled || !GOOGLE_CLIENT_ID ? " is-disabled" : ""}`} aria-disabled={!GOOGLE_CLIENT_ID || disabled} title={!GOOGLE_CLIENT_ID ? "Chưa cấu hình Google" : undefined}>
+    <div className="ridge-google-visual" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4 1.9-6.9 1.9-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3l5.8-5.8A19.4 19.4 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"/></svg>
+      <span>{activeTab === "register" ? "Đăng ký bằng Google" : "Đăng nhập bằng Google"}</span>
+    </div>
+    {GOOGLE_CLIENT_ID && <div ref={containerRef} className="ridge-google-gis" aria-disabled={disabled || undefined} />}
   </div>;
 }
 
@@ -197,7 +196,7 @@ function AuthPage() {
           {activeTab === "register" && <div className="ridge-auth-field"><label htmlFor="auth-confirm-password">Xác nhận mật khẩu</label><div className="ridge-auth-password"><input id="auth-confirm-password" type={showConfirmPassword ? "text" : "password"} name="confirmPassword" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required minLength={8} /><button className="ridge-auth-toggle" type="button" aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowConfirmPassword((visible) => !visible)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>}
           <button className="ridge-auth-submit" type="submit" disabled={isSubmitting}>{isSubmitting ? "Đang xử lý..." : activeTab === "register" ? "Đăng ký" : "Đăng nhập"}</button>
           <div className="ridge-auth-divider"><span /><p>Hoặc tiếp tục với</p><span /></div>
-          <GoogleSignInButton activeTab={activeTab} disabled={isSubmitting} onCredential={googleCredential} formRef={googleFormRef} />
+          <GoogleSignInButton activeTab={activeTab} disabled={isSubmitting} onCredential={googleCredential} />
           {activeTab !== "register" && <Link className="ridge-auth-link ridge-auth-forgot" to="/forgot-password">Quên mật khẩu?</Link>}
           {feedback.text && <p className={`ridge-auth-feedback ${feedback.type}`} role={feedback.type === "error" ? "alert" : "status"} aria-live={feedback.type === "error" ? "assertive" : "polite"}>{feedback.text}</p>}
           <p className="ridge-auth-note">{activeTab === "register" ? "Bạn đã có tài khoản? " : "Chưa có tài khoản? "}<button className="ridge-auth-link" type="button" onClick={() => setActiveTab(activeTab === "register" ? "login" : "register")}>{activeTab === "register" ? "Đăng nhập ngay" : "Đăng ký ngay"}</button></p>
