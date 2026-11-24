@@ -33,7 +33,7 @@ html[data-theme="dark"] {
   --news-scrollbar: #4b5260;
 }
 
-.home-layout { max-width: none; margin-inline: 0; grid-template-columns: 248px minmax(0, 680px) 300px; justify-content: start; gap: 24px; padding: 0 16px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+.home-layout { max-width: none; margin-inline: 0; grid-template-columns: 248px minmax(0, 680px) 300px; justify-content: start; gap: 24px; padding: 0 16px; background: transparent; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
 .theme-options { display: flex; gap: 8px; }
 .theme-options button { min-height: 40px; padding: 0 18px; border: 1px solid var(--news-border); border-radius: 10px; background: var(--news-surface); color: var(--news-ink); cursor: pointer; }
 .theme-options button[aria-pressed="true"] { border-color: var(--news-accent); background: var(--news-hover); color: var(--news-accent); }
@@ -258,7 +258,7 @@ body:has(.home-layout) { background: var(--news-bg); }
   .home-layout .header-brand-search { gap: 7px; }
   .home-layout .user-search-wrap { flex: 1 1 auto; min-width: 0; }
   .home-layout .user-search-wrap .news-search { height: 38px; }
-  .home-layout .home-sidebar { position: fixed; z-index: 60; inset: auto 0 0; display: block; width: 100%; height: 62px; min-width: 0; padding: 4px 5px max(4px, env(safe-area-inset-bottom)); overflow: hidden; background: #fff; }
+  .home-layout .home-sidebar { position: fixed; z-index: 60; inset: auto 0 0; display: block; width: 100%; height: 62px; min-width: 0; padding: 4px 5px max(4px, env(safe-area-inset-bottom)); overflow: hidden; background: var(--news-surface); }
   .home-layout .home-menu { height: 100%; flex-direction: row; justify-content: space-around; gap: 2px; }
   .home-layout .menu-item { flex: 1 1 0; justify-content: center; width: auto; max-width: 52px; min-height: 52px; padding: 0; }
   .home-layout .menu-item-label { display: none; }
@@ -334,11 +334,9 @@ a[class*="button"]:active,
 }
 
 /* Keep late-loaded legacy page styles on the shared theme palette. */
-html[data-theme="dark"] body,
-html[data-theme="dark"] .home-layout { background: var(--news-bg); color: var(--news-ink); }
+html[data-theme="dark"] body { background: var(--news-bg); color: var(--news-ink); }
+html[data-theme="dark"] .home-layout { background: transparent; color: var(--news-ink); }
 html[data-theme="dark"] .home-topbar,
-html[data-theme="dark"] .home-sidebar,
-html[data-theme="dark"] .home-columns > *,
 html[data-theme="dark"] .home-layout .card,
 html[data-theme="dark"] .settings-card,
 html[data-theme="dark"] .ridge-conversation-list,

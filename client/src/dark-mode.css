@@ -1,9 +1,8 @@
 html[data-theme="dark"] body,
-html[data-theme="dark"] .home-layout,
 html[data-theme="dark"] .guest-layout { background: var(--news-bg); color: var(--news-ink); }
+html[data-theme="dark"] .home-layout { background: transparent; color: var(--news-ink); }
 
 html[data-theme="dark"] .home-topbar,
-html[data-theme="dark"] .home-sidebar,
 html[data-theme="dark"] .post-card,
 html[data-theme="dark"] .guest-post-card,
 html[data-theme="dark"] .home-layout .card,

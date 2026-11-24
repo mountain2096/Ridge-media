@@ -15,3 +15,11 @@ test("dark polish surfaces use theme tokens and preserve unread distinction", ()
   assert.match(dark, /\.ridge-conversation-panel:not\(\[class\*="chat-bg-"\]\) \.ridge-message-compose/);
   assert.match(reactions, /background:\s*var\(--chat-surface,\s*var\(--news-surface/);
 });
+
+test("dark mode leaves shared layout wrappers transparent while retaining panel surfaces", () => {
+  assert.doesNotMatch(feed, /html\[data-theme="dark"\] \.home-sidebar\s*,/);
+  assert.doesNotMatch(feed, /html\[data-theme="dark"\] \.home-columns > \*\s*,/);
+  assert.match(feed, /html\[data-theme="dark"\] \.ridge-conversation-panel/);
+  assert.doesNotMatch(dark, /html\[data-theme="dark"\] \.home-sidebar\s*,/);
+  assert.match(dark, /html\[data-theme="dark"\] \.post-card/);
+});
