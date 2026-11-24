@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-24, after the story-strip theme fix.
+> Last updated: 2026-11-24, after the auth form and logo fix.
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -22,6 +22,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Auth form and logo (`fix/admin-moderation`): `node --test` passed 182; focused client tests passed 9; client lint passed with 0 errors; production build passed with the existing large-chunk advisory. Registration hint is under the password input, placeholders are present, spacing is compact, and auth mark uses the accent token. No browser or services were started.
 - Post back navigation (`fix/admin-moderation`): `node --test` passed 180; focused message-menu/theme/post-back tests passed 7; client lint passed with 0 errors; production build passed with the existing large-chunk advisory. Moderation links carry router state and deleted/unavailable posts return to `?tab=moderation`; browser interaction not manually verified.
 - Story strip theme fix (`fix/admin-moderation`): `node --test` passed 177; focused client tests passed 5; client lint/build passed with the existing large-chunk advisory. Dark surface/border overrides now exclude the transparent story wrapper; the horizontal story row remains scrollable. Browser appearance not visually inspected.
 - Admin layout background artifacts (`fix/admin-moderation`): `node --test` passed 176; focused message-menu/theme/layout tests passed 6; client lint passed; production build passed with the existing large-chunk advisory. Shared shell, sidebar, and page wrappers are transparent in both themes; authenticated route visuals remain for browser verification.
@@ -109,6 +110,7 @@ Reels comments support reading and posting top-level comments only; there is no 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
 ## 7. Round log
+- Auth form and logo: move the registration hint below password, add input placeholders, compact the form, and use the theme accent for the auth logo | `node --test`: 182 passed; focused client tests: 9 passed; lint/build passed; no browser or services started | `fix/admin-moderation`
 - Story strip theme fix: exclude the story wrapper from dark card-surface overrides and allow its horizontal scroll row to overflow visibly | `node --test`: 177 passed; focused client tests: 5 passed; lint/build passed; Vite :5173 and API :5000 restarted and listening | `fix/admin-moderation`
 - Admin moderation: allow admin post/comment/story deletion, resolve pending content reports, link moderation cards to content, and align the app shell to the viewport | `node --test`: 175 passed; focused client tests: 5 passed; lint/build passed; :5173 and :5000 listening; unauthenticated `/admin` redirected to `/` | `fix/admin-moderation`
 - Token tab sync: added cross-tab token event handling and a theme-aware unsaved-draft notice; merged from `fix/token-tab-sync-v2` into `main` at `ea94451`.
@@ -180,6 +182,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 45 | Fix dark-mode shared posts/actions and friends buttons; correct chat contrast under Chromium force-dark | `node --test`: 148 passed; client lint/build passed; mocked force-dark and normal Playwright captures inspected; no live API/database | pending |
 
 ## 8. Possible next work (project owner chooses)
+Visually verify auth registration/login in light and dark mode, including the 1080px-high layout and mobile widths; regression tests, lint, and build pass, but no browser was started.
 Visually confirm the story strip has no full-width surface behind its rounded cards in dark and light mode; automated CSS regression coverage, lint, and build pass.
 Verify feed, messages, friends, profile, saved, settings, and admin in dark/light mode when an authenticated browser session is available; this change was checked by CSS regression tests and build, not authenticated screenshots.
 Review `fix/admin-moderation` visually before merge: confirm report links/back navigation, admin delete menus and confirmation flows, and sidebar alignment in light/dark at 1920/1440/1024 plus mobile. Automated browser could not reach the authenticated admin route in this run. Story/user report targets are not supported by the current Report model; moderation currently supports posts and comments.
