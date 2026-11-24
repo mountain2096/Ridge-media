@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-24, after Phase C password-reset mail handling.
+> Last updated: 2026-11-24, after Round 20a Google sign-in.
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -22,6 +22,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 
 ## 4. Test status (update each round)
 - Dark mode page corners and profile/connections button contrast (`fix/dark-polish`): `node --test` passed 171; client lint/build passed (existing large-chunk advisory); no browser, API, Vite, or database started.
+- Round 20a Google sign-in: 178 server tests passed; client lint/build passed. Playwright screenshots were inspected for auth at 1280x720 and 390x844 in light/dark, plus forgot/reset logo contrast and mocked forgot-password success; no real Google sign-in was completed.
 - Token tab sync v2 (merged into `main`, `ea94451`): prior run `node --test` passed 171; focused message-menu/theme/token tests passed 5; client lint passed; build passed with the existing large-chunk advisory. This merge's checks could not start because Windows failed process startup with CLR `HRESULT 80004005` and Node reported `VirtualAlloc failed`; two-tab behavior remains for visual verification.
 - Story interactions (`feat/story-interactions`): 169 server tests, 4 client tests, lint passed; production build passed with the existing large-chunk advisory. Owner reactor panel now has compact avatar/name/reaction/time rows, header and empty state; endpoints unchanged. Dark/light visuals and live services remain for manual verification.
 - Combined story interactions and dark polish: `node --test` passed all 170 discovered tests; focused message-menu, theme, and dark-polish tests passed 5; client lint/build passed. No browser or live API/database was started.
@@ -113,6 +114,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 50 | Add story reactions and owner reactor lists, story replies in chat, and story reaction notifications; compact the owner reactor panel | 169 server tests, 4 client tests, lint/build passed; no browser or live service started. Endpoints unchanged | `86563f3` |
 | Round | Work | Result | Commit |
 |---|---|---|---|
+| 20a | Add Google sign-in/sign-up, improve auth logo contrast, localize the generic reset message, and document Google setup | `node --test`: 178 passed; client lint/build passed; Playwright visuals inspected for both auth tabs/viewports/themes and forgot/reset pages; Google IDs unset, so no live GIS button/sign-in | `b4e8c92` |
 | Phase C | Create Gmail transport lazily, warn without exposing credentials, and send generic forgot-password responses with HTML reset links | 164 server tests; 6 client tests; lint/build passed | `cedd511` |
 | 47 | Merge message replies with dark mode; add reply through `messageMenu.js` | 156 server tests, 5 client tests, lint/build passed; no browser started for the reply flow | pending |
 | 48 | Fix default chat palette inheritance in dark mode and preserve light control colors; verify chat controls and reply quotes in seven themes | 156 server tests, 5 client tests, lint/build passed; mocked Playwright screenshots inspected in dark/light; default dark dots 11.35:1 | this commit |
@@ -210,6 +212,7 @@ Round 37 keeps message unread counts on the messages icon unchanged, filters leg
 Round 35 keeps mute personal to each participant, broadcasts nickname changes through the existing user-room socket helper, and leaves message delivery, read receipts, stickers, reactions, and shared-post payloads unchanged. No live service or browser was used.
 Round 36 validates short emoji-only quick icons, broadcasts them to the other participant, and sends the selected emoji through the existing text-message path when the composer is empty. No live service or browser was used.
 Notification delete/read-all operations are scoped to the authenticated recipient; the client updates the bell immediately and restores optimistic state on request failures. Panel scrolling and service startup were not browser-verified.
+Round 20a inspected 13 temporary Playwright screenshots: Google fallback placement/no social buttons across both auth tabs at desktop/mobile in light/dark; readable R marks on auth/forgot/reset; and the exact Vietnamese reset-success message. Google IDs are absent from this machine's `.env`, so the official GIS button and real sign-in remain unverified.
 
 ## 9. Notes for a new agent
 - `docs/STATUS.md` and `docs/AUDIT.md` are old snapshots; always verify against the code and `git log`.
