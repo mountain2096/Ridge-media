@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-24, after Phase C password-reset mail handling.
+> Last updated: 2026-11-24, after the story-strip theme fix.
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -22,6 +22,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Story strip theme fix (`fix/admin-moderation`): `node --test` passed 177; focused client tests passed 5; client lint/build passed with the existing large-chunk advisory. Dark surface/border overrides now exclude the transparent story wrapper; the horizontal story row remains scrollable. Browser appearance not visually inspected.
 - Admin layout background artifacts (`fix/admin-moderation`): `node --test` passed 176; focused message-menu/theme/layout tests passed 6; client lint passed; production build passed with the existing large-chunk advisory. Shared shell, sidebar, and page wrappers are transparent in both themes; authenticated route visuals remain for browser verification.
 - Admin moderation fix (`fix/admin-moderation`): `node --test` passed 175; focused message-menu/theme/moderation-content tests passed 5; client lint passed; production build passed with the existing large-chunk advisory. Vite :5173 and API :5000 are listening. Browser `/admin` redirected to `/` without an authenticated session, so admin visuals remain for owner verification.
 - Token tab sync v2 (merged into `main`, `ea94451`): prior run `node --test` passed 171; focused message-menu/theme/token tests passed 5; client lint passed; build passed with the existing large-chunk advisory. This merge's checks could not start because Windows failed process startup with CLR `HRESULT 80004005` and Node reported `VirtualAlloc failed`; two-tab behavior remains for visual verification.
@@ -107,6 +108,7 @@ Reels comments support reading and posting top-level comments only; there is no 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
 ## 7. Round log
+- Story strip theme fix: exclude the story wrapper from dark card-surface overrides and allow its horizontal scroll row to overflow visibly | `node --test`: 177 passed; focused client tests: 5 passed; lint/build passed; Vite :5173 and API :5000 restarted and listening | `fix/admin-moderation`
 - Admin moderation: allow admin post/comment/story deletion, resolve pending content reports, link moderation cards to content, and align the app shell to the viewport | `node --test`: 175 passed; focused client tests: 5 passed; lint/build passed; :5173 and :5000 listening; unauthenticated `/admin` redirected to `/` | `fix/admin-moderation`
 - Token tab sync: added cross-tab token event handling and a theme-aware unsaved-draft notice; merged from `fix/token-tab-sync-v2` into `main` at `ea94451`.
 | Story interactions + dark polish 2 | Story reactions/reactor list/replies/notifications and themed notification/privacy/chat/search surfaces | After merge on `main`: `node --test` 170 passed; focused client tests 5 passed; lint/build passed; no browser or live API/database started | `86563f3` |
@@ -176,6 +178,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 45 | Fix dark-mode shared posts/actions and friends buttons; correct chat contrast under Chromium force-dark | `node --test`: 148 passed; client lint/build passed; mocked force-dark and normal Playwright captures inspected; no live API/database | pending |
 
 ## 8. Possible next work (project owner chooses)
+Visually confirm the story strip has no full-width surface behind its rounded cards in dark and light mode; automated CSS regression coverage, lint, and build pass.
 Verify feed, messages, friends, profile, saved, settings, and admin in dark/light mode when an authenticated browser session is available; this change was checked by CSS regression tests and build, not authenticated screenshots.
 Review `fix/admin-moderation` visually before merge: confirm report links/back navigation, admin delete menus and confirmation flows, and sidebar alignment in light/dark at 1920/1440/1024 plus mobile. Automated browser could not reach the authenticated admin route in this run. Story/user report targets are not supported by the current Report model; moderation currently supports posts and comments.
 Verify cross-tab login, logout, account switching, and the draft notice in two browser tabs. Keep remote `fix/token-tab-sync` (`ba64bd7`) and local `backup/token-tab-sync-old` untouched until the owner approves cleanup. Re-run checks when Windows process allocation is available.
