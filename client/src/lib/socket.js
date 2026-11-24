@@ -10,7 +10,7 @@ let socket = null;
 
 export function getSocket() {
   if (!socket) {
-    socket = io(API_BASE, {
+    socket = io(API_BASE || undefined, {
       autoConnect: false,
       // A function so every (re)connect sends the current token.
       auth: (callback) => callback({ token: localStorage.getItem("token") || "" }),

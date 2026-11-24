@@ -44,6 +44,7 @@ const isAllowedOrigin = (origin) => {
     }
 
     const isDevelopment = process.env.NODE_ENV !== "production";
+    if (isDevelopment && parsedOrigin.protocol === "https:" && parsedOrigin.hostname.endsWith(".trycloudflare.com")) return true;
     if (isDevelopment && parsedOrigin.protocol === "http:" &&
         ["localhost", "127.0.0.1"].includes(parsedOrigin.hostname)) {
         return true;
