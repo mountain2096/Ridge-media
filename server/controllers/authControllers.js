@@ -1,7 +1,7 @@
 const { randomBytes, createHash } = require("node:crypto");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+const mailer = require("../config/mailer");
 const bcrypt = require("bcryptjs");
 const errorResponse = require("../utils/errorResponse");
 
@@ -13,14 +13,6 @@ const signAuthToken = (user) => jwt.sign({
     isAdmin: user.isAdmin,
     tv: user.tokenVersion || 0,
 }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
-const transport = nodemailer.createTransport({
-    service: "gmail",
-    auth:{
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-})
 
 const register = async (req, res) =>{
     try{
@@ -128,66 +120,35 @@ const login = async(req,res) =>{
         return errorResponse(res, err);
     }
 }
-const forgotPassword = async (req, res) =>{
-    try{
+const forgotPassword = async (req, res) => {
+    try {
         const { email } = req.body;
-
-        if(typeof email !== "string" || !email.trim()){
-            return res.status(400).json({
-                message:"Vui lòng nhập email"
-            })
+        if (typeof email !== "string" || !email.trim()) {
+            return res.status(400).json({ message: "Please enter an email address." });
+        }
+        const normalizedEmail = email.trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+            return res.status(400).json({ message: "Please enter a valid email address." });
         }
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-            return res.status(400).json({ message: "Email không hợp lệ!" });
-        }
-
-        const user = await User.findOne({
-            email: email.trim().toLowerCase()
-        })
-        if(!user){
-            return res.status(200).json({ message:"Email chưa được đăng ký" });
-        }
-
-        const message =  "Đã gửi đường dẫn đặt lại mật khẩu đến gmail!";
-        const resetToken = randomBytes(32).toString("hex");
-
-        user.resetPasswordToken = 
-        createHash("sha256")
-        .update(resetToken)
-        .digest("hex");
-         user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
-
-        await user.save();
-
-        
-        const resetURL =
-            `${process.env.CLIENT_URL || "http://localhost:5173"}` +
-            `/reset-password/${resetToken}`;
-
-
-        try {
-            await transport.sendMail({
-                from: process.env.EMAIL_USER,
-                to: user.email,
-                subject: "Đặt lại mật khẩu",
-                text: `Truy cập liên kết sau để đặt lại mật khẩu: ${resetURL}\nLiên kết hết hạn sau 15 phút.`
-            });
-        } catch (emailError) {
-            user.resetPasswordToken = null;
-            user.resetPasswordExpires = null;
+        const user = await User.findOne({ email: normalizedEmail });
+        if (user) {
+            const resetToken = randomBytes(32).toString("hex");
+            user.resetPasswordToken = createHash("sha256").update(resetToken).digest("hex");
+            user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
             await user.save();
-
-            throw emailError;
+            const resetURL = (process.env.CLIENT_URL || "http://localhost:5173").replace(/\/+$/, "") + "/reset-password/" + resetToken;
+            try {
+                await mailer.sendPasswordResetEmail(user.email, resetURL);
+            } catch {
+                user.resetPasswordToken = null;
+                user.resetPasswordExpires = null;
+                await user.save();
+            }
         }
-
-        return res.status(200).json({ message });
-    } catch (err) {
-        console.error(err);
-
-        return res.status(500).json({
-            message: "Không thể gửi email đặt lại mật khẩu!"
-        });
+        return res.status(200).json({ message: "If the account exists, a password reset link will be sent." });
+    } catch (error) {
+        return errorResponse(res, error);
     }
 };
 const resetPassword = async (req, res) => {
