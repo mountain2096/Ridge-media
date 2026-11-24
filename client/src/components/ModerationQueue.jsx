@@ -18,16 +18,16 @@ function ModerationItem({ item, busy, onResolve }) {
       <div className="ridge-mod-top">
         <span className={`ridge-mod-level is-${item.level}`}>{LEVEL_LABELS[item.level]}</span>
         <span className="ridge-mod-score" aria-label={`Điểm ưu tiên ${item.score} trên 100`}>{item.score}<small>/100</small></span>
-        {item.target.available ? <Link className="ridge-admin-report-type ridge-mod-link" to={contentPath}>{TARGET_LABELS[item.targetType] || item.targetType}</Link> : <span className="ridge-admin-report-type">{TARGET_LABELS[item.targetType] || item.targetType}</span>}
+        {item.target.available ? <Link className="ridge-admin-report-type ridge-mod-link" to={contentPath} state={{ from: "/admin", tab: "moderation" }}>{TARGET_LABELS[item.targetType] || item.targetType}</Link> : <span className="ridge-admin-report-type">{TARGET_LABELS[item.targetType] || item.targetType}</span>}
         {author && <span className="ridge-mod-author">của {author}</span>}
       </div>
 
       {item.target.available ? (
-        <Link className="ridge-mod-content ridge-mod-content-link" to={contentPath}>{item.target.content}{item.target.hasMedia ? " [kèm ảnh/video]" : ""}</Link>
+        <Link className="ridge-mod-content ridge-mod-content-link" to={contentPath} state={{ from: "/admin", tab: "moderation" }}>{item.target.content}{item.target.hasMedia ? " [kèm ảnh/video]" : ""}</Link>
       ) : (
         <p className="ridge-mod-content is-muted">Nội dung đã bị xóa</p>
       )}
-      {item.target.available && <Link className="ridge-admin-action is-neutral ridge-mod-open" to={contentPath}>Xem nội dung</Link>}
+      {item.target.available && <Link className="ridge-admin-action is-neutral ridge-mod-open" to={contentPath} state={{ from: "/admin", tab: "moderation" }}>Xem nội dung</Link>}
 
       <div className="ridge-mod-reasons">
         <span>{item.reportCount} báo cáo</span>

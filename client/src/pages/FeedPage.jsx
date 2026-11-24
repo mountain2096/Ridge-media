@@ -8,6 +8,7 @@ import { uploadMedia } from "../lib/uploadMedia.js";
 import { API_BASE } from "../lib/api.js";
 import { sendReaction } from "../lib/reactions.js";
 import { mergeSavedPost } from "../lib/mergeSavedPost.js";
+import { postBackTarget } from "../lib/postBackTarget.js";
 import { useConfirm } from "../components/ConfirmDialog.jsx";
 import ReportDialog from "../components/ReportDialog.jsx";
 import Toast from "../components/Toast.jsx";
@@ -30,6 +31,7 @@ function FeedPage({ section = "feed" }){
     const { id: routePostId } = useParams();
     const { currentUser, setCurrentUser, searchQuery } = useOutletContext();
     const activeSection = section;
+    const backTarget = postBackTarget(location.state);
     const [posts, setPosts] = useState([]);
     const postCardRefs = useRef(new Map());
     const pendingCardAnimations = useRef(new Set());
@@ -408,6 +410,7 @@ function FeedPage({ section = "feed" }){
           setOpenCommentsFor(null);
           setComments([]);
         }
+        if (activeSection === "post" && backTarget.to.startsWith("/admin")) navigate(backTarget.to, { replace: true });
       } catch (requestError) {
         setPostActionError(requestError.message);
       }
@@ -912,6 +915,7 @@ function FeedPage({ section = "feed" }){
         setPosts((currentPosts) => currentPosts.map((post) => post._id === postId
           ? { ...post, commentsCount: Math.max(0, (post.commentsCount || 0) - removedCount) }
           : post));
+        if (activeSection === "post" && backTarget.to.startsWith("/admin")) navigate(backTarget.to, { replace: true });
       } catch (requestError) {
         setCommentError(requestError.message);
       }
@@ -985,7 +989,7 @@ function FeedPage({ section = "feed" }){
 
     return (
         <><section className={"feed-column " + (section === "feed" ? "" : "feed-column-single")}>
-                {activeSection === "post" && <Link className="single-post-back" to="/feed">← Bảng tin</Link>}
+                {activeSection === "post" && <Link className="single-post-back" to={backTarget.to}>{backTarget.label}</Link>}
                 {activeSection === "messages" ? (
                   <MessagesView currentUser={currentUser} initialConversationId={location.state?.openConversationId} />
                 ) : activeSection === "settings" ? (
@@ -1019,11 +1023,11 @@ function FeedPage({ section = "feed" }){
                 </>}
                 {isLoading && <p>Đang tải bài viết...</p>}
 
-{!isLoading && error && activeSection === "post" && [404, 403].includes(error.status) ? <div className="single-post-unavailable card"><p>Nội dung đã bị xóa hoặc không còn khả dụng.</p><Link to="/feed">Quay lại bảng tin</Link></div> : !isLoading && error && (
+{!isLoading && error && activeSection === "post" && [404, 403].includes(error.status) ? <div className="single-post-unavailable card"><p>Nội dung đã bị xóa hoặc không còn khả dụng.</p><Link to={backTarget.to}>{backTarget.label}</Link></div> : !isLoading && error && (
   <p className="feedback-message error">{typeof error === "string" ? error : error.message}</p>
 )}
 
-{!isLoading && !error && activeSection === "post" && displayedPosts.length === 0 && <div className="single-post-unavailable card"><p>Nội dung đã bị xóa hoặc không còn khả dụng.</p><Link to="/feed">Quay lại bảng tin</Link></div>}
+{!isLoading && !error && activeSection === "post" && displayedPosts.length === 0 && <div className="single-post-unavailable card"><p>Nội dung đã bị xóa hoặc không còn khả dụng.</p><Link to={backTarget.to}>{backTarget.label}</Link></div>}
 {!isLoading && !error && activeSection !== "post" && displayedPosts.length === 0 && (
   <p>{activeSection === "saved" ? "Bạn chưa lưu bài viết nào." : activeSection === "activity" ? "Bạn chưa đăng bài viết nào." : "Chưa có bài viết nào."}</p>
 )}
