@@ -807,7 +807,7 @@
   align-items: center;
   align-self: flex-start;
   gap: 8px;
-  color: var(--news-muted, #5b6478);
+  color: var(--chat-muted, var(--news-muted, #5b6478));
   font-size: 12px;
 }
 
@@ -816,17 +816,17 @@
   align-items: center;
   gap: 3px;
   padding: 9px 12px;
-  border: 1px solid var(--news-border, #e6e8ef);
+  border: 1px solid var(--chat-border, var(--news-border, #e6e8ef));
   border-radius: 16px;
   border-bottom-left-radius: 5px;
-  background: var(--news-surface, #fff);
+  background: var(--chat-received-surface, var(--news-surface, #fff));
 }
 
 .ridge-typing-dots span {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--news-muted, #5b6478);
+  background: var(--chat-muted, var(--news-muted, #5b6478));
   animation: ridge-typing-bounce 1.2s infinite ease-in-out;
 }
 
