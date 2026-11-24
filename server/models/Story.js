@@ -17,6 +17,13 @@ const storySchema = new mongoose.Schema(
             enum: ["image", "video"],
             required: true,
         },
+        caption: { type: String, trim: true, maxlength: 500, default: "" },
+        reactions: [{
+            _id: false,
+            user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+            type: { type: String, enum: ["like", "love", "haha", "wow", "sad", "angry"], required: true },
+            createdAt: { type: Date, default: Date.now },
+        }],
         expiresAt: {
             type: Date,
             required: true,

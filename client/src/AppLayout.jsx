@@ -33,8 +33,8 @@ const REACTION_NOTIFICATION_TEXT = {
 };
 
 function notificationText(type, reaction, commentId) {
-  if (type === "like" && reaction && REACTION_NOTIFICATION_TEXT[reaction]) {
-    return `${REACTION_NOTIFICATION_TEXT[reaction]} ${commentId ? "bình luận" : "bài viết"} của bạn`;
+  if ((type === "like" || type === "story_reaction") && reaction && REACTION_NOTIFICATION_TEXT[reaction]) {
+    return `${REACTION_NOTIFICATION_TEXT[reaction]} ${type === "story_reaction" ? "story" : commentId ? "bình luận" : "bài viết"} của bạn`;
   }
   return NOTIFICATION_TEXT[type] || "có cập nhật mới";
 }
@@ -53,10 +53,11 @@ function NotificationItem({ item, onOpen, onDelete }) {
   const post = item.postId && typeof item.postId === "object" && item.postId.status !== "deleted" ? item.postId : null;
   const comment = item.commentId && typeof item.commentId === "object" ? item.commentId : null;
   const hasPost = ["like", "comment", "reply", "mention", "share"].includes(item.type);
-  const preview = !hasPost ? (item.type === "message" ? "Tin nhắn" : "") : !post ? "Bài viết đã bị xóa" : ["comment", "reply", "mention"].includes(item.type) && comment?.content
+  const preview = item.type === "story_reaction" ? "Story" : !hasPost ? (item.type === "message" ? "Tin nhắn" : "") : !post ? "Bài viết đã bị xóa" : ["comment", "reply", "mention"].includes(item.type) && comment?.content
     ? comment.content : post.content?.trim() || (post.video ? "Video" : post.image ? "Ảnh" : "Bài viết");
   const reaction = item.type === "like" ? reactionInfo(item.reaction)?.emoji : null;
   const badgePath = ["comment", "reply", "mention"].includes(item.type) ? "M20 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"
+    : item.type === "story_reaction" ? "M12 21s-8-4.5-8-11a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 6.5-8 11-8 11z"
     : item.type === "share" ? "M22 3 11 14M22 3l-7 18-4-7-7-4z"
       : item.type.startsWith("friend_") ? "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21v-1a8 8 0 0 1 16 0v1" : null;
   return <div className={`notification-item ${item.isRead ? "read" : "unread"}`} role="button" tabIndex={0} onClick={() => onOpen(item)} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); onOpen(item); } }}>

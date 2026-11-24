@@ -1098,7 +1098,7 @@ function FeedPage({ section = "feed" }){
                 </section>
                 {activeSection === "feed" && <ContactsPanel friends={friends} sortedContactFriends={sortedContactFriends} onStartConversation={handleStartConversation} />}
             <StoryComposer open={isStoryComposerOpen} file={storyFile} setFile={setStoryFile} submitting={isPostingStory} error={storyFeedback} onClose={() => { setIsStoryComposerOpen(false); setStoryFile(null); setStoryFeedback(""); }} onSubmit={handleCreateStory} />
-            {activeStoryGroup && currentStory && <StoryViewer groups={storyGroups} activeGroup={activeStoryGroup} activeIndex={activeStoryIndex} currentUserId={currentUser?._id} error={storyFeedback} onChange={(group, index) => { setActiveStoryGroup(group); setActiveStoryIndex(index); }} onClose={() => setActiveStoryGroup(null)} onDelete={handleDeleteStory} />}
+            {activeStoryGroup && currentStory && <StoryViewer key={currentStory._id} groups={storyGroups} activeGroup={activeStoryGroup} activeIndex={activeStoryIndex} currentUserId={currentUser?._id} error={storyFeedback} onChange={(group, index) => { setActiveStoryGroup(group); setActiveStoryIndex(index); }} onClose={() => setActiveStoryGroup(null)} onDelete={handleDeleteStory} />}
             <ReportDialog
               key={reportTarget?.targetId || "closed"}
               open={Boolean(reportTarget)}

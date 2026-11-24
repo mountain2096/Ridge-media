@@ -41,6 +41,18 @@
 .story-arrow svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .story-arrow-previous { left: max(12px, calc(50% - 250px)); }
 .story-arrow-next { right: max(12px, calc(50% - 250px)); }
+.story-interactions { position: absolute; z-index: 4; right: 12px; bottom: 12px; left: 12px; display: grid; gap: 8px; color: var(--news-ink); }
+.story-interactions form { display: flex; gap: 6px; }
+.story-interactions input { min-width: 0; flex: 1; padding: 9px 12px; border: 1px solid var(--news-border); border-radius: 20px; background: var(--news-field); color: var(--news-ink); }
+.story-interactions button, .story-reactors-panel { border: 1px solid var(--news-border); border-radius: 18px; background: var(--news-surface); color: var(--news-ink); }
+.story-interactions form button, .story-reactors-button { padding: 7px 12px; }
+.story-reaction-row { display: flex; justify-content: space-between; padding: 4px; border-radius: 24px; background: var(--news-surface); }
+.story-reaction-row button { width: 38px; height: 38px; border: 0; background: transparent; font-size: 22px; cursor: pointer; }
+.story-reaction-row button.selected { background: var(--news-hover); }
+.story-interaction-feedback { justify-self: center; padding: 5px 10px; border-radius: 14px; background: var(--news-surface); color: var(--news-ink); font-size: 12px; }
+.story-reactors-panel { position: absolute; z-index: 5; right: 12px; bottom: 110px; left: 12px; display: grid; max-height: 40%; gap: 8px; overflow: auto; padding: 12px; }
+.story-reactors-panel > button { justify-self: end; border: 0; background: transparent; color: var(--news-ink); font-size: 20px; }
+.story-reactors-panel > span { color: var(--news-ink); }
 .story-viewer-dialog :focus-visible,
 .story-viewer-backdrop :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 body:has(.story-viewer-backdrop) .ridge-dialog-backdrop { z-index: 2400; }

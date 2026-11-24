@@ -856,6 +856,9 @@
 .ridge-shared-post-media img,.ridge-shared-post-media video{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:10px}
 .ridge-shared-post-play{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
 .ridge-shared-post-play svg{width:32px;height:32px;padding:8px;border-radius:50%;background:rgb(15 23 42 / 70%);fill:#fff}
+.ridge-story-reply-card{display:grid;gap:5px;width:min(220px,70vw);margin-bottom:6px;padding:8px;border:1px solid var(--news-border);border-radius:10px;background:var(--news-surface);color:var(--news-ink);font-size:12px}
+.ridge-story-reply-card img,.ridge-story-reply-card video{width:100%;max-height:140px;border-radius:7px;object-fit:cover;background:var(--news-field)}
+.ridge-story-reply-card small{overflow:hidden;color:var(--news-muted);text-overflow:ellipsis;white-space:nowrap}
 .ridge-message-confirm-backdrop{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:20px;background:rgba(15,23,42,.45)}
 .ridge-message-confirm{width:min(360px,100%);padding:20px;border:1px solid #e6e8ef;border-radius:16px;background:#fff;color:#0f172a;box-shadow:0 16px 48px rgb(15 23 42 / 20%);font-family:"Be Vietnam Pro",system-ui,sans-serif}
 .ridge-message-confirm h2{margin:0 0 8px;color:#0f172a;font-size:18px;font-weight:700;line-height:1.35}

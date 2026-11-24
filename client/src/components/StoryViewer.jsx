@@ -1,4 +1,6 @@
 import { resolveMediaUrl } from "../lib/api.js";
+import { API_BASE } from "../lib/api.js";
+import { REACTIONS } from "../lib/reactions.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
@@ -16,15 +18,20 @@ function relativeTime(value) {
 }
 
 function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, onChange, onClose, onDelete }) {
+  const story = activeGroup?.items?.[activeIndex];
   const [paused, setPaused] = useState(false);
   const [videoDuration, setVideoDuration] = useState(5);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [reply, setReply] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [reactorsOpen, setReactorsOpen] = useState(false);
+  const [reactors, setReactors] = useState([]);
+  const [myReaction, setMyReaction] = useState(() => story?.reactions?.find((item) => String(item.user?._id || item.user) === String(currentUserId))?.type || null);
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
   const videoRef = useRef(null);
   const confirm = useConfirm();
-  const story = activeGroup?.items?.[activeIndex];
   const shouldAutoAdvance = Boolean(story && !paused && story.mediaType !== "video");
   const isOwner = activeGroup?.author?._id === currentUserId;
   const duration = story?.mediaType === "video" ? videoDuration : 5;
@@ -50,12 +57,39 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
 
   useEffect(() => {
     function onKeyDown(event) {
+      if (event.target instanceof HTMLElement && ["INPUT", "TEXTAREA"].includes(event.target.tagName)) return;
       if (event.key === "ArrowRight") { event.preventDefault(); advance(1); }
       if (event.key === "ArrowLeft") { event.preventDefault(); advance(-1); }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [advance]);
+
+  async function storyRequest(path, method, body) {
+    const response = await fetch(`${API_BASE}${path}`, { method, headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, ...(body ? { "Content-Type": "application/json" } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || "Không thể thực hiện thao tác.");
+    return data;
+  }
+
+  async function sendStoryReply(event) {
+    event.preventDefault();
+    try { await storyRequest(`/api/story/${story._id}/reply`, "POST", { content: reply }); setReply(""); setPaused(false); setFeedback("Đã gửi trả lời"); }
+    catch (error) { setFeedback(error.message); }
+  }
+
+  async function toggleStoryReaction(type) {
+    try {
+      const selected = myReaction === type ? null : type;
+      await storyRequest(`/api/story/${story._id}/reaction`, selected ? "PUT" : "DELETE", selected ? { type: selected } : null);
+      setMyReaction(selected); setFeedback(selected ? "Đã gửi cảm xúc" : "Đã gỡ cảm xúc");
+    } catch (error) { setFeedback(error.message); }
+  }
+
+  async function openReactors() {
+    try { const data = await storyRequest(`/api/story/${story._id}/reactions`, "GET"); setReactors(data.reactions || []); setReactorsOpen(true); }
+    catch (error) { setFeedback(error.message); }
+  }
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -129,6 +163,14 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
           onPlay={() => setPaused(false)}
           onEnded={() => advance(1)}
         /> : <img key={story._id} className="story-viewer-media" src={resolveMediaUrl(story.mediaUrl)} alt={`Story của ${authorName}`} />}
+        <div className="story-interactions" onPointerDown={(event) => event.stopPropagation()}>
+          {feedback && <span className="story-interaction-feedback" role="status">{feedback}</span>}
+          {isOwner ? <button type="button" className="story-reactors-button" onClick={openReactors}>Xem cảm xúc ({story.reactions?.length || 0})</button> : <>
+            <form onSubmit={sendStoryReply}><input aria-label="Trả lời story" placeholder="Trả lời story..." value={reply} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)} onChange={(event) => { setReply(event.target.value); setPaused(true); }} /><button type="submit" disabled={!reply.trim()}>Gửi</button></form>
+            <div className="story-reaction-row">{REACTIONS.map((item) => <button key={item.type} type="button" aria-label={item.label} aria-pressed={myReaction === item.type} className={myReaction === item.type ? "selected" : ""} onClick={() => toggleStoryReaction(item.type)}>{item.emoji}</button>)}</div>
+          </>}
+        </div>
+        {reactorsOpen && <div className="story-reactors-panel"><button type="button" aria-label="Đóng danh sách" onClick={() => setReactorsOpen(false)}>×</button>{reactors.map((item) => <span key={item.user?._id}>{item.user?.username} {REACTIONS.find((reaction) => reaction.type === item.type)?.emoji}</span>)}</div>}
         <button className="story-arrow story-arrow-previous" type="button" aria-label="Story trước" onClick={() => advance(-1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></button>
         <button className="story-arrow story-arrow-next" type="button" aria-label="Story tiếp theo" onClick={() => advance(1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></button>
       </section>

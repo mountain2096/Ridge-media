@@ -19,6 +19,7 @@ const notificationSchema = new mongoose.Schema(
                 "friend_accept",
                 "friend_reject",
                 "like",
+                "story_reaction",
                 "comment",
                 "message",
                 "share",
