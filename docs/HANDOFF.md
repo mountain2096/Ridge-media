@@ -11,7 +11,7 @@
 - Checks: `node --test` (server), `node --test client/test/*.test.js` (client), `npm run lint --prefix client`, `npm run build --prefix client`.
 
 ## 2. Git branches
-Current token-tab sync work is on fresh `fix/token-tab-sync` from `main` (`342f264`); old local attempt is retained as `backup/token-tab-sync-old`. Remote `fix/token-tab-sync` still points to the old attempt until the fresh branch is pushed.
+Current token-tab sync work is on `fix/token-tab-sync-v2` at `d11dc26`. The old remote `origin/fix/token-tab-sync` (`ba64bd7`) and local `backup/token-tab-sync-old` are kept untouched pending owner approval for cleanup.
 The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media`, `fix/vite-proxy-single-tunnel` (Phase B), `fix/forgot-password` (Phase C), `feat/story-interactions`, and `fix/dark-polish-2` are merged into `main`.
 
 ## 3. Features verified in code
@@ -21,7 +21,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
-- Token tab sync (`fix/token-tab-sync`): `node --test` passed 171; focused message-menu/theme/token tests passed 5; client lint passed; build passed with the existing large-chunk advisory. Token changes reload when composer/comment/chat text is empty, otherwise show a Vietnamese reload notice; token removal navigates to login without reload. Ports 5173 and 5000 are listening; two-tab behavior remains for visual verification.
+- Token tab sync (`fix/token-tab-sync-v2`, `d11dc26`): prior run `node --test` passed 171; focused message-menu/theme/token tests passed 5; client lint passed; build passed with the existing large-chunk advisory. Token changes reload when composer/comment/chat text is empty, otherwise show a Vietnamese reload notice; token removal navigates to login without reload. Recheck ports and tests for this branch; two-tab behavior remains for visual verification.
 - Story interactions (`feat/story-interactions`): 169 server tests, 4 client tests, lint passed; production build passed with the existing large-chunk advisory. Owner reactor panel now has compact avatar/name/reaction/time rows, header and empty state; endpoints unchanged. Dark/light visuals and live services remain for manual verification.
 - Combined story interactions and dark polish: `node --test` passed all 170 discovered tests; focused message-menu, theme, and dark-polish tests passed 5; client lint/build passed. No browser or live API/database was started.
 - Merged `feat/story-interactions` and `fix/dark-polish-2` on `main`: `node --test` passed 170; focused message-menu, theme, and dark-polish tests passed 5; lint passed; build passed with the existing large-chunk advisory.
@@ -104,7 +104,7 @@ Reels comments support reading and posting top-level comments only; there is no 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
 ## 7. Round log
-- Token tab sync: added cross-tab token event handling and a theme-aware unsaved-draft notice; verified checks pass, commit `this commit`.
+- Token tab sync: added cross-tab token event handling and a theme-aware unsaved-draft notice; commit `d11dc26` on `fix/token-tab-sync-v2`.
 | Story interactions + dark polish 2 | Story reactions/reactor list/replies/notifications and themed notification/privacy/chat/search surfaces | After merge on `main`: `node --test` 170 passed; focused client tests 5 passed; lint/build passed; no browser or live API/database started | `86563f3` |
 | Phase B | Route `/uploads` through the Vite proxy and allow development Cloudflare tunnel origins | 161 server tests; lint/build; 6 client tests passed; real upload returned matching 200 responses through :5173 and :5000; missing Post.video files: 0 | `7bdda31` |
 | 49 | Keep uploaded media stable across host changes; add URL migration and resolution; reject external message attachments | 160 server tests, 5 client tests, lint/build passed; migration applied to `ridge_demo` with backup at `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`; stories expire via `expiresAt` after 24 hours | `a309408` |
@@ -171,7 +171,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 45 | Fix dark-mode shared posts/actions and friends buttons; correct chat contrast under Chromium force-dark | `node --test`: 148 passed; client lint/build passed; mocked force-dark and normal Playwright captures inspected; no live API/database | pending |
 
 ## 8. Possible next work (project owner chooses)
-Verify cross-tab login, logout, account switching, and the draft notice in two browser tabs. The old local branch is `backup/token-tab-sync-old`; remote `fix/token-tab-sync` still points to the prior attempt and may reject a normal push.
+Verify cross-tab login, logout, account switching, and the draft notice in two browser tabs. Keep remote `fix/token-tab-sync` (`ba64bd7`) and local `backup/token-tab-sync-old` untouched until the owner approves cleanup.
 After this feature, consider notification pagination only if the client has a next-page caller. Optional: review diffs, update README "How to run", branch protection, and old-branch cleanup after owner approval.
 Phase B upload verification found 63 files in `server/uploads`; a real MP4 matched through Vite and the API. No Post.video media paths were missing. The one-tunnel command is documented in section 1.
 Configure `EMAIL_USER` and a Gmail App Password in `.env`, then restart the server to enable password-reset email. The current server should warn when either setting is missing or remains a placeholder.
