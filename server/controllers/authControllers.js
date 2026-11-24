@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 const mailer = require("../config/mailer");
 const bcrypt = require("bcryptjs");
 const errorResponse = require("../utils/errorResponse");
+const { OAuth2Client } = require("google-auth-library");
+
+const googleClient = new OAuth2Client();
 
 const validatePassword = (password) => typeof password === "string" && password.length >= 8 &&
     /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
@@ -13,6 +16,53 @@ const signAuthToken = (user) => jwt.sign({
     isAdmin: user.isAdmin,
     tv: user.tokenVersion || 0,
 }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+const createGoogleAuthController = (verifyIdToken = (options) => googleClient.verifyIdToken(options)) => async (req, res) => {
+    if (!process.env.GOOGLE_CLIENT_ID) {
+        return res.status(503).json({ message: "Đăng nhập Google chưa được cấu hình trên máy chủ." });
+    }
+    if (typeof req.body?.credential !== "string" || !req.body.credential) {
+        return res.status(401).json({ message: "Thông tin đăng nhập Google không hợp lệ." });
+    }
+
+    let payload;
+    try {
+        const ticket = await verifyIdToken({ idToken: req.body.credential, audience: process.env.GOOGLE_CLIENT_ID });
+        payload = ticket.getPayload();
+    } catch {
+        return res.status(401).json({ message: "Thông tin đăng nhập Google không hợp lệ." });
+    }
+    if (!payload?.email_verified || typeof payload.email !== "string") {
+        return res.status(401).json({ message: "Email Google chưa được xác minh." });
+    }
+
+    try {
+        const email = payload.email.trim().toLowerCase();
+        let user = await User.findOne({ email });
+        if (user?.isLocked) {
+            return res.status(403).json({ message: "Tài khoản của bạn hiện đã bị vô hiệu hóa" });
+        }
+        if (!user) {
+            const base = (payload.name || email.split("@")[0]).trim().slice(0, 32) || "Ridge user";
+            let username = base;
+            while (await User.findOne({ username })) username = `${base.slice(0, 32)}-${randomBytes(3).toString("hex")}`;
+            let profilePicture = "";
+            try {
+                if (new URL(payload.picture).protocol === "https:") profilePicture = payload.picture;
+            } catch {}
+            user = await User.create({
+                username, email, password: await bcrypt.hash(randomBytes(32).toString("hex"), 10), profilePicture,
+            });
+        }
+        return res.status(200).json({
+            message: "Đăng nhập thành công!",
+            token: signAuthToken(user),
+            user: { id: user._id, email: user.email, username: user.username },
+        });
+    } catch (error) {
+        return errorResponse(res, error);
+    }
+};
 
 const register = async (req, res) =>{
     try{
@@ -146,7 +196,7 @@ const forgotPassword = async (req, res) => {
                 await user.save();
             }
         }
-        return res.status(200).json({ message: "If the account exists, a password reset link will be sent." });
+        return res.status(200).json({ message: "Nếu email này đã đăng ký, chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến và cả mục Thư rác (liên kết hết hạn sau 15 phút)." });
     } catch (error) {
         return errorResponse(res, error);
     }
@@ -245,6 +295,7 @@ const logout = async (req, res) => {
 module.exports = {
     register,
     login,
+    createGoogleAuthController,
     resetPassword,
     forgotPassword,
     changePassword,

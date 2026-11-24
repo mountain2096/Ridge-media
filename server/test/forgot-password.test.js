@@ -35,7 +35,7 @@ test("forgot password has the same response for registered and unknown emails", 
 
         assert.equal(registered.statusCode, 200);
         assert.deepEqual(registered.body, unknown.body);
-        assert.match(registered.body.message, /If the account exists/);
+        assert.equal(registered.body.message, "Nếu email này đã đăng ký, chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến và cả mục Thư rác (liên kết hết hạn sau 15 phút).");
         assert.equal(sent.length, 1);
         assert.equal(sent[0][0], user.email);
         assert.match(sent[0][1], /^https:\/\/ridge\.example\/reset-password\/[a-f0-9]{64}$/);

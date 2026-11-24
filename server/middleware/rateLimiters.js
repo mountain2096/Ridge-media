@@ -14,6 +14,7 @@ function createRateLimiters(overrides = {}) {
 
     return {
         login: createLimiter("login", 15 * 60 * 1000, 10, { skipSuccessfulRequests: true }),
+        googleAuth: createLimiter("googleAuth", 15 * 60 * 1000, 10, { skipSuccessfulRequests: true }),
         register: createLimiter("register", 60 * 60 * 1000, 20),
         forgotPassword: createLimiter("forgotPassword", 15 * 60 * 1000, 5),
         resetPassword: createLimiter("resetPassword", 15 * 60 * 1000, 10),

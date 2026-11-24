@@ -46,7 +46,7 @@
   place-items: center;
   border-radius: 13px;
   background: var(--news-ink, #0f172a);
-  color: #fff;
+  color: var(--news-surface, #fff);
   font-size: 22px;
 }
 
@@ -157,8 +157,7 @@
   background: var(--news-hover, #eef0f7);
 }
 
-.ridge-auth-toggle svg,
-.ridge-auth-social-buttons svg {
+.ridge-auth-toggle svg {
   width: 20px;
   height: 20px;
   fill: none;
@@ -259,11 +258,59 @@
   color: var(--news-muted, #5b6478);
 }
 
-.ridge-auth-social {
+.ridge-auth-google-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+}
+
+.ridge-auth-google,
+.ridge-auth-google-fallback {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 2px;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.ridge-auth-google-fallback {
+  gap: 10px;
+  padding: 8px 16px;
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 4px;
+  background: var(--news-surface, #fff);
+  color: var(--news-ink, #0f172a);
+  font: inherit;
+  font-weight: 600;
+  cursor: not-allowed;
+}
+
+.ridge-auth-google-fallback svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+}
+
+.ridge-auth-google-fallback:focus-visible {
+  outline: 2px solid var(--news-accent, #2f4be0);
+  outline-offset: 2px;
+}
+
+.ridge-auth-google.is-disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.ridge-auth-google-blocker {
+  position: absolute;
+  inset: 0;
+  cursor: wait;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ridge-auth-page *,
+  .ridge-auth-page *::before,
+  .ridge-auth-page *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }
 
 .ridge-auth-divider {
@@ -283,28 +330,6 @@
 .ridge-auth-divider p {
   margin: 0;
   white-space: nowrap;
-}
-
-.ridge-auth-social-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.ridge-auth-social-buttons button {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid var(--news-border, #e6e8ef);
-  border-radius: 11px;
-  background: var(--news-surface, #fff);
-  color: var(--news-muted, #5b6478);
-  font: inherit;
-  font-size: 16px;
-  font-weight: 700;
-  opacity: 0.62;
-  cursor: not-allowed;
 }
 
 .ridge-auth-page :focus-visible {

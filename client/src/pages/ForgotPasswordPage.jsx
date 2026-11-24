@@ -34,7 +34,7 @@ function ForgotPasswordPage(){
 
       setFeedback({
         type:"success",
-        text:data.message
+        text:"Nếu email này đã đăng ký, chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến và cả mục Thư rác (liên kết hết hạn sau 15 phút)."
       })
     } catch(err){
       setFeedback({
