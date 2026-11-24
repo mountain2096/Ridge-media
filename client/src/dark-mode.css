@@ -50,6 +50,7 @@ html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
 html[data-theme="dark"] textarea,
 html[data-theme="dark"] select,
 html[data-theme="dark"] .ridge-list-search { background-color: var(--news-field); color: var(--news-ink); border-color: var(--news-border); }
+html[data-theme="dark"] .news-search input { background: transparent; border: 0; }
 html[data-theme="dark"] input::placeholder,
 html[data-theme="dark"] textarea::placeholder,
 html[data-theme="dark"] .ridge-chat-settings small { color: var(--news-muted); }
@@ -59,6 +60,10 @@ html[data-theme="dark"] .home-layout .home-menu:not(.has-active-pill) .menu-item
 html[data-theme="dark"] .home-layout .sidebar-active-pill { background: #303858; color: #c4ccff; }
 html[data-theme="dark"] .home-layout .home-brand-icon { background: var(--news-accent); }
 html[data-theme="dark"] .ridge-message-list { background-color: var(--news-bg); color: var(--news-ink); }
+html[data-theme="dark"] .ridge-conversation-panel:not([class*="chat-bg-"]) .ridge-conversation-header,
+html[data-theme="dark"] .ridge-conversation-panel:not([class*="chat-bg-"]) .ridge-message-compose { border-color: var(--news-border); background: var(--news-surface); color: var(--news-ink); }
+html[data-theme="dark"] .ridge-conversation-panel:not([class*="chat-bg-"]) .ridge-message-compose input { border-color: var(--news-border); background: var(--news-field); color: var(--news-ink); }
+html[data-theme="dark"] .ridge-conversation-panel:not([class*="chat-bg-"]) .ridge-message-compose input::placeholder { color: var(--news-muted); }
 html[data-theme="dark"] .ridge-conversation-header,
 html[data-theme="dark"] .ridge-chat-settings,
 html[data-theme="dark"] .ridge-msg-menu { color: var(--news-ink); }
