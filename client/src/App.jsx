@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { API_BASE } from "./lib/api.js";
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext, Link } from "react-router-dom";
 import AppLayout from "./AppLayout.jsx";
@@ -21,12 +21,33 @@ function AuthPage() {
   const location = useLocation();
   const tab = new URLSearchParams(location.search).get("tab");
   const [activeTab, setActiveTab] = useState(tab === "login" || tab === "register" ? tab : "register");
+  const [slideDirection, setSlideDirection] = useState("");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({type: "", text:""})
+  const cardRef = useRef(null);
+
+  function switchTab(nextTab) {
+    if (nextTab === activeTab) return;
+    cardRef.current.style.height = `${cardRef.current.offsetHeight}px`;
+    setSlideDirection(nextTab === "login" ? "from-right" : "from-left");
+    setActiveTab(nextTab);
+  }
+
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    if (!slideDirection || !card) return;
+    requestAnimationFrame(() => { card.style.height = `${card.scrollHeight}px`; });
+  }, [activeTab, slideDirection]);
+
+  function finishCardResize(event) {
+    if (event.propertyName === "height") event.currentTarget.style.height = "auto";
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -43,7 +64,7 @@ function AuthPage() {
     setIsSubmitting(true)
     try{
     const formData = new FormData(event.currentTarget);
-    const email = formData.get("email");
+    const emailValue = formData.get("email");
     const passwordValue = formData.get("password");
     const username = formData.get("username");
 
@@ -52,8 +73,8 @@ function AuthPage() {
 
     const requestBody = 
     activeTab === "register"
-    ? {username, email, password: passwordValue, confirmPassword}
-    : {email, password: passwordValue};
+    ? {username, email: emailValue, password: passwordValue, confirmPassword}
+    : {email: emailValue, password: passwordValue};
 
     try{
       const response = await fetch(
@@ -85,7 +106,7 @@ function AuthPage() {
     if(activeTab === 'register'){
       setPassword("");
       setConfirmPassword("");
-      setActiveTab("login")
+      switchTab("login")
     }
     }catch(error) {
       setFeedback({
@@ -104,25 +125,26 @@ function AuthPage() {
 }
   return (
     <main className="auth-page ridge-auth-page">
-      <section className="ridge-auth-card" aria-labelledby="auth-title">
+      <section ref={cardRef} onTransitionEnd={finishCardResize} className="ridge-auth-card" aria-labelledby="auth-title">
         <div className="ridge-auth-brand" aria-label="Ridge">
           <span className="ridge-auth-mark" aria-hidden="true">R</span>
           <span>Ridge</span>
         </div>
-        <div className="ridge-auth-tabs" role="tablist" aria-label="Tài khoản">
-          <button className={`ridge-auth-tab ${activeTab === "register" ? "is-selected" : ""}`} type="button" role="tab" aria-selected={activeTab === "register"} onClick={() => setActiveTab("register")}>Đăng ký</button>
-          <button className={`ridge-auth-tab ${activeTab === "login" ? "is-selected" : ""}`} type="button" role="tab" aria-selected={activeTab === "login"} onClick={() => setActiveTab("login")}>Đăng nhập</button>
+        <div className={`ridge-auth-tabs ${activeTab === "login" ? "is-login" : ""}`} role="tablist" aria-label="Tài khoản">
+          <span className="ridge-auth-tab-indicator" aria-hidden="true" />
+          <button className={`ridge-auth-tab ${activeTab === "register" ? "is-selected" : ""}`} type="button" role="tab" aria-selected={activeTab === "register"} onClick={() => switchTab("register")}>Đăng ký</button>
+          <button className={`ridge-auth-tab ${activeTab === "login" ? "is-selected" : ""}`} type="button" role="tab" aria-selected={activeTab === "login"} onClick={() => switchTab("login")}>Đăng nhập</button>
         </div>
         <h1 className="ridge-auth-title" id="auth-title">{activeTab === "register" ? "Đăng ký" : "Đăng nhập"}</h1>
-        <form className="ridge-auth-form" onSubmit={handleSubmit}>
-          {activeTab === "register" && <div className="ridge-auth-field"><label htmlFor="auth-username">Họ và tên</label><input id="auth-username" type="text" name="username" autoComplete="name" placeholder="Nhập họ và tên" required /></div>}
-          <div className="ridge-auth-field"><label htmlFor="auth-email">Email</label><input id="auth-email" type="email" name="email" autoComplete="email" placeholder="you@example.com" required /></div>
+        <form className={`ridge-auth-form ${slideDirection ? `is-sliding ${slideDirection}` : ""}`} onSubmit={handleSubmit}>
+          {activeTab === "register" && <div key="username" className="ridge-auth-field"><label htmlFor="auth-username">Họ và tên</label><input id="auth-username" type="text" name="username" autoComplete="name" placeholder="Nhập họ và tên" value={username} onChange={(event) => setUsername(event.target.value)} required /></div>}
+          <div key="email" className="ridge-auth-field"><label htmlFor="auth-email">Email</label><input id="auth-email" type="email" name="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} required /></div>
           <div className="ridge-auth-field"><label htmlFor="auth-password">Mật khẩu</label><div className="ridge-auth-password"><input id="auth-password" type={showPassword ? "text" : "password"} name="password" autoComplete={activeTab === "register" ? "new-password" : "current-password"} placeholder={activeTab === "register" ? "Tạo mật khẩu" : "Mật khẩu"} value={password} onChange={(event) => setPassword(event.target.value)} required minLength={activeTab === "register" ? 8 : undefined} title={activeTab === "register" ? "Ít nhất 8 ký tự, có chữ hoa, chữ thường và số." : undefined} /><button className="ridge-auth-toggle" type="button" aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowPassword((visible) => !visible)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div>{activeTab === "register" && <p className="ridge-auth-hint">Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.</p>}</div>
           {activeTab === "register" && <div className="ridge-auth-field"><label htmlFor="auth-confirm-password">Xác nhận mật khẩu</label><div className="ridge-auth-password"><input id="auth-confirm-password" type={showConfirmPassword ? "text" : "password"} name="confirmPassword" autoComplete="new-password" placeholder="Nhập lại mật khẩu" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required minLength={8} /><button className="ridge-auth-toggle" type="button" aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowConfirmPassword((visible) => !visible)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>}
           <button className="ridge-auth-submit" type="submit" disabled={isSubmitting}>{isSubmitting ? "Đang xử lý..." : activeTab === "register" ? "Đăng ký" : "Đăng nhập"}</button>
           {activeTab !== "register" && <Link className="ridge-auth-link ridge-auth-forgot" to="/forgot-password">Quên mật khẩu?</Link>}
           {feedback.text && <p className={`ridge-auth-feedback ${feedback.type}`} role={feedback.type === "error" ? "alert" : "status"} aria-live={feedback.type === "error" ? "assertive" : "polite"}>{feedback.text}</p>}
-          <p className="ridge-auth-note">{activeTab === "register" ? "Bạn đã có tài khoản? " : "Chưa có tài khoản? "}<button className="ridge-auth-link" type="button" onClick={() => setActiveTab(activeTab === "register" ? "login" : "register")}>{activeTab === "register" ? "Đăng nhập ngay" : "Đăng ký ngay"}</button></p>
+          <p className="ridge-auth-note">{activeTab === "register" ? "Bạn đã có tài khoản? " : "Chưa có tài khoản? "}<button className="ridge-auth-link" type="button" onClick={() => switchTab(activeTab === "register" ? "login" : "register")}>{activeTab === "register" ? "Đăng nhập ngay" : "Đăng ký ngay"}</button></p>
           <div className="ridge-auth-social"><div className="ridge-auth-divider"><span /> <p>Hoặc {activeTab === "register" ? "đăng ký" : "đăng nhập"} bằng</p> <span /></div><div className="ridge-auth-social-buttons"><button type="button" disabled title="Đăng nhập Google chưa được cấu hình">G</button><button type="button" disabled title="Đăng nhập Facebook chưa được cấu hình">f</button><button type="button" disabled title="Đăng nhập Apple chưa được cấu hình"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4a4.2 4.2 0 0 0-3.3-1.8c-1.4-.1-2.7.8-3.4.8s-1.8-.8-3-.8a4.4 4.4 0 0 0-3.7 2.3c-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.3 2.9 2.2 1.2-.1 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.3.9-1.3 1.2-2.6 1.2-2.7s-2.5-1-2.6-3.6ZM14.2 6a4.1 4.1 0 0 0 1-3 4.2 4.2 0 0 0-2.7 1.4 3.9 3.9 0 0 0-1 2.9 3.5 3.5 0 0 0 2.7-1.3Z"/></svg></button></div></div>
         </form>
       </section>

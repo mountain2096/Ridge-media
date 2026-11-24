@@ -25,6 +25,7 @@
   border-radius: 20px;
   background: var(--news-surface, #fff);
   box-shadow: 0 14px 44px rgb(15 23 42 / 7%);
+  transition: height 280ms ease;
 }
 
 .ridge-auth-brand {
@@ -51,6 +52,7 @@
 }
 
 .ridge-auth-tabs {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
@@ -61,6 +63,8 @@
 }
 
 .ridge-auth-tab {
+  position: relative;
+  z-index: 1;
   min-height: 44px;
   border: 1px solid transparent;
   border-radius: 10px;
@@ -72,10 +76,22 @@
 }
 
 .ridge-auth-tab.is-selected {
-  border-color: var(--news-border, #e6e8ef);
-  background: var(--news-surface, #fff);
   color: var(--news-ink, #0f172a);
+}
+
+.ridge-auth-tab-indicator {
+  position: absolute;
+  inset: 4px auto 4px 4px;
+  width: calc((100% - 12px) / 2);
+  border: 1px solid var(--news-border, #e6e8ef);
+  border-radius: 10px;
+  background: var(--news-surface, #fff);
   box-shadow: 0 1px 3px rgb(15 23 42 / 8%);
+  transition: transform 250ms ease;
+}
+
+.ridge-auth-tabs.is-login .ridge-auth-tab-indicator {
+  transform: translateX(calc(100% + 4px));
 }
 
 .ridge-auth-title {
@@ -90,8 +106,43 @@
 
 .ridge-auth-form {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 10px;
+}
+
+.ridge-auth-form.is-sliding.from-right {
+  animation: ridge-auth-enter-right 280ms ease both;
+}
+
+.ridge-auth-form.is-sliding.from-left {
+  animation: ridge-auth-enter-left 280ms ease both;
+}
+
+@keyframes ridge-auth-enter-right {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ridge-auth-enter-left {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ridge-auth-card,
+  .ridge-auth-tab-indicator {
+    transition: none;
+  }
+
+  .ridge-auth-card {
+    height: auto !important;
+  }
+
+  .ridge-auth-form.is-sliding.from-right,
+  .ridge-auth-form.is-sliding.from-left {
+    animation: none;
+  }
 }
 
 .ridge-auth-field {
