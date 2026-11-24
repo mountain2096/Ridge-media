@@ -22,7 +22,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 ## 4. Test status (update each round)
 - Phase B + Phase C on `main`: 165 server tests and 6 client tests passed; client lint/build passed.
 - Forgot-password mail (Phase C): 164 server tests passed; 6 client tests passed; client lint/build passed. Forgot-password response is generic for registered and unknown addresses; mailer and transport are mocked in coverage.
-- Single-tunnel proxy (Phase B, `fix/vite-proxy-single-tunnel`): 161 server tests passed; client lint/build passed; client tests passed. A real upload matched through Vite :5173 and API :5000; missing Post.video files: 0.
+- Single-tunnel proxy (Phase B, `fix/vite-proxy-single-tunnel`): 161 server tests passed; 6 client tests passed; client lint/build passed. A real upload matched through Vite :5173 and API :5000; missing Post.video files: 0.
 - Relative media URLs (Round 49): 160 server tests; 5 client tests; client lint/build passed. Migration applied to `ridge_demo`; dry run reports zero remaining URLs in every field. Backup: `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`. Story expiry uses `expiresAt` (24 hours).
 - Chat dark-mode controls and reply contrast (Round 48): 156 server tests, 5 client tests, lint/build passed. Mocked Playwright screenshots for dark/light across default, sea, night, snow, starry, ghost, and berry were inspected; default dark dots measured 11.35:1 contrast and light colors stayed unchanged.
 - Message replies (Round 47): 156 server tests and 5 client tests passed; lint/build passed; reply actions use `messageMenu.js`. No browser started for the reply flow.
@@ -99,7 +99,7 @@ Reels comments support reading and posting top-level comments only; there is no 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
 ## 7. Round log
-| Phase B | Route `/uploads` through the Vite proxy and allow development Cloudflare tunnel origins | 161 server tests; lint/build; 5 client tests passed; real upload returned matching 200 responses through :5173 and :5000; missing Post.video files: 0 | `7bdda31` |
+| Phase B | Route `/uploads` through the Vite proxy and allow development Cloudflare tunnel origins | 161 server tests; lint/build; 6 client tests passed; real upload returned matching 200 responses through :5173 and :5000; missing Post.video files: 0 | `7bdda31` |
 | 49 | Keep uploaded media stable across host changes; add URL migration and resolution; reject external message attachments | 160 server tests, 5 client tests, lint/build passed; migration applied to `ridge_demo` with backup at `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`; stories expire via `expiresAt` after 24 hours | `a309408` |
 | Round | Work | Result | Commit |
 |---|---|---|---|
