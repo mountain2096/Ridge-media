@@ -11,7 +11,7 @@
 - Checks: `node --test` (server), `node --test client/test/*.test.js` (client), `npm run lint --prefix client`, `npm run build --prefix client`.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media`, `fix/vite-proxy-single-tunnel` (Phase B), and `fix/forgot-password` (Phase C) are merged into `main`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media`, `fix/vite-proxy-single-tunnel` (Phase B), and `fix/forgot-password` (Phase C) are merged into `main`. Current feature branch: `fix/dark-polish-2`, branched from `main`; story UI remains on `feat/story-interactions`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -20,6 +20,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Dark polish (`fix/dark-polish-2`): notification panel, privacy menu, message reaction badge and default chat surfaces, plus single-layer search use theme tokens; `node --test` passed 166 total tests (159 under `server/test`); the focused message-menu, theme, and dark-polish tests passed 5; client lint/build passed. No browser or live API/database was started.
 - Phase B + Phase C on `main`: 165 server tests and 6 client tests passed; client lint/build passed.
 - Forgot-password mail (Phase C): 164 server tests passed; 6 client tests passed; client lint/build passed. Forgot-password response is generic for registered and unknown addresses; mailer and transport are mocked in coverage.
 - Single-tunnel proxy (Phase B, `fix/vite-proxy-single-tunnel`): 161 server tests passed; 6 client tests passed; client lint/build passed. A real upload matched through Vite :5173 and API :5000; missing Post.video files: 0.
@@ -99,6 +100,7 @@ Reels comments support reading and posting top-level comments only; there is no 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
 ## 7. Round log
+| Dark polish 2 | Theme notification panel, privacy menu, default chat surfaces/reaction badges, and search pill | `node --test`: 166 total passed (159 under `server/test`); focused client tests: 5 passed; lint/build passed; no browser or live API/database started | this commit |
 | Phase B | Route `/uploads` through the Vite proxy and allow development Cloudflare tunnel origins | 161 server tests; lint/build; 6 client tests passed; real upload returned matching 200 responses through :5173 and :5000; missing Post.video files: 0 | `7bdda31` |
 | 49 | Keep uploaded media stable across host changes; add URL migration and resolution; reject external message attachments | 160 server tests, 5 client tests, lint/build passed; migration applied to `ridge_demo` with backup at `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`; stories expire via `expiresAt` after 24 hours | `a309408` |
 | Round | Work | Result | Commit |

@@ -10,6 +10,8 @@
   --news-like: #E5484D;
   --news-hover: #EAECF4;
   --news-field: #F4F5F9;
+  --news-unread: #E6EBFF;
+  --news-scrollbar: #c4cad5;
   --news-radius-card: 16px;
   color-scheme: light;
 }
@@ -27,6 +29,8 @@ html[data-theme="dark"] {
   --news-like: #ff777d;
   --news-hover: #2c303a;
   --news-field: #292d36;
+  --news-unread: #30364a;
+  --news-scrollbar: #4b5260;
 }
 
 .home-layout { max-width: 1360px; grid-template-columns: 248px minmax(0, 680px) 300px; justify-content: center; gap: 24px; padding: 0 24px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
@@ -66,7 +70,8 @@ body:has(.home-layout) { background: var(--news-bg); }
 .home-layout .header-brand-search { display: flex; flex: 1 1 0; gap: 24px; }
 .home-layout .home-brand { font-size: 21px; }
 .home-layout .user-search-wrap { flex: 0 1 440px; width: auto; min-width: 220px; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.home-layout .user-search-wrap .news-search { height: 44px; padding: 0 16px; border: 0; background: var(--news-bg); }
+.home-layout .user-search-wrap .news-search { height: 44px; padding: 0 16px; border: 1px solid var(--news-border); background: var(--news-field); }
+.home-layout .user-search-wrap .news-search input { border: 0; background: transparent; }
 .home-layout .user-search-wrap .news-search:focus-within { outline: 2px solid var(--news-accent); outline-offset: 2px; }
 .home-layout .user-search-panel { top: calc(100% + 8px); }
 .home-layout .news-topbar-right { gap: 8px; }
@@ -130,10 +135,10 @@ body:has(.home-layout) { background: var(--news-bg); }
 .home-layout .create-post-card .privacy-select-trigger { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--news-bg); color: var(--news-nav); font: inherit; font-size: 14px; cursor: pointer; }
 .home-layout .create-post-card .privacy-select-trigger svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .home-layout .create-post-card .privacy-select-trigger .privacy-chevron { width: 16px; height: 16px; color: var(--news-muted); }
-.home-layout .create-post-card .privacy-options { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 8px); width: 200px; padding: 5px; border: 1px solid var(--news-border); border-radius: 12px; background: #fff; box-shadow: 0 8px 24px rgb(15 23 42 / 12%); }
+.home-layout .create-post-card .privacy-options { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 8px); width: 200px; padding: 5px; border: 1px solid var(--news-border); border-radius: 12px; background: var(--news-surface); color: var(--news-ink); box-shadow: 0 8px 24px rgb(15 23 42 / 12%); }
 .home-layout .create-post-card .privacy-option { display: flex; width: 100%; min-height: 40px; align-items: center; gap: 9px; padding: 0 9px; border: 0; border-radius: 8px; background: transparent; color: var(--news-ink); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
 .home-layout .create-post-card .privacy-option:hover,
-.home-layout .create-post-card .privacy-option[aria-selected="true"] { background: var(--news-bg); }
+.home-layout .create-post-card .privacy-option[aria-selected="true"] { background: var(--news-hover); color: var(--news-ink); }
 .home-layout .create-post-card .privacy-option svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .home-layout .create-post-card .privacy-option .privacy-check { margin-left: auto; color: var(--news-accent); }
 .home-layout .create-post-card .create-post-button { min-height: 44px; padding: 0 24px; border-radius: 999px; font-size: 14px; }
@@ -273,18 +278,19 @@ body:has(.home-layout) { background: var(--news-bg); }
 .notification-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .notification-panel-header h2 { margin: 0 0 10px; }
 .notification-panel-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-bottom: 10px; }
-.notification-panel-actions button { padding: 5px 9px; border: 1px solid #E6E8EF; border-radius: 16px; background: #fff; color: #2F4BE0; font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer; box-shadow: none; }
-.notification-panel-actions button:hover, .notification-panel-actions button:focus-visible { background: #F0F2F8; }
+.notification-panel-actions button { padding: 5px 9px; border: 1px solid var(--news-border); border-radius: 16px; background: var(--news-field); color: var(--news-accent); font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer; box-shadow: none; }
+.notification-panel-actions button:hover, .notification-panel-actions button:focus-visible { background: var(--news-hover); }
 .notification-panel-actions button:focus-visible, .notification-delete:focus-visible, .notification-item:focus-visible { outline: 2px solid #2F4BE0; outline-offset: 2px; }
 .notification-item { position: relative; display: flex; width: 100%; min-height: 68px; align-items: center; gap: 10px; padding: 10px 34px 10px 8px; border: 0; border-radius: 10px; background: transparent; text-align: left; cursor: pointer; }
-.notification-item.unread { background: #E6EBFF; }
-.notification-item:hover { background: #F0F2F8; }
-.notification-delete { position: absolute; top: 6px; right: 6px; display: grid; width: 22px; height: 22px; place-items: center; padding: 0; border: 1px solid #E6E8EF; border-radius: 50%; background: #fff; color: #667085; font-size: 12px; line-height: 1; opacity: 0; cursor: pointer; box-shadow: none; }
+.notification-item.unread { background: var(--news-unread); }
+.notification-item.read { background: var(--news-surface); }
+.notification-item:hover { background: var(--news-hover); }
+.notification-delete { position: absolute; top: 6px; right: 6px; display: grid; width: 22px; height: 22px; place-items: center; padding: 0; border: 1px solid var(--news-border); border-radius: 50%; background: var(--news-field); color: var(--news-muted); font-size: 12px; line-height: 1; opacity: 0; cursor: pointer; box-shadow: none; }
 .notification-item:hover .notification-delete, .notification-item:focus-within .notification-delete { opacity: 1; }
 @media (hover: none) { .notification-delete { opacity: .55; } }
-.notification-avatar { position: relative; display: grid; flex: 0 0 44px; width: 44px; height: 44px; place-items: center; border-radius: 50%; background: #E6EBFF; color: var(--news-accent); font-weight: 700; }
+.notification-avatar { position: relative; display: grid; flex: 0 0 44px; width: 44px; height: 44px; place-items: center; border-radius: 50%; background: var(--news-unread); color: var(--news-accent); font-weight: 700; }
 .notification-avatar > img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: center; }
-.notification-kind { position: absolute; right: -2px; bottom: -2px; display: grid; min-width: 18px; height: 18px; place-items: center; border: 2px solid #fff; border-radius: 50%; background: var(--news-accent); color: #fff; font-size: 11px; line-height: 1; }
+.notification-kind { position: absolute; right: -2px; bottom: -2px; display: grid; min-width: 18px; height: 18px; place-items: center; border: 2px solid var(--news-surface); border-radius: 50%; background: var(--news-accent); color: var(--news-surface); font-size: 11px; line-height: 1; }
 .notification-kind svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .notification-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; color: var(--news-ink); font-size: 13px; line-height: 1.35; }
 .notification-copy > span:first-child { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
@@ -358,4 +364,4 @@ html[data-theme="dark"] .ridge-message-list.chat-bg-snow .ridge-message-bubble:n
 html[data-theme="dark"] .ridge-message-list.chat-bg-ghost .ridge-message-bubble:not(.post-share),
 html[data-theme="dark"] .ridge-message-list.chat-bg-berry .ridge-message-bubble:not(.post-share) { color: #273142; }
 html[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--news-bg); }
-html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #4b5260; border-color: var(--news-bg); }
+html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--news-scrollbar); border-color: var(--news-bg); }

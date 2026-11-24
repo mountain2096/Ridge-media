@@ -34,7 +34,7 @@
   position: absolute; bottom: -17px; display: inline-flex; align-items: center; gap: 3px;
   box-sizing: border-box; width: auto !important; min-width: 0 !important; height: 22px !important; min-height: 0 !important;
   margin: 0; padding: 0 6px !important; border: 1px solid var(--news-border, #e6e8ef); border-radius: 999px;
-  background: var(--news-surface, #fff); box-shadow: 0 1px 3px rgb(15 23 42 / 20%);
+  background: var(--chat-surface, var(--news-surface, #fff)); box-shadow: 0 1px 3px rgb(15 23 42 / 20%);
   color: var(--news-ink, #0f172a); font-size: 13px; line-height: 1; cursor: pointer;
 }
 .ridge-messages button.ridge-msg-badge.mine { border-color: var(--news-accent, #2f4be0); }
