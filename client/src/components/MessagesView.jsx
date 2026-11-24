@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
@@ -808,7 +809,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
             {conversationActionError && <p className="ridge-list-error" role="alert">{conversationActionError}</p>}
             {!isLoadingFriends && !friendError && filteredFriends.length === 0 && <p className="ridge-list-state">Không tìm thấy bạn bè nào.</p>}
             {filteredFriends.map((friend) => <button className="ridge-picker-friend" type="button" key={friend._id} onClick={() => { void openOrCreateConversation(friend._id, friend); }}>
-              <span className="person-avatar ridge-avatar" aria-hidden="true">{friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}</span>
+              <span className="person-avatar ridge-avatar" aria-hidden="true">{friend.profilePicture ? <img src={resolveMediaUrl(friend.profilePicture)} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}</span>
               <span>{friend.username || "Người dùng"}</span>
             </button>)}
           </div>
@@ -846,7 +847,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                   onClick={() => handleSelectConversation(conversation._id)}
                 >
                   <span className="person-avatar ridge-avatar" aria-hidden="true">
-                    {participant?.profilePicture ? <img src={participant.profilePicture} alt="" /> : (participant?.username?.charAt(0).toUpperCase() || "?")}
+                    {participant?.profilePicture ? <img src={resolveMediaUrl(participant.profilePicture)} alt="" /> : (participant?.username?.charAt(0).toUpperCase() || "?")}
                   </span>
                   <span className="conversation-summary ridge-conversation-summary">
                     <span className="ridge-conversation-top"><span className="ridge-conversation-name">{nicknameFor(conversation, participant?._id) || participant?.username || "Người dùng"}</span>{conversation.isMuted && <svg className="ridge-muted-icon" viewBox="0 0 24 24" role="img" aria-label="Đã tắt thông báo"><path d="M18 9a6 6 0 0 0-10.8-3.6M6 9c0 7-3 7-3 9h18c0-1.2-1-1.8-1.8-3M3 3l18 18M10 21h4" /></svg>}{conversationTime && <time className="ridge-conversation-time">{conversationTime}</time>}</span>
@@ -886,7 +887,7 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
               <button className="ridge-back-button" type="button" onClick={() => setShowChatPane(false)}>Quay lại</button>
               <Link className="person-avatar" to={`/profile/${otherParticipant?._id}`} aria-label={`Xem trang cá nhân ${otherParticipant?.username || "người dùng"}`}>
                 {otherParticipant?.profilePicture ? (
-                  <img src={otherParticipant.profilePicture} alt="" />
+                  <img src={resolveMediaUrl(otherParticipant.profilePicture)} alt="" />
                 ) : (otherParticipant?.username?.charAt(0).toUpperCase() || "?")}
               </Link>
               <Link className="ridge-chat-title" to={`/profile/${otherParticipant?._id}`}>{shownOtherName}</Link>
@@ -931,8 +932,8 @@ function MessagesView({ currentUser, reloadKey, initialConversationId }) {
                             <span>{messageSnippet(message.replyTo)}</span>
                           </button>}
                           {isRecalled ? recalledMessageText(message, currentUser?._id, otherParticipant?.username) : sticker ? <img className="ridge-sticker-img" src={sticker.src} alt={sticker.label} /> : message.type === "post_share" ? <Link className="ridge-shared-post" to={message.sharedPostId?._id ? `/post/${message.sharedPostId._id}` : "#"} onClick={(event) => { if (!message.sharedPostId?._id) event.preventDefault(); }}>
-                            {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={message.sharedPostId.authorId.profilePicture} alt="" /> : <span className="ridge-shared-post-initial">{message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?"}</span>}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span>{message.sharedPostId.content && <span className="ridge-shared-post-text">{message.sharedPostId.content}</span>}{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={message.sharedPostId.image} alt="" /> : <><video src={message.sharedPostId.video} preload="metadata" muted playsInline /><span className="ridge-shared-post-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span></>}</span>}</> : "Bài viết không còn khả dụng"}
-                          </Link> : message.type === "image" ? <a className="ridge-chat-media-link" href={message.mediaUrl} target="_blank" rel="noreferrer"><img className="ridge-chat-media" src={message.mediaUrl} alt="Ảnh đã gửi" loading="lazy" onLoad={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /></a> : message.type === "video" ? <video className="ridge-chat-media" src={message.mediaUrl} controls preload="metadata" playsInline onLoadedMetadata={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /> : message.content}
+                            {message.sharedPostId ? <><span className="ridge-shared-post-author">{message.sharedPostId.authorId?.profilePicture ? <img src={resolveMediaUrl(message.sharedPostId.authorId.profilePicture)} alt="" /> : <span className="ridge-shared-post-initial">{message.sharedPostId.authorId?.username?.[0]?.toUpperCase() || "?"}</span>}<strong>{message.sharedPostId.authorId?.username || "Người dùng"}</strong></span>{message.sharedPostId.content && <span className="ridge-shared-post-text">{message.sharedPostId.content}</span>}{(message.sharedPostId.image || message.sharedPostId.video) && <span className="ridge-shared-post-media">{message.sharedPostId.image ? <img src={resolveMediaUrl(message.sharedPostId.image)} alt="" /> : <><video src={resolveMediaUrl(message.sharedPostId.video)} preload="metadata" muted playsInline /><span className="ridge-shared-post-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span></>}</span>}</> : "Bài viết không còn khả dụng"}
+                          </Link> : message.type === "image" ? <a className="ridge-chat-media-link" href={message.mediaUrl} target="_blank" rel="noreferrer"><img className="ridge-chat-media" src={resolveMediaUrl(message.mediaUrl)} alt="Ảnh đã gửi" loading="lazy" onLoad={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /></a> : message.type === "video" ? <video className="ridge-chat-media" src={resolveMediaUrl(message.mediaUrl)} controls preload="metadata" playsInline onLoadedMetadata={() => { if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight; }} /> : message.content}
                           <time className="ridge-message-time" dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
                         </div>
                         {!isRecalled && reactionSummary.total > 0 && (

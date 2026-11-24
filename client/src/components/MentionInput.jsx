@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useState } from "react";
 
 // Text input that suggests people when you type "@". `candidates` is a list
@@ -74,7 +75,7 @@ function MentionInput({ value, onChange, candidates = [], inputRef, ...inputProp
                 onMouseDown={(event) => { event.preventDefault(); pick(person); }}
               >
                 <span className="ridge-mention-avatar" aria-hidden="true">
-                  {person.profilePicture ? <img src={person.profilePicture} alt="" /> : person.username.charAt(0).toUpperCase()}
+                  {person.profilePicture ? <img src={resolveMediaUrl(person.profilePicture)} alt="" /> : person.username.charAt(0).toUpperCase()}
                 </span>
                 <span>{person.username}</span>
               </button>

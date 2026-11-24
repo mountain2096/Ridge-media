@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { resolveMediaUrl } from "../lib/api.js";
 
 let activeVideo;
 
@@ -27,7 +28,7 @@ export default function RidgeVideo({ src, className = "", onExpand, preload = "m
   useEffect(() => () => clearTimeout(timerRef.current), []);
 
   return <div className={`ridge-video ${playing && hidden ? "is-hidden" : ""}`} onPointerDown={(event) => { if (event.pointerType === "touch") { setTouch(true); showTemporarily(); } }} onMouseLeave={() => { if (playing) { clearTimeout(timerRef.current); timerRef.current = window.setTimeout(() => setHidden(true), 2000); } }} onMouseEnter={() => setHidden(false)} onFocus={() => setHidden(false)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget) && playing) setHidden(true); }}>
-    <video ref={videoRef} className={className} src={src} preload={preload} disablePictureInPicture playsInline controlsList="nodownload nofullscreen noremoteplayback" onClick={togglePlay} onPlay={() => { if (activeVideo && activeVideo !== videoRef.current) activeVideo.pause(); activeVideo = videoRef.current; setPlaying(true); setError(false); setHidden(false); if (touch) { clearTimeout(timerRef.current); timerRef.current = window.setTimeout(() => setHidden(true), 2000); } }} onPause={() => { setPlaying(false); setHidden(false); clearTimeout(timerRef.current); }} onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onDurationChange={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)} onError={() => setError(true)} />
+    <video ref={videoRef} className={className} src={resolveMediaUrl(src)} preload={preload} disablePictureInPicture playsInline controlsList="nodownload nofullscreen noremoteplayback" onClick={togglePlay} onPlay={() => { if (activeVideo && activeVideo !== videoRef.current) activeVideo.pause(); activeVideo = videoRef.current; setPlaying(true); setError(false); setHidden(false); if (touch) { clearTimeout(timerRef.current); timerRef.current = window.setTimeout(() => setHidden(true), 2000); } }} onPause={() => { setPlaying(false); setHidden(false); clearTimeout(timerRef.current); }} onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onDurationChange={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)} onError={() => setError(true)} />
     {!playing && <button className="ridge-video-center" type="button" aria-label="Phát" onClick={togglePlay}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z" /></svg></button>}
     {error && <span className="ridge-video-error">Không phát được video</span>}
     <div className="ridge-video-bar">

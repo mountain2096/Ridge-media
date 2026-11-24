@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../lib/api.js";
 import { uploadMedia } from "../lib/uploadMedia.js";
@@ -248,7 +249,7 @@ function ProfileSettings({ currentUser, onProfileSaved }) {
               {blockedUsers.map((user) => (
                 <div className="blocked-user-row" key={user._id}>
                   <span className="blocked-user-avatar">
-                    {user.profilePicture ? <img src={user.profilePicture} alt="" /> : (user.username || "U").charAt(0).toUpperCase()}
+                    {user.profilePicture ? <img src={resolveMediaUrl(user.profilePicture)} alt="" /> : (user.username || "U").charAt(0).toUpperCase()}
                   </span>
                   <strong>{user.username}</strong>
                   <button className="settings-unblock" type="button" onClick={() => handleUnblock(user._id)}>Bỏ chặn</button>

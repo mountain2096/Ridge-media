@@ -57,7 +57,7 @@ router.post("/", protect, (req, res, next) => {
 
     const mediaType = req.file.mimetype.startsWith("image/") ? "image" : "video";
     return res.status(201).json({
-        url: `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`,
+        url: `/uploads/${req.file.filename}`,
         mediaType,
     });
 });

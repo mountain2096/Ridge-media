@@ -5,7 +5,8 @@ const Message = require("../models/Message");
 const errorResponse = require("../utils/errorResponse");
 const { emitToUser } = require("../utils/realtime");
 const { isStickerId, STICKER_PREVIEW } = require("../utils/stickers");
-const CHAT_MEDIA_PATH = /^\/uploads\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/;
+const validateMediaUrl = require("../utils/validateMediaUrl");
+const CHAT_MEDIA_PATH = /\.([A-Za-z0-9]+)$/;
 const SHARE_PREVIEW = "Đã chia sẻ một bài viết";
 
 async function findOrCreateConversation(senderId, receiverId) {
@@ -153,13 +154,14 @@ const sendMessage = async (req, res) => {
 
         if (hasMedia) {
             try {
-                const url = new URL(mediaUrl);
-                const requestHost = req.get?.("host") || req.headers?.host;
-                const rawPath = typeof mediaUrl === "string" && mediaUrl.match(/^https?:\/\/[^/?#]+(\/[^?#]*)$/i)?.[1];
-                const extension = CHAT_MEDIA_PATH.exec(rawPath || "")?.[1];
-                if (typeof mediaUrl !== "string" || !requestHost || !["http:", "https:"].includes(url.protocol) ||
-                    url.origin !== new URL(`${req.protocol}://${requestHost}`).origin || url.username || url.password ||
-                    url.search || url.hash || !extension) throw new Error();
+                if (!mediaUrl.startsWith("/")) {
+                    const requestHost = req.get?.("host") || req.headers?.host;
+                    if (!requestHost || new URL(mediaUrl).origin !== new URL(`${req.protocol}://${requestHost}`).origin) throw new Error();
+                }
+                if (!validateMediaUrl(mediaUrl, req)) throw new Error();
+                const pathname = mediaUrl.startsWith("/") ? mediaUrl : new URL(mediaUrl).pathname;
+                const extension = CHAT_MEDIA_PATH.exec(pathname)?.[1]?.toLowerCase();
+                if (!["jpg", "png", "webp", "gif", "mp4", "webm"].includes(extension)) throw new Error();
                 mediaType = ["mp4", "webm"].includes(extension) ? "video" : "image";
             } catch {
                 return res.status(400).json({ message: "Tệp đính kèm không hợp lệ!" });

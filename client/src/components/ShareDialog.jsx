@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useEffect, useRef, useState } from "react";
 import { API_BASE } from "../lib/api.js";
 import { useModalBehavior } from "./ConfirmDialog.jsx";
@@ -51,13 +52,13 @@ export default function ShareDialog({ post, onShare, onClose }) {
   return <div className="ridge-share-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose(); }}>
     <section className="ridge-share-dialog" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" ref={dialogRef} tabIndex="-1">
       <header><h2 id="share-dialog-title">Chia sẻ bài viết</h2><button type="button" aria-label="Đóng" onClick={onClose}>×</button></header>
-      <div className="ridge-share-preview"><strong>{original.authorId?.username || "Người dùng"}</strong><p>{(original.content || "").split("\n")[0]}</p>{original.image ? <img src={original.image} alt="" /> : original.video ? <span aria-label="Video">▶ Video</span> : null}</div>
+      <div className="ridge-share-preview"><strong>{original.authorId?.username || "Người dùng"}</strong><p>{(original.content || "").split("\n")[0]}</p>{original.image ? <img src={resolveMediaUrl(original.image)} alt="" /> : original.video ? <span aria-label="Video">▶ Video</span> : null}</div>
       <div className="ridge-share-feed-block"><textarea aria-label="Viết gì đó về bài viết này..." placeholder="Viết gì đó về bài viết này..." maxLength={500} value={caption} onChange={(event) => setCaption(event.target.value)} /><small>{caption.length}/500</small><button className="ridge-share-option" type="button" disabled={busy} onClick={() => void shareToFeed()}>{busy ? "Đang chia sẻ..." : "Chia sẻ lên bảng tin"}</button></div>
       <h3>Gửi trong tin nhắn</h3>
       <input aria-label="Tìm bạn bè" placeholder="Tìm bạn bè" type="search" value={search} onChange={(event) => setSearch(event.target.value)} />
       <div className="ridge-share-friends">{friends.filter((friend) => friend.username?.toLowerCase().includes(search.toLowerCase())).map((friend) => <label key={friend._id}>
         <input type="checkbox" checked={selected.includes(friend._id)} disabled={!selected.includes(friend._id) && selected.length >= 10} onChange={() => setSelected((ids) => ids.includes(friend._id) ? ids.filter((id) => id !== friend._id) : [...ids, friend._id])} />
-        <span className="ridge-share-avatar">{friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : friend.username?.[0]?.toUpperCase()}</span>{friend.username}
+        <span className="ridge-share-avatar">{friend.profilePicture ? <img src={resolveMediaUrl(friend.profilePicture)} alt="" /> : friend.username?.[0]?.toUpperCase()}</span>{friend.username}
       </label>)}</div>
       <textarea aria-label="Viết gì đó..." placeholder="Viết gì đó..." maxLength={500} value={message} onChange={(event) => setMessage(event.target.value)} />
       <button className="ridge-share-send" type="button" disabled={busy || !selected.length} onClick={() => void send()}>{busy ? "Đang gửi..." : "Gửi"}</button>

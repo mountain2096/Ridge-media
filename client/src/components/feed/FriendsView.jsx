@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../../lib/api.js";
 import { Link } from "react-router-dom";
 import FriendPresence from "./FriendPresence.jsx";
 
@@ -10,7 +11,7 @@ export default function FriendsView({ friends, navigate }) {
           {friends.map((friend) => (
             <div className="friend-row" key={friend._id}>
               <Link className="friend-avatar" to={`/profile/${friend._id}`} aria-label={`Xem trang cá nhân ${friend.username}`}>
-                {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                {friend.profilePicture ? <img src={resolveMediaUrl(friend.profilePicture)} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
               </Link>
               <Link className="friend-name profile-name-link" to={`/profile/${friend._id}`}>{friend.username}</Link>
               <FriendPresence friend={friend} />

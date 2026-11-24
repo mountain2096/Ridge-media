@@ -6,10 +6,11 @@ const { createPost, updatePost } = require("../controllers/postControllers");
 const { updateMe } = require("../controllers/userControllers");
 
 const validMediaUrl = "http://localhost:5000/uploads/123e4567-e89b-42d3-a456-426614174000.jpg";
+const validRelativeMediaUrl = "/uploads/123e4567-e89b-42d3-a456-426614174000.jpg";
 const invalidMediaUrls = [
     "javascript:alert(1)",
     "data:image/png;base64,AAAA",
-    "https://external.example/uploads/123e4567-e89b-42d3-a456-426614174000.jpg",
+    "/uploads/../secret.jpg", "/uploads/file.svg",
 ];
 
 function request(body) {
@@ -54,6 +55,12 @@ test("createPost accepts an upload URL and rejects unsafe or external media URLs
         const accepted = response();
         await createPost(request({ content: "hello", image: validMediaUrl }), accepted);
         assert.equal(accepted.statusCode, 201);
+        const oldHost = response();
+        await createPost(request({ content: "hello", image: "https://previous-tunnel.example/uploads/123e4567-e89b-42d3-a456-426614174000.jpg" }), oldHost);
+        assert.equal(oldHost.statusCode, 201);
+        const relative = response();
+        await createPost(request({ content: "hello", image: validRelativeMediaUrl }), relative);
+        assert.equal(relative.statusCode, 201);
 
         for (const mediaUrl of invalidMediaUrls) {
             await assertRejectedBy(

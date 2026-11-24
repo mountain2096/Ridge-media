@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../lib/api.js";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useModalBehavior } from "./ConfirmDialog.jsx";
@@ -44,7 +45,7 @@ export default function ReactionListDialog({ path, onClose }) {
       </div>}
       <div className="ridge-reaction-people" aria-live="polite">
         {items.map(({ user, reaction }) => <div className="ridge-reaction-person" key={user._id}>
-          <Link className="ridge-reaction-avatar" to={`/profile/${user._id}`} onClick={onClose}>{user.profilePicture ? <img src={user.profilePicture} alt="" /> : (user.username || "?").charAt(0).toUpperCase()}</Link>
+          <Link className="ridge-reaction-avatar" to={`/profile/${user._id}`} onClick={onClose}>{user.profilePicture ? <img src={resolveMediaUrl(user.profilePicture)} alt="" /> : (user.username || "?").charAt(0).toUpperCase()}</Link>
           <Link className="profile-name-link" to={`/profile/${user._id}`} onClick={onClose}>{user.username}</Link>
           <span aria-label={REACTIONS.find((item) => item.type === reaction)?.label}>{REACTIONS.find((item) => item.type === reaction)?.emoji}</span>
         </div>)}

@@ -41,8 +41,8 @@ test("upload URLs and media validation honor forwarded HTTPS and local HTTP", as
             const uploadResponse = await fetch(`${baseUrl}/api/upload`, { method: "POST", headers, body: form });
             assert.equal(uploadResponse.status, 201);
             const { url } = await uploadResponse.json();
-            assert.equal(new URL(url).protocol, `${expectedProtocol}:`);
-            createdFiles.push(path.join(__dirname, "..", "uploads", path.basename(new URL(url).pathname)));
+            assert.match(url, /^\/uploads\/[A-Za-z0-9._-]+\.png$/);
+            createdFiles.push(path.join(__dirname, "..", "uploads", path.basename(url)));
 
             const validationResponse = await fetch(`${baseUrl}/validate`, {
                 method: "POST",

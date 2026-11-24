@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "../../lib/api.js";
 import FriendPresence from "./FriendPresence.jsx";
 
 export default function ContactsPanel({ friends, sortedContactFriends, onStartConversation }) {
@@ -11,7 +12,7 @@ export default function ContactsPanel({ friends, sortedContactFriends, onStartCo
             {sortedContactFriends.map((friend) => (
               <button className="contact-row" type="button" key={friend._id} onClick={() => handleStartConversation(friend._id)}>
                 <span className="contact-avatar">
-                  {friend.profilePicture ? <img src={friend.profilePicture} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
+                  {friend.profilePicture ? <img src={resolveMediaUrl(friend.profilePicture)} alt="" /> : (friend.username?.charAt(0).toUpperCase() || "?")}
                 </span>
                 <span>{friend.username}</span>
                 <FriendPresence friend={friend} />
