@@ -154,6 +154,10 @@ const sendMessage = async (req, res) => {
 
         if (hasMedia) {
             try {
+                if (!mediaUrl.startsWith("/")) {
+                    const requestHost = req.get?.("host") || req.headers?.host;
+                    if (!requestHost || new URL(mediaUrl).origin !== new URL(`${req.protocol}://${requestHost}`).origin) throw new Error();
+                }
                 if (!validateMediaUrl(mediaUrl, req)) throw new Error();
                 const pathname = mediaUrl.startsWith("/") ? mediaUrl : new URL(mediaUrl).pathname;
                 const extension = CHAT_MEDIA_PATH.exec(pathname)?.[1]?.toLowerCase();
