@@ -1,4 +1,11 @@
 const fields = { Post: ["image", "video"], Story: ["mediaUrl"], Message: ["mediaUrl"], User: ["profilePicture", "coverPicture"] };
+const fs = require("node:fs/promises");
+const path = require("node:path");
+
+async function writeBackup(directory, documents) {
+    await fs.mkdir(directory, { recursive: true });
+    await fs.writeFile(path.join(directory, "media-url-backup.json"), JSON.stringify(documents, null, 2), { flag: "wx" });
+}
 
 function relativeUploadUrl(value) {
     if (typeof value !== "string") return null;
@@ -9,4 +16,4 @@ function relativeUploadUrl(value) {
     } catch { return null; }
 }
 
-module.exports = { fields, relativeUploadUrl };
+module.exports = { fields, relativeUploadUrl, writeBackup };
