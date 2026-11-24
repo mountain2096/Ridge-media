@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-24, after Round 20a Google sign-in.
+> Last updated: 2026-11-24, after Round 20b auth layout and dark polish integration.
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -21,6 +21,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Round 20b: rebased `feat/google-signin` onto `fix/dark-polish`, retaining both polish commits; `node --test`: 178 passed; client lint/build passed. Playwright checked auth register/login at 1280x720 and 390x844 in both themes, and feed/messages/friends/profile/saved/settings in both themes using mocked API responses. The GIS button matched input width (354px desktop, 324px mobile); no Facebook/Apple controls. Dark feed story tile still has a pale background.
 - Dark mode page corners and profile/connections button contrast (`fix/dark-polish`): `node --test` passed 171; client lint/build passed (existing large-chunk advisory); no browser, API, Vite, or database started.
 - Round 20a Google sign-in: 178 server tests passed; client lint/build passed. Playwright screenshots were inspected for auth at 1280x720 and 390x844 in light/dark, plus forgot/reset logo contrast and mocked forgot-password success; no real Google sign-in was completed.
 - Token tab sync v2 (merged into `main`, `ea94451`): prior run `node --test` passed 171; focused message-menu/theme/token tests passed 5; client lint passed; build passed with the existing large-chunk advisory. This merge's checks could not start because Windows failed process startup with CLR `HRESULT 80004005` and Node reported `VirtualAlloc failed`; two-tab behavior remains for visual verification.
@@ -115,6 +116,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | Round | Work | Result | Commit |
 |---|---|---|---|
 | 20a | Add Google sign-in/sign-up, improve auth logo contrast, localize the generic reset message, and document Google setup | `node --test`: 178 passed; client lint/build passed; Playwright visuals inspected for both auth tabs/viewports/themes and forgot/reset pages; Google IDs unset, so no live GIS button/sign-in | `b4e8c92` |
+| 20b | Move Google sign-in below submit with the requested divider; rebase Google sign-in onto both dark-polish commits | `node --test`: 178 passed; client lint/build passed; Playwright inspected auth at 1280x720 and 390x844 in both themes plus six app tabs in both themes using mocked API responses; dark feed story tile remains pale | `52e6fe1`, `d5044b6`, `b628069` |
 | Phase C | Create Gmail transport lazily, warn without exposing credentials, and send generic forgot-password responses with HTML reset links | 164 server tests; 6 client tests; lint/build passed | `cedd511` |
 | 47 | Merge message replies with dark mode; add reply through `messageMenu.js` | 156 server tests, 5 client tests, lint/build passed; no browser started for the reply flow | pending |
 | 48 | Fix default chat palette inheritance in dark mode and preserve light control colors; verify chat controls and reply quotes in seven themes | 156 server tests, 5 client tests, lint/build passed; mocked Playwright screenshots inspected in dark/light; default dark dots 11.35:1 | this commit |
@@ -175,6 +177,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 45 | Fix dark-mode shared posts/actions and friends buttons; correct chat contrast under Chromium force-dark | `node --test`: 148 passed; client lint/build passed; mocked force-dark and normal Playwright captures inspected; no live API/database | pending |
 
 ## 8. Possible next work (project owner chooses)
+The dark-mode feed story tile (“Tạo tin”) still has a pale background; it was reported in Round 20b and intentionally left unchanged.
 Verify cross-tab login, logout, account switching, and the draft notice in two browser tabs. Keep remote `fix/token-tab-sync` (`ba64bd7`) and local `backup/token-tab-sync-old` untouched until the owner approves cleanup. Re-run checks when Windows process allocation is available.
 After this feature, consider notification pagination only if the client has a next-page caller. Optional: review diffs, update README "How to run", branch protection, and old-branch cleanup after owner approval.
 Phase B upload verification found 63 files in `server/uploads`; a real MP4 matched through Vite and the API. No Post.video media paths were missing. The one-tunnel command is documented in section 1.
