@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { API_BASE } from "./lib/api.js";
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext, Link } from "react-router-dom";
 import AppLayout from "./AppLayout.jsx";
@@ -14,6 +14,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import './App.css'
 import './auth.css'
+import { getTokenStorageAction } from "./lib/tokenStorageChange.js";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -144,8 +145,31 @@ function AuthRoute(){
   return token ? <Navigate to="/feed" replace/>:<AuthPage/>
 }
 function App() {
+  const navigate = useNavigate();
+  const [sessionChanged, setSessionChanged] = useState(false);
+
+  useEffect(() => {
+    function handleStorage(event) {
+      const hasDraft = [...document.querySelectorAll(".create-post-input, .comment-form input, .reel-comments-panel input, #message-content")]
+        .some((input) => input.value.trim());
+      const action = getTokenStorageAction(event, hasDraft);
+      if (action === "logout") {
+        setSessionChanged(false);
+        navigate("/", { replace: true });
+      } else if (action === "notice") setSessionChanged(true);
+      else if (action === "reload") window.location.reload();
+    }
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [navigate]);
 
   return (
+    <>
+    {sessionChanged && <aside className="token-change-notice" role="status">
+      <span>Tài khoản đã thay đổi ở tab khác. Bấm để tải lại.</span>
+      <button type="button" onClick={() => window.location.reload()}>Tải lại</button>
+    </aside>}
     <Routes>
       <Route path="/" element={<AuthRoute />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
@@ -166,6 +190,7 @@ function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 
