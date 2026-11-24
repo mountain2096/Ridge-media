@@ -66,6 +66,14 @@ test("development CORS allows localhost hosts on non-default ports", async () =>
     });
 });
 
+test("development CORS allows HTTPS Cloudflare tunnel origins", async () => {
+    await withCorsEnvironment({ clientUrl: "https://ridge.example/", nodeEnv: "development" }, async () => {
+        const origin = "https://ridge-demo.trycloudflare.com";
+        const response = await requestWithOrigin(origin);
+        assert.equal(response.headers.get("access-control-allow-origin"), origin);
+    });
+});
+
 test("production CORS rejects localhost origins", async () => {
     await withCorsEnvironment({ clientUrl: "https://ridge.example/", nodeEnv: "production" }, async () => {
         const response = await requestWithOrigin("http://localhost:5173");
