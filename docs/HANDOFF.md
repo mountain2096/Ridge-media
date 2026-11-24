@@ -11,7 +11,7 @@
 - Checks: `node --test` (server), `node --test client/test/*.test.js` (client), `npm run lint --prefix client`, `npm run build --prefix client`.
 
 ## 2. Git branches
-The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media`, `fix/vite-proxy-single-tunnel` (Phase B), and `fix/forgot-password` (Phase C) are merged into `main`. Current visual review branch: `feat/story-interactions`, combining story interactions and dark polish 2; not merged into `main`.
+The chain up to Round 16 was merged into main by PR #3 on 2026-11-22 (merge commit `095dccd`). Round 21 integrates Reels, post access checks, settings initial state, and responsive navigation. Round 22 continues the feed redesign in `client/src/feed-redesign.css`, using Be Vietnam Pro and `docs/design/feed-redesign-reference.html`. `feat/chat-media`, `fix/vite-proxy-single-tunnel` (Phase B), `fix/forgot-password` (Phase C), `feat/story-interactions`, and `fix/dark-polish-2` are merged into `main`.
 
 ## 3. Features verified in code
 Feed pagination: 20 posts per page, with automatic loading on scroll; the button is only a fallback.
@@ -22,6 +22,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 ## 4. Test status (update each round)
 - Story interactions (`feat/story-interactions`): 169 server tests, 4 client tests, lint passed; production build passed with the existing large-chunk advisory. Owner reactor panel now has compact avatar/name/reaction/time rows, header and empty state; endpoints unchanged. Dark/light visuals and live services remain for manual verification.
 - Combined story interactions and dark polish: `node --test` passed all 170 discovered tests; focused message-menu, theme, and dark-polish tests passed 5; client lint/build passed. No browser or live API/database was started.
+- Merged `feat/story-interactions` and `fix/dark-polish-2` on `main`: `node --test` passed 170; focused message-menu, theme, and dark-polish tests passed 5; lint passed; build passed with the existing large-chunk advisory.
 - Phase B + Phase C on `main`: 165 server tests and 6 client tests passed; client lint/build passed.
 - Forgot-password mail (Phase C): 164 server tests passed; 6 client tests passed; client lint/build passed. Forgot-password response is generic for registered and unknown addresses; mailer and transport are mocked in coverage.
 - Single-tunnel proxy (Phase B, `fix/vite-proxy-single-tunnel`): 161 server tests passed; 6 client tests passed; client lint/build passed. A real upload matched through Vite :5173 and API :5000; missing Post.video files: 0.
@@ -101,10 +102,10 @@ Reels comments support reading and posting top-level comments only; there is no 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
 ## 7. Round log
-| Dark polish 2 | Theme notification panel, privacy menu, default chat surfaces/reaction badges, and search pill | Combined branch `node --test`: 170 passed; focused client tests: 5 passed; lint/build passed; no browser or live API/database started | `5f273a7` |
+| Story interactions + dark polish 2 | Story reactions/reactor list/replies/notifications and themed notification/privacy/chat/search surfaces | After merge on `main`: `node --test` 170 passed; focused client tests 5 passed; lint/build passed; no browser or live API/database started | `86563f3` |
 | Phase B | Route `/uploads` through the Vite proxy and allow development Cloudflare tunnel origins | 161 server tests; lint/build; 6 client tests passed; real upload returned matching 200 responses through :5173 and :5000; missing Post.video files: 0 | `7bdda31` |
 | 49 | Keep uploaded media stable across host changes; add URL migration and resolution; reject external message attachments | 160 server tests, 5 client tests, lint/build passed; migration applied to `ridge_demo` with backup at `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`; stories expire via `expiresAt` after 24 hours | `a309408` |
-| 50 | Add story reactions and owner reactor lists, story replies in chat, and story reaction notifications; compact the owner reactor panel | 169 server tests, 4 client tests, lint/build passed; no browser or live service started. Endpoints unchanged | this commit |
+| 50 | Add story reactions and owner reactor lists, story replies in chat, and story reaction notifications; compact the owner reactor panel | 169 server tests, 4 client tests, lint/build passed; no browser or live service started. Endpoints unchanged | `86563f3` |
 | Round | Work | Result | Commit |
 |---|---|---|---|
 | Phase C | Create Gmail transport lazily, warn without exposing credentials, and send generic forgot-password responses with HTML reset links | 164 server tests; 6 client tests; lint/build passed | `cedd511` |
@@ -167,7 +168,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 45 | Fix dark-mode shared posts/actions and friends buttons; correct chat contrast under Chromium force-dark | `node --test`: 148 passed; client lint/build passed; mocked force-dark and normal Playwright captures inspected; no live API/database | pending |
 
 ## 8. Possible next work (project owner chooses)
-Story interactions and dark polish 2 are combined on `feat/story-interactions`. Manually check dark/light modes for the story bottom bar, compact owner's reactors list, story-reply card in chat, `story_reaction` notification, notification panel, privacy options, message reactions/default chat, and search pill. Vite/API restart and live behavior were not verified in this run.
+Next up: `fix/token-tab-sync` (storage listener in `App.jsx`); notification pagination only if the client has a next-page caller. Optional: review diffs, update README "How to run", branch protection, and old-branch cleanup after owner approval. Restart Vite/API and verify live behavior when convenient.
 Phase B upload verification found 63 files in `server/uploads`; a real MP4 matched through Vite and the API. No Post.video media paths were missing. The one-tunnel command is documented in section 1.
 Configure `EMAIL_USER` and a Gmail App Password in `.env`, then restart the server to enable password-reset email. The current server should warn when either setting is missing or remains a placeholder.
 Round 49 migration is complete on `ridge_demo`; its backup is `C:\Users\LENOVO\AppData\Local\Temp\ridge-backup-20261124-112655\media-url-backup.json`. Story TTL is represented by `expiresAt` and set to 24 hours on creation.
