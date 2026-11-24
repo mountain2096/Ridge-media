@@ -104,6 +104,7 @@ function AppLayout() {
   const [searchQuery, setSearchQuery] = useState("");
   const [messageCount, setMessageCount] = useState(0);
   const [requestCount, setRequestCount] = useState(0);
+  const [friendsVersion, setFriendsVersion] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationError, setNotificationError] = useState("");
@@ -250,7 +251,10 @@ function AppLayout() {
         avatar: notification.senderId?.profilePicture || "",
         notification,
       });
-      if (notification.type === "friend_request" || notification.type === "friend_accept") scheduleRefresh();
+      if (["friend_request", "friend_accept", "friend_reject"].includes(notification.type)) {
+        setFriendsVersion((version) => version + 1);
+        scheduleRefresh();
+      }
     }
 
     function handleNewMessage({ conversationId, message } = {}) {
@@ -443,7 +447,7 @@ function AppLayout() {
     });
     pill.dataset.ready = "true";
   }, [location.pathname]);
-  const outletContext = { currentUser, setCurrentUser, searchQuery, setSearchQuery };
+  const outletContext = { currentUser, setCurrentUser, searchQuery, setSearchQuery, friendsVersion };
   function handleLogout() {
     try {
       fetch(`${API_BASE}/api/auth/logout`, {

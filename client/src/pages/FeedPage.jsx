@@ -28,7 +28,7 @@ function FeedPage({ section = "feed" }){
     const navigate = useNavigate();
     const location = useLocation();
     const { id: routePostId } = useParams();
-    const { currentUser, setCurrentUser, searchQuery } = useOutletContext();
+    const { currentUser, setCurrentUser, searchQuery, friendsVersion } = useOutletContext();
     const activeSection = section;
     const [posts, setPosts] = useState([]);
     const postCardRefs = useRef(new Map());
@@ -96,6 +96,7 @@ function FeedPage({ section = "feed" }){
     const [friendRequests, setFriendRequests] = useState([]);
     const [isLoadingFriendRequests, setIsLoadingFriendRequests] = useState(false);
     const [friendRequestError, setFriendRequestError] = useState("");
+    const friendRequestsLoaded = useRef(false);
     const [friends, setFriends] = useState([]);
     const [friendSearch, setFriendSearch] = useState("");
     const normalizeFriendName = (name = "") => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d").toLowerCase();
@@ -120,32 +121,52 @@ function FeedPage({ section = "feed" }){
     useEffect(() => {
       if (activeSection !== "connections") return undefined;
       const controller = new AbortController();
+      let loading = false;
       async function loadFriendRequests() {
-        setIsLoadingFriendRequests(true);
+        if (loading) return;
+        loading = true;
+        const showLoading = !friendRequestsLoaded.current;
+        if (showLoading) setIsLoadingFriendRequests(true);
         setFriendRequestError("");
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch(`${API_BASE}/api/friend/requests`, {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: controller.signal,
-          });
-          const data = await response.json();
+          const headers = { Authorization: `Bearer ${token}` };
+          const [response, friendsResponse, peopleResponse] = await Promise.all([
+            fetch(`${API_BASE}/api/friend/requests`, { headers, signal: controller.signal }),
+            fetch(`${API_BASE}/api/friend`, { headers, signal: controller.signal }),
+            fetch(`${API_BASE}/api/user/search?q=${encodeURIComponent(searchQuery)}`, { headers, signal: controller.signal }),
+          ]);
+          const [data, friendsData, peopleData] = await Promise.all([
+            response.json(), friendsResponse.json(), peopleResponse.json(),
+          ]);
+          if (friendsResponse.ok) setFriends(friendsData.friend || []);
+          if (peopleResponse.ok) {
+            setPeople(peopleData.users || []);
+            setSentRequestIds((peopleData.users || []).filter((person) => person.hasPendingRequest).map((person) => person._id));
+          }
           if (!response.ok) {
             throw new Error(data.message || "Không thể tải lời mời kết bạn.");
           }
           setFriendRequests(data.request);
+          friendRequestsLoaded.current = true;
         } catch (requestError) {
           if (requestError.name !== "AbortError") {
             setFriendRequestError(requestError.message);
           }
         } finally {
-          if (!controller.signal.aborted) setIsLoadingFriendRequests(false);
+          loading = false;
+          if (!controller.signal.aborted && showLoading) setIsLoadingFriendRequests(false);
         }
       }
 
       loadFriendRequests();
-      return () => controller.abort();
-    }, [activeSection]);
+      const handleFocus = () => { void loadFriendRequests(); };
+      window.addEventListener("focus", handleFocus);
+      return () => {
+        window.removeEventListener("focus", handleFocus);
+        controller.abort();
+      };
+    }, [activeSection, friendsVersion, searchQuery]);
 
     useEffect(() => {
       const controller = new AbortController();
@@ -589,6 +610,19 @@ function FeedPage({ section = "feed" }){
         setFriendRequests((currentRequests) => currentRequests.filter(
           (request) => request._id !== requestId
         ));
+        const [friendsResponse, peopleResponse] = await Promise.all([
+          fetch(`${API_BASE}/api/friend`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_BASE}/api/user/search?q=${encodeURIComponent(searchQuery)}`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        if (friendsResponse.ok) {
+          const friendsData = await friendsResponse.json();
+          setFriends(friendsData.friend || []);
+        }
+        if (peopleResponse.ok) {
+          const peopleData = await peopleResponse.json();
+          setPeople(peopleData.users || []);
+          setSentRequestIds((peopleData.users || []).filter((person) => person.hasPendingRequest).map((person) => person._id));
+        }
       } catch (requestError) {
         setPeopleError(requestError.message);
       }
