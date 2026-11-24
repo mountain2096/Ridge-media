@@ -34,6 +34,7 @@ function PostCard({
   const username = post.authorId?.username || "Người dùng";
   const originalUsername = originalPost?.authorId?.username || "Người dùng";
   const authorId = post.authorId?._id;
+  const canDeletePost = Boolean(currentUser?._id && (String(authorId) === String(currentUser._id) || currentUser.isAdmin));
   const hasMedia = Boolean(visiblePost?.image || visiblePost?.video);
   const postDate = post.createdAt
     ? new Date(post.createdAt).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })
@@ -120,8 +121,8 @@ function PostCard({
             </button>}
             {ownsPost && <>
               <button type="button" role="menuitem" onClick={() => { onStartEdit?.(post); setMenuOpen(false); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" /></svg>Chỉnh sửa bài viết</button>
-              <button className="post-menu-delete" type="button" role="menuitem" onClick={() => { setMenuOpen(false); onDeletePost?.(post); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>Xóa bài viết</button>
             </>}
+            {canDeletePost && <button className="post-menu-delete" type="button" role="menuitem" onClick={() => { setMenuOpen(false); onDeletePost?.(post); }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>Xóa bài viết</button>}
           </div>}
         </div>
       </header>

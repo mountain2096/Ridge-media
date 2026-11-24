@@ -1,5 +1,6 @@
 const errorResponse = require("../utils/errorResponse");
 const Post = require("../models/Post");
+const Report = require("../models/Report");
 const Notification = require("../models/Notification")
 const Comment = require("../models/Comment");
 const User = require("../models/User");
@@ -146,12 +147,12 @@ const getPostById = async (req, res) =>{
                 message:"Bài đăng không tồn tại!"
             })
         }
-        if (!await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
+        if (!req.user.isAdmin && !await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
         await post.populate("authorId", "username profilePicture");
         if (post.originalPostId) {
             const sourcePost = await Post.findOne({ _id: post.originalPostId, status: "active" });
             if (!sourcePost) return res.status(404).json({ message: "Bài viết không tồn tại!" });
-            if (!await canAccessPost(req.user, sourcePost)) {
+            if (!req.user.isAdmin && !await canAccessPost(req.user, sourcePost)) {
                 return res.status(404).json({ message: "Bài viết không tồn tại!" });
             }
             await post.populate({ path: "originalPostId", select: "content image video authorId privacy status createdAt editedAt", populate: { path: "authorId", select: "username profilePicture" } });
@@ -250,6 +251,10 @@ const deletePost = async (req, res) =>{
         await Post.updateMany(
             { originalPostId: post._id, status: "active" },
             { $set: { status: "deleted" } }
+        );
+        if (req.user.isAdmin) await Report.updateMany(
+            { targetType: "post", targetId: post._id, status: "pending" },
+            { $set: { status: "actioned", reviewedBy: req.user._id, reviewedAt: new Date() } },
         );
 
         res.status(200).json({

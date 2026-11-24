@@ -1,4 +1,5 @@
 const Comment = require("../models/Comment");
+const Report = require("../models/Report");
 const Post = require("../models/Post")
 const Notification = require("../models/Notification");
 const User = require("../models/User");
@@ -112,7 +113,7 @@ const getCommentByPost = async (req, res) =>{
                 message:"Không tìm thấy bài viết!"
             })
         }
-        if (!await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
+        if (!req.user.isAdmin && !await canAccessPost(req.user, post)) return res.status(404).json({ message: "Bài viết không tồn tại!" });
 
         const comment = await Comment.find({ postId, status: "active" })
         .populate([
@@ -121,7 +122,7 @@ const getCommentByPost = async (req, res) =>{
         ])
         .sort({ createdAt : 1})
 
-        const commentsWithOwner = comment.filter((item) => item.authorId && !blockedEitherWay(req.user, item.authorId)).map((item) => {
+        const commentsWithOwner = comment.filter((item) => item.authorId && (req.user.isAdmin || !blockedEitherWay(req.user, item.authorId))).map((item) => {
         const commentData = item.toObject();
         if (commentData.authorId) delete commentData.authorId.blockList;
 
@@ -188,7 +189,9 @@ const deleteComment = async (req, res) =>{
             return res.status(404).json({ message: "Bình luận không tồn tại!" });
         }
 
-        const post = await loadAccessiblePost(req.user, comment.postId);
+        const post = req.user.isAdmin
+            ? await Post.findOne({ _id: comment.postId, status: "active" })
+            : await loadAccessiblePost(req.user, comment.postId);
         if (!post) return res.status(404).json({ message: "Bài viết không tồn tại!" });
         const isCommentOwner = comment.authorId.toString() === req.user._id.toString();
         const isPostOwner = post && post.authorId.toString() === req.user._id.toString();
@@ -210,6 +213,10 @@ const deleteComment = async (req, res) =>{
             );
             removedReplies = Number(result?.modifiedCount) || 0;
         }
+        if (req.user.isAdmin) await Report.updateMany(
+            { targetType: "comment", targetId: comment._id, status: "pending" },
+            { $set: { status: "actioned", reviewedBy: req.user._id, reviewedAt: new Date() } },
+        );
 
         res.status(200).json({ message: "Bình luận đã được xóa!", removed: 1 + removedReplies });
     } catch (error) {

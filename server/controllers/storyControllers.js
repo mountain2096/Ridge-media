@@ -107,7 +107,7 @@ const deleteStory = async (req, res) => {
         if (!story) {
             return res.status(404).json({ message: "Không tìm thấy story!" });
         }
-        if (story.authorId.toString() !== req.user._id.toString()) {
+        if (story.authorId.toString() !== req.user._id.toString() && !req.user.isAdmin) {
             return res.status(403).json({ message: "Bạn không có quyền xóa story này!" });
         }
 

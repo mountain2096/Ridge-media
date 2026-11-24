@@ -39,8 +39,10 @@ const listPriorityReports = async (req, res) => {
         const idsOf = (type) => [...groups.values()].filter((group) => group.targetType === type).map((group) => group.targetId);
         const [posts, comments] = await Promise.all([
             Post.find({ _id: { $in: idsOf("post") } }).select("authorId content image video status").lean(),
-            Comment.find({ _id: { $in: idsOf("comment") } }).select("authorId content status").lean(),
+            Comment.find({ _id: { $in: idsOf("comment") } }).select("authorId content status postId").lean(),
         ]);
+        const parentPosts = await Post.find({ _id: { $in: comments.map((comment) => comment.postId) } }).select("status").lean();
+        const activePostIds = new Set(parentPosts.filter((post) => post.status === "active").map((post) => String(post._id)));
         const targets = new Map();
         posts.forEach((post) => targets.set(keyOf("post", post._id), post));
         comments.forEach((comment) => targets.set(keyOf("comment", comment._id), comment));
@@ -94,7 +96,7 @@ const listPriorityReports = async (req, res) => {
             const reports = [...group.reports].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             const reasonCounts = {};
             reports.forEach((report) => { reasonCounts[report.reason] = (reasonCounts[report.reason] || 0) + 1; });
-            const available = Boolean(target) && target.status === "active";
+            const available = Boolean(target) && target.status === "active" && (group.targetType !== "comment" || activePostIds.has(String(target.postId)));
 
             return {
                 targetType: group.targetType,
@@ -112,6 +114,7 @@ const listPriorityReports = async (req, res) => {
                     available,
                     content: available ? snippet(target.content) : "",
                     hasMedia: available && Boolean(target.image || target.video),
+                    postId: group.targetType === "comment" ? String(target?.postId || "") : group.targetId,
                 },
                 reports: reports.map((report) => ({
                     _id: report._id,

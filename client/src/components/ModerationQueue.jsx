@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
+import { moderationContentPath } from "../lib/moderationContent.js";
 
 const LEVEL_LABELS = { high: "Ưu tiên cao", medium: "Trung bình", low: "Thấp" };
 const TARGET_LABELS = { post: "Bài viết", comment: "Bình luận" };
@@ -10,20 +12,22 @@ function formatTime(value) {
 
 function ModerationItem({ item, busy, onResolve }) {
   const author = item.author?.username;
+  const contentPath = moderationContentPath(item);
   return (
     <article className={`ridge-mod-item is-${item.level}`}>
       <div className="ridge-mod-top">
         <span className={`ridge-mod-level is-${item.level}`}>{LEVEL_LABELS[item.level]}</span>
         <span className="ridge-mod-score" aria-label={`Điểm ưu tiên ${item.score} trên 100`}>{item.score}<small>/100</small></span>
-        <span className="ridge-admin-report-type">{TARGET_LABELS[item.targetType] || item.targetType}</span>
+        {item.target.available ? <Link className="ridge-admin-report-type ridge-mod-link" to={contentPath}>{TARGET_LABELS[item.targetType] || item.targetType}</Link> : <span className="ridge-admin-report-type">{TARGET_LABELS[item.targetType] || item.targetType}</span>}
         {author && <span className="ridge-mod-author">của {author}</span>}
       </div>
 
       {item.target.available ? (
-        <p className="ridge-mod-content">{item.target.content}{item.target.hasMedia ? " [kèm ảnh/video]" : ""}</p>
+        <Link className="ridge-mod-content ridge-mod-content-link" to={contentPath}>{item.target.content}{item.target.hasMedia ? " [kèm ảnh/video]" : ""}</Link>
       ) : (
-        <p className="ridge-mod-content is-muted">Nội dung đã bị xóa hoặc ẩn.</p>
+        <p className="ridge-mod-content is-muted">Nội dung đã bị xóa</p>
       )}
+      {item.target.available && <Link className="ridge-admin-action is-neutral ridge-mod-open" to={contentPath}>Xem nội dung</Link>}
 
       <div className="ridge-mod-reasons">
         <span>{item.reportCount} báo cáo</span>
@@ -62,7 +66,7 @@ function ModerationItem({ item, busy, onResolve }) {
       </details>
 
       <div className="ridge-admin-report-actions">
-        <button className="ridge-admin-action is-neutral" type="button" disabled={busy} aria-label={`Đánh dấu đã xem ${item.reportCount} báo cáo`} onClick={() => onResolve(item, "reviewed")}>Đã xem</button>
+        {item.target.available && <button className="ridge-admin-action is-neutral" type="button" disabled={busy} aria-label={`Đánh dấu đã xem ${item.reportCount} báo cáo`} onClick={() => onResolve(item, "reviewed")}>Đã xem</button>}
         <button className="ridge-admin-action is-danger" type="button" disabled={busy} aria-label={`Đánh dấu đã xử lý ${item.reportCount} báo cáo`} onClick={() => onResolve(item, "actioned")}>Đã xử lý</button>
       </div>
     </article>

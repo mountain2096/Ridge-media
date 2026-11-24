@@ -1,6 +1,7 @@
 import { resolveMediaUrl } from "../lib/api.js";
 import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../lib/api.js";
+import { useSearchParams } from "react-router-dom";
 import { useConfirm } from "./ConfirmDialog.jsx";
 import AdminStats from "./AdminStats.jsx";
 import ModerationQueue from "./ModerationQueue.jsx";
@@ -11,7 +12,9 @@ function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [tab, setTab] = useState("stats");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = ["moderation", "accounts"].includes(searchParams.get("tab")) ? searchParams.get("tab") : "stats";
+  const setTab = (value) => setSearchParams(value === "stats" ? {} : { tab: value });
   const token = localStorage.getItem("token");
 
   const loadData = useCallback(async () => {

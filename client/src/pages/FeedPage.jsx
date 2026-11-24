@@ -1019,11 +1019,11 @@ function FeedPage({ section = "feed" }){
                 </>}
                 {isLoading && <p>Đang tải bài viết...</p>}
 
-{!isLoading && error && activeSection === "post" && [404, 403].includes(error.status) ? <div className="single-post-unavailable card"><p>Bài viết không còn khả dụng hoặc bạn không có quyền xem.</p><Link to="/feed">Quay lại bảng tin</Link></div> : !isLoading && error && (
+{!isLoading && error && activeSection === "post" && [404, 403].includes(error.status) ? <div className="single-post-unavailable card"><p>Nội dung đã bị xóa hoặc không còn khả dụng.</p><Link to="/feed">Quay lại bảng tin</Link></div> : !isLoading && error && (
   <p className="feedback-message error">{typeof error === "string" ? error : error.message}</p>
 )}
 
-{!isLoading && !error && activeSection === "post" && displayedPosts.length === 0 && <div className="single-post-unavailable card"><p>Bài viết không còn khả dụng hoặc bạn không có quyền xem.</p><Link to="/feed">Quay lại bảng tin</Link></div>}
+{!isLoading && !error && activeSection === "post" && displayedPosts.length === 0 && <div className="single-post-unavailable card"><p>Nội dung đã bị xóa hoặc không còn khả dụng.</p><Link to="/feed">Quay lại bảng tin</Link></div>}
 {!isLoading && !error && activeSection !== "post" && displayedPosts.length === 0 && (
   <p>{activeSection === "saved" ? "Bạn chưa lưu bài viết nào." : activeSection === "activity" ? "Bạn chưa đăng bài viết nào." : "Chưa có bài viết nào."}</p>
 )}
@@ -1098,7 +1098,7 @@ function FeedPage({ section = "feed" }){
                 </section>
                 {activeSection === "feed" && <ContactsPanel friends={friends} sortedContactFriends={sortedContactFriends} onStartConversation={handleStartConversation} />}
             <StoryComposer open={isStoryComposerOpen} file={storyFile} setFile={setStoryFile} submitting={isPostingStory} error={storyFeedback} onClose={() => { setIsStoryComposerOpen(false); setStoryFile(null); setStoryFeedback(""); }} onSubmit={handleCreateStory} />
-            {activeStoryGroup && currentStory && <StoryViewer key={currentStory._id} groups={storyGroups} activeGroup={activeStoryGroup} activeIndex={activeStoryIndex} currentUserId={currentUser?._id} error={storyFeedback} onChange={(group, index) => { setActiveStoryGroup(group); setActiveStoryIndex(index); }} onClose={() => setActiveStoryGroup(null)} onDelete={handleDeleteStory} />}
+            {activeStoryGroup && currentStory && <StoryViewer key={currentStory._id} groups={storyGroups} activeGroup={activeStoryGroup} activeIndex={activeStoryIndex} currentUserId={currentUser?._id} isAdmin={currentUser?.isAdmin} error={storyFeedback} onChange={(group, index) => { setActiveStoryGroup(group); setActiveStoryIndex(index); }} onClose={() => setActiveStoryGroup(null)} onDelete={handleDeleteStory} />}
             <ReportDialog
               key={reportTarget?.targetId || "closed"}
               open={Boolean(reportTarget)}

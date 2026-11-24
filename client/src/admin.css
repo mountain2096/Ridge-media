@@ -639,6 +639,12 @@
   overflow-wrap: anywhere;
 }
 
+.ridge-mod-link,
+.ridge-mod-content-link { text-decoration: none; }
+.ridge-mod-link:hover,
+.ridge-mod-content-link:hover { color: var(--news-accent, #2f4be0); text-decoration: underline; }
+.ridge-mod-open { align-self: flex-start; text-decoration: none; }
+
 .ridge-mod-content.is-muted {
   color: var(--news-muted, #5b6478);
   font-style: italic;

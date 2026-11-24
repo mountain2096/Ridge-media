@@ -17,7 +17,7 @@ function relativeTime(value) {
   return `${Math.floor(hours / 24)} ngày trước`;
 }
 
-function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, onChange, onClose, onDelete }) {
+function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, isAdmin, error, onChange, onClose, onDelete }) {
   const story = activeGroup?.items?.[activeIndex];
   const [paused, setPaused] = useState(false);
   const [videoDuration, setVideoDuration] = useState(5);
@@ -33,7 +33,8 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
   const videoRef = useRef(null);
   const confirm = useConfirm();
   const shouldAutoAdvance = Boolean(story && !paused && story.mediaType !== "video");
-  const isOwner = activeGroup?.author?._id === currentUserId;
+  const isOwner = Boolean(currentUserId && String(activeGroup?.author?._id) === String(currentUserId));
+  const canDelete = isOwner || isAdmin;
   const duration = story?.mediaType === "video" ? videoDuration : 5;
   const advance = useCallback((direction) => {
     const index = groups.findIndex((group) => group.author?._id === activeGroup.author?._id);
@@ -141,7 +142,7 @@ function StoryViewer({ groups, activeGroup, activeIndex, currentUserId, error, o
             <span><strong id="story-viewer-title">{authorName}</strong><time>{relativeTime(story.createdAt)}</time></span>
           </Link>
           <div className="story-viewer-controls">
-            {isOwner && <div className="story-viewer-menu-wrap">
+            {canDelete && <div className="story-viewer-menu-wrap">
               <button className="story-viewer-icon-button" type="button" aria-label="Tùy chọn story" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="19" cy="12" r="1.7" /></svg>
               </button>

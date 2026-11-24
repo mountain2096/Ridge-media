@@ -33,12 +33,11 @@ html[data-theme="dark"] {
   --news-scrollbar: #4b5260;
 }
 
-.home-layout { max-width: 1360px; grid-template-columns: 248px minmax(0, 680px) 300px; justify-content: center; gap: 24px; padding: 0 24px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+.home-layout { max-width: none; margin-inline: 0; grid-template-columns: 248px minmax(0, 680px) 300px; justify-content: start; gap: 24px; padding: 0 16px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
 .theme-options { display: flex; gap: 8px; }
 .theme-options button { min-height: 40px; padding: 0 18px; border: 1px solid var(--news-border); border-radius: 10px; background: var(--news-surface); color: var(--news-ink); cursor: pointer; }
 .theme-options button[aria-pressed="true"] { border-color: var(--news-accent); background: var(--news-hover); color: var(--news-accent); }
 body:has(.home-layout) { background: var(--news-bg); }
-.home-layout { margin-inline: auto; }
 .ridge-video { position: relative; width: 100%; overflow: hidden; border-radius: 14px; background: #080a10; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
 .ridge-video > video { display: block; width: 100%; margin: 0; }
 .guest-post-card > .ridge-video { width: calc(100% - 40px); margin: 0 20px; }
