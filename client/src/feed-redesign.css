@@ -369,4 +369,5 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--news-scrol
   .home-layout .home-columns-single { justify-self: center; }
   .home-layout .home-columns:not(.home-columns-single) { max-width: none; grid-template-columns: minmax(0, 1fr) 300px; }
   .home-layout .home-columns:not(.home-columns-single) > :not(.right-column) { width: 100%; max-width: 680px; justify-self: center; }
+  .home-layout .home-columns:not(.home-columns-single) > .ridge-dialog-backdrop, .home-layout .home-columns:not(.home-columns-single) > .story-viewer-backdrop { width: auto; max-width: none; justify-self: stretch; }
 }
