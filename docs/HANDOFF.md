@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-25, after the sidebar alignment follow-up.
+> Last updated: 2026-11-25, after the wide-feed dialog backdrop fix.
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -24,6 +24,7 @@ JWT sign-up and login; password reset and change (minimum 8 characters); profile
 ## 4. Test status (update each round)
 - Round 21: CSS-only wide feed layout at 1280px and above; `node --test`: 178 passed; client lint/build passed (build retains the existing large-chunk advisory); browser verification was not completed because the local page returned 404.
 - Sidebar alignment follow-up: replaced the desktop layout override for all authenticated pages; `node --test`: 178 passed; client lint/build passed (build retains the existing large-chunk advisory); browser measurements were not verified because Playwright could not launch (EPERM creating its daemon log).
+- Wide-feed dialog backdrop fix: widened direct-child dialog and story-viewer backdrops in the desktop feed grid; `node --test`: 178 passed; client lint/build passed (build retains the existing large-chunk advisory); browser verification and viewport measurements were not completed because Playwright could not open its daemon log (EPERM).
 - Round 20c: styled the Google GIS overlay for auth register/login. `node --test`: 178 passed; client lint/build passed (existing large-chunk advisory). Playwright inspected all eight desktop/mobile, light/dark, register/login screenshots; the slot measured 354px/324px by 40px, and center hit testing reached the GIS button container. Google returned 403 because localhost is not allowed for this client ID, so sign-in was not completed.
 - Round 20b: rebased `feat/google-signin` onto `fix/dark-polish`, retaining both polish commits; `node --test`: 178 passed; client lint/build passed. Playwright checked auth register/login at 1280x720 and 390x844 in both themes, and feed/messages/friends/profile/saved/settings in both themes using mocked API responses. The GIS button matched input width (354px desktop, 324px mobile); no Facebook/Apple controls. Dark feed story tile still has a pale background.
 - Dark mode page corners and profile/connections button contrast (`fix/dark-polish`): `node --test` passed 171; client lint/build passed (existing large-chunk advisory); no browser, API, Vite, or database started.
@@ -119,6 +120,7 @@ Reaction lists: the total count may include blocked or deactivated users while t
 | 50 | Add story reactions and owner reactor lists, story replies in chat, and story reaction notifications; compact the owner reactor panel | 169 server tests, 4 client tests, lint/build passed; no browser or live service started. Endpoints unchanged | `86563f3` |
 | Round | Work | Result | Commit |
 |---|---|---|---|
+| 23 | Keep direct-child dialog and story-viewer backdrops full-screen in the wide feed | `node --test`: 178 passed; client lint/build passed; Playwright browser verification unavailable (daemon log open failed with EPERM); no viewport measurements | `2292640` |
 | 21 | Widen the feed layout at desktop widths with CSS only | `node --test`: 178 passed; client lint/build passed; browser verification unavailable (local page returned 404) | `0052918` |
 | 22 | Align the sidebar position across all pages at desktop widths with CSS only | `node --test`: 178 passed; client lint/build passed; browser measurements not verified (Playwright launch failed with EPERM) | `a9a98cd` |
 | 20a | Add Google sign-in/sign-up, improve auth logo contrast, localize the generic reset message, and document Google setup | `node --test`: 178 passed; client lint/build passed; Playwright visuals inspected for both auth tabs/viewports/themes and forgot/reset pages; Google IDs unset, so no live GIS button/sign-in | `b4e8c92` |
