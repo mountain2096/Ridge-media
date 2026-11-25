@@ -8,7 +8,7 @@
   background: #090a0d;
 }
 
-.home-columns-single > .reels-page { width: auto; max-width: none; margin: 0; }
+.home-layout .home-columns-single > .reels-page { width: auto; max-width: none; margin: 0; }
 
 .reels-container {
   width: 100%;
