@@ -1,7 +1,7 @@
 # HANDOFF — Ridge-media
 
 > For a new agent (Claude, Codex, or another agent) continuing the project. Read together with `AGENTS.md`. After EVERY finished feature: update sections 4, 7 and 8, then commit this file.
-> Last updated: 2026-11-25, after the wide-feed dialog backdrop fix.
+> Last updated: 2026-11-25, after the Reels wide-panel width fix.
 
 ## 1. Project
 - Repo: https://github.com/mountain2096/Ridge-media (public). A social feed app: React 19 + Vite 8 (`client/`), Express 5 + MongoDB/Mongoose 9 (`server/`), Socket.IO for realtime.
@@ -22,6 +22,7 @@ The authenticated Reels view uses a vertical snap feed, muted autoplay, reaction
 JWT sign-up and login; password reset and change (minimum 8 characters); profile page (`/profile/:id`, `ProfilePage.jsx`); guests can view only a profile and its public posts via `/api/public/users/:id` and `/api/public/users/:id/posts`, with a login gate after 8 seconds; public, friends-only, or private posts that can be edited, soft-deleted, shared, and saved; paginated feed of 20 posts with a "Tải thêm bài viết" button; 6 reaction types for posts, comments, and messages; reaction lists for posts and comments; one-level comment replies and @mentions; stories; friend requests, blocking, and user search; realtime messaging (typing, "Đã xem"), emoji, and stickers; realtime notifications (Socket.IO); reports and admin page (statistics, moderation queue with priority scores); rate limits, CORS allowlist, media URL validation; sample-data script.
 
 ## 4. Test status (update each round)
+- Reels wide-panel width fix: increased the `.reels-page` override specificity; client lint/build passed; `node --test`: 178 passed; browser verification and viewport measurements were not completed because Playwright could not open its daemon log (`EPERM`).
 - Round 21: CSS-only wide feed layout at 1280px and above; `node --test`: 178 passed; client lint/build passed (build retains the existing large-chunk advisory); browser verification was not completed because the local page returned 404.
 - Sidebar alignment follow-up: replaced the desktop layout override for all authenticated pages; `node --test`: 178 passed; client lint/build passed (build retains the existing large-chunk advisory); browser measurements were not verified because Playwright could not launch (EPERM creating its daemon log).
 - Wide-feed dialog backdrop fix: widened direct-child dialog and story-viewer backdrops in the desktop feed grid; `node --test`: 178 passed; client lint/build passed (build retains the existing large-chunk advisory); browser verification and viewport measurements were not completed because Playwright could not open its daemon log (EPERM).
@@ -112,6 +113,7 @@ Reels comments support reading and posting top-level comments only; there is no 
 Reaction lists: the total count may include blocked or deactivated users while the list filters them; the endpoint loads all reactions into memory before pagination, which suits the current project but not posts with thousands of reactions; `limit=0` falls back to 30 but `limit=-5` is clamped to 1 (the `parseInt || 30` behavior); tests assert this current behavior, so update them if handling is standardized; the dialog has a `tablist` but no `tabpanel`.
 
 ## 7. Round log
+| Reels wide-panel width fix | Raise the `.reels-page` width override specificity so the panel reaches the viewport edge on wide screens | `node --test`: 178 passed; client lint/build passed (existing large-chunk advisory); browser measurements and comments/overflow checks unavailable (Playwright daemon log open failed with EPERM) | `4445619` |
 - Dark polish: removed surface slabs from transparent navigation/page wrappers and restored theme-aware contrast for profile and connections actions | 171 tests; client lint/build passed; no browser or live services started | pending
 - Token tab sync: added cross-tab token event handling and a theme-aware unsaved-draft notice; merged from `fix/token-tab-sync-v2` into `main` at `ea94451`.
 | Story interactions + dark polish 2 | Story reactions/reactor list/replies/notifications and themed notification/privacy/chat/search surfaces | After merge on `main`: `node --test` 170 passed; focused client tests 5 passed; lint/build passed; no browser or live API/database started | `86563f3` |
